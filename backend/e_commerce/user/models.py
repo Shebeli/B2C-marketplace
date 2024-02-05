@@ -1,8 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
-
-class MyUserManager(BaseUserManager):
-    pass
-
+import phonenumbers
+# this model does not contain any superuser or admin, as theres a seperate model for that purpose.
 class EcomUser(AbstractBaseUser):
-    pass
+    first_name = models.CharField()
+    last_name = models.CharField()
+    username = models.CharField()
+    
+phonenumbers.parse()
