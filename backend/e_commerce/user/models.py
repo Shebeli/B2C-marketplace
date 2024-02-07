@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser
 from django.utils import timezone
 
-from user.validators import (
+from e_commerce.validators import (
     validate_phone,
     validate_username,
     validate_national_code,
@@ -10,15 +10,16 @@ from user.validators import (
 )
 from user.managers import EcomUserManager
 
-# this model does not contain any superuser or admin, as theres a seperate model for that purpose.
+
 class EcomUser(AbstractBaseUser):
+    "This model does not contain any superuser or staff as its in the seperate model Admin"
     first_name = models.CharField(_("First Name"), max_length=50, blank=True)
     last_name = models.CharField(_("Last Name"), max_length=50, blank=True)
     username = models.CharField(
         _("Username"),
         unique=True,
         help_text=_(
-            "Maximum of 50 characters. Only letters, digits and the special character . are allowed"
+            "Maximum of 100 characters. Only letters, digits and the special character . are allowed"
         ),
         validators=[username_validator],
         error_messages={
@@ -29,6 +30,7 @@ class EcomUser(AbstractBaseUser):
                 "The username is invalid. Please refer to username definition constraints."
             ),
         },
+        max_length=100,
     )
     email = models.EmailField(_("Email Address"), blank=True)
     phone = models.CharField(
@@ -60,6 +62,10 @@ class EcomUser(AbstractBaseUser):
     def full_name(self):
         return f"{self.first_name} {self.last_name}"
 
+    @property
+    def is_admin(self):
+        "To distinguish user model from admin model by using this method"
+        return False
+
     def __str__(self):
         return f"User: {self.username} , Phone number:{self.phone}"
-

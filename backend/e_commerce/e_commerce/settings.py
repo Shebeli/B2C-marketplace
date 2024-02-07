@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'users'
+    "users",
 ]
 
 MIDDLEWARE = [
@@ -123,6 +123,9 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-AUTH_USER_MODEL = 'users.EcomUser'
+AUTH_USER_MODEL = "user.EcomUser"
 
-AUTHENTICATION_BACKENDS = ['users.authentication.UsernameOrPhoneBackend']
+AUTHENTICATION_BACKENDS = [
+    "user.authentication.UsernameOrPhoneBackend",
+    "admin.authentication.AdminBackend",
+]

@@ -29,3 +29,6 @@ class EcomUserManager(BaseUserManager):
                 parsed_phone, phonenumbers.PhoneNumberFormat.NATIONAL
             ).replace(" ", "")  # eg: 09377954148
         return phone
+    
+    def create_superuser(self):
+        raise Exception(_("The project user model doesn't include staff or superuser. Use the command createsuperadmin instead."))
