@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from e_commerce.validators import (
     validate_phone,
@@ -8,11 +9,11 @@ from e_commerce.validators import (
     validate_national_code,
     validate_postal_code,
 )
-from user.managers import EcomUserManager
+from .managers import EcomUserManager
 
 
 class EcomUser(AbstractBaseUser):
-    "This model does not contain any superuser or staff as its in the seperate model Admin"
+    "This model does not contain any superuser or staff attributes as its handled in the seperate model named AdminUser"
     first_name = models.CharField(_("First Name"), max_length=50, blank=True)
     last_name = models.CharField(_("Last Name"), max_length=50, blank=True)
     username = models.CharField(
@@ -21,16 +22,16 @@ class EcomUser(AbstractBaseUser):
         help_text=_(
             "Maximum of 100 characters. Only letters, digits and the special character . are allowed"
         ),
-        validators=[username_validator],
+        validators=[validate_username],
         error_messages={
             "null": _("The username cannot be null"),
             "blank": _("The username cannot be blank"),
             "unique": _("The username already exists"),
             "invalid": _(
-                "The username is invalid. Please refer to username definition constraints."
+                "The username is invalid. Please refer to username help text."
             ),
         },
-        max_length=100,
+        max_length=50,
     )
     email = models.EmailField(_("Email Address"), blank=True)
     phone = models.CharField(
@@ -48,7 +49,7 @@ class EcomUser(AbstractBaseUser):
         max_length=10,
         validators=[validate_postal_code],
     )
-    address = models.CharField(max_length=150, blank=True)
+    address = models.CharField(max_length=300, blank=True)
     is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(
         _("UserAccount Creation Date"), default=timezone.now
@@ -69,3 +70,4 @@ class EcomUser(AbstractBaseUser):
 
     def __str__(self):
         return f"User: {self.username} , Phone number:{self.phone}"
+

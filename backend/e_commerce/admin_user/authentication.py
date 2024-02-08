@@ -1,7 +1,7 @@
 from django.db.models import Q
 from django.contrib.auth.backends import ModelBackend
 
-from .models import Admin
+from .models import AdminUser
 
 
 class AdminBackend(ModelBackend):
@@ -9,15 +9,15 @@ class AdminBackend(ModelBackend):
         if (username is None and email is None) or password is None:
             return
         try: 
-            admin = Admin.objects.get(Q(username=username) | Q(email=email))
-        except Admin.DoesNotExist:
+            admin_user = AdminUser.objects.get(Q(username=username) | Q(email=email))
+        except AdminUser.DoesNotExist:
             return None
         else:
-            if admin.check_password(password) and self.user_can_authenticate(admin):
-                return admin
+            if admin_user.check_password(password) and self.user_can_authenticate(admin_user    ):
+                return admin_user
 
     def get_user(self, user_id):
         try:
-            return Admin.objects.get(pk=user_id)
-        except Admin.DoesNotExist:
+            return AdminUser.objects.get(pk=user_id)
+        except AdminUser.DoesNotExist:
             return None

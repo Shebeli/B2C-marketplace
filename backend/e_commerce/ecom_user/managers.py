@@ -6,7 +6,7 @@ import phonenumbers
 
 class EcomUserManager(BaseUserManager):
 
-    def create_user(self, username, phone, email="", password=None, **extra_fields):
+    def create_user(self, username, phone, email="", password=None):
         if not username and not phone:
             raise ValueError("Either username or phone should be provided")
         UserModel = get_user_model()
@@ -16,13 +16,13 @@ class EcomUserManager(BaseUserManager):
             phone = self.normalize_phone(phone)
         email = self.normalize_email(email)
         user = self.model(
-            username=username, phone=phone, email=email, **extra_fields
+            username=username, phone=phone, email=email
         )  # either username or phone can be null here
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def normalize_phone(self, phone: Any) -> Any:
+    def normalize_phone(self, phone) -> any:
         if phone:
             parsed_phone = phonenumbers.parse(phone, "IR")
             phone = phonenumbers.format_number(

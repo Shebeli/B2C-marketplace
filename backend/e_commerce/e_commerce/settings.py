@@ -37,7 +37,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "users",
+    "ecom_user",
+    "admin_user",
+    # 3rd party
+    "rest_framework",
 ]
 
 MIDDLEWARE = [
@@ -123,9 +126,9 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-AUTH_USER_MODEL = "user.EcomUser"
+AUTH_USER_MODEL = "ecom_user.EcomUser"
 
 AUTHENTICATION_BACKENDS = [
-    "user.authentication.UsernameOrPhoneBackend",
-    "admin.authentication.AdminBackend",
+    "ecom_user.authentication.UsernameOrPhoneBackend",
+    "admin_user.authentication.AdminBackend",
 ]

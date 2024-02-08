@@ -1,11 +1,19 @@
 from django.contrib.auth.models import AbstractBaseUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 from .managers import AdminManager
+from e_commerce.validators import validate_username
 
-
-class Admin(AbstractBaseUser):
+class AdminUser(AbstractBaseUser):
+    class AdminRoles(models.TextChoices):
+        ORDERMANAGER = 'OM', _('Order Manager')
+        INVENTORYMANAGER = 'IM', _('Inventory Manager')
+        SUPERVISOR = "SV", _("Super visor")
+        MANAGER = "MG", _("Manager")
+        SUPERADMIN = "SA", _("Super admin")
+    
     role = models.CharField(max_length=2, choices=AdminRoles)
     first_name = models.CharField(_("First Name"), max_length=50, blank=True)
     last_name = models.CharField(_("Last Name"), max_length=50, blank=True)
@@ -16,7 +24,7 @@ class Admin(AbstractBaseUser):
         help_text=_(
             "Maximum of 100 characters. Only letters, digits and the special character . are allowed"
         ),
-        validators=[username_validator],
+        validators=[validate_username],
         error_messages={
             "null": _("The username cannot be null"),
             "blank": _("The username cannot be blank"),

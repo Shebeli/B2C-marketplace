@@ -6,7 +6,9 @@ from django.conf import settings
 
 
 class UsernameOrPhoneBackend(ModelBackend):
-    def authenticate(self, request, username=None, phone=None, **kwargs):
+    def authenticate(self, request, username=None, phone=None, password=None, **kwargs):
+        if (username is None and phone is None) or password is None:
+            return
         UserModel = get_user_model()
         try:  # phone and username are unique fields and one of them can null but not both.
             user = UserModel.objects.get(Q(username=username) | Q(phone=phone))
