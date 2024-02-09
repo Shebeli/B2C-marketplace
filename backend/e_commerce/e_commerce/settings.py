@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "admin_user",
     # 3rd party
     "rest_framework",
+    "rest_framework_simplejwt"
 ]
 
 MIDDLEWARE = [
@@ -132,3 +133,7 @@ AUTHENTICATION_BACKENDS = [
     "ecom_user.authentication.UsernameOrPhoneBackend",
     "admin_user.authentication.AdminBackend",
 ]
+
+# SIMPLE_JWT = {
+#     "UPDATE_LAST_LOGIN": True,
+# }

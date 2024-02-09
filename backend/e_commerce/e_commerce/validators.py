@@ -1,8 +1,8 @@
 import re
 
-import phonenumbers
+from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
-from django.core.validators import RegexValidator
+import phonenumbers
 
 
 def validate_phone(value: str) -> None:
@@ -11,7 +11,7 @@ def validate_phone(value: str) -> None:
         "IR",
     )
     if not phonenumbers.is_valid_number(parsed_phone):
-        raise ValidationError(_(f"Entered phone number '{phone}' is not valid"))
+        raise ValidationError(_(f"Entered phone number '{value}' is not valid"))
 
 
 def validate_username(value: str) -> None:
@@ -27,9 +27,9 @@ def validate_national_code(value: str) -> None:
     last_digit = int(value[-1])
     weighted_sum = sum(int(value[x]) * (10 - x) for x in range(9)) % 11
     if weighted_sum < 2:
-        is_national_code_valid = last_digit == s
+        is_national_code_valid = last_digit == weighted_sum
     else:
-        is_national_code_valid = last_digit + s == 11
+        is_national_code_valid = last_digit + weighted_sum == 11
     if not is_national_code_valid:
         raise validation_error
 

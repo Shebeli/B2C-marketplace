@@ -33,21 +33,23 @@ class EcomUser(AbstractBaseUser):
         },
         max_length=50,
     )
-    email = models.EmailField(_("Email Address"), blank=True)
+    email = models.EmailField(_("Email Address"), blank=True, unique=True)
     phone = models.CharField(
-        _("Phone Number"), max_length=13, validators=[validate_phone]
+        _("Phone Number"), max_length=13, validators=[validate_phone], unique=True
     )
     national_code = models.CharField(
         _("National Code"),
         blank=True,
         max_length=10,
         validators=[validate_national_code],
+        unique=True
     )
     postal_code = models.CharField(
         _("Postal Code"),
         blank=True,
         max_length=10,
         validators=[validate_postal_code],
+        unique=True
     )
     address = models.CharField(max_length=300, blank=True)
     is_active = models.BooleanField(default=True)
