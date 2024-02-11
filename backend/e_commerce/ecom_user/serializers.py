@@ -58,17 +58,16 @@ class ChangePasswordSerializer(serializers.Serializer):
         user_instance.save()
         return user_instance
     
-class UpdatePhoneSerializer(serializers.ModelSerializer):
+class PhoneSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = EcomUser
-        fields = ['phone','email']
+        fields = ['phone']
         
     def create(self, validated_data):
-        raise Exception("Method create is not allowed on UpdatePhoneSerializer")
+        return EcomUser.objects.create_user(phone=validated_data['phone'])
     
     def update(self, user_instance, validated_data):
         user_instance.phone = validated_data.get('phone', user_instance.phone)
-        user_instance.email = validated_data.get('email', user_instance.email)
         user_instance.save()
         return user_instance
