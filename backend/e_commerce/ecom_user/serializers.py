@@ -5,7 +5,7 @@ from rest_framework import serializers
 from .models import EcomUser
 
 # displaying user profile, updating profile except for phone number
-class UserSerializer(serializers.ModelSerializer):
+class UserProfileSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source="get_fullname", read_only=True)
 
     class Meta:
@@ -71,3 +71,14 @@ class PhoneSerializer(serializers.ModelSerializer):
         user_instance.phone = validated_data.get('phone', user_instance.phone)
         user_instance.save()
         return user_instance
+    
+class VerifyCodeSerializer(PhoneSerializer):
+    code = serializers.CharField()
+    
+    def validate_code(self, code):
+        try:
+            code = int(code)
+            if len(code) != 5:
+                raise serializers.ValidationError(_("The entered code length isn't 5"))
+        except ValueError:
+            raise serializers.ValidationError(_("The entered code contains non-digits"))

@@ -14,8 +14,6 @@ TimeFormat = NewType("TimeFormat", str)
 # headers = {"Authorization": f"Basic {encoded_auth}"}
 
 
-sender_phone_number = settings.SMS_SENDER_PHONE_NUMBER
-
 def current_time(time_format: TimeFormat = "%H:%M:%S") -> str:
     return datetime.now().strftime(time_format)
 
@@ -32,7 +30,7 @@ def send_sms(
     reciever_phone_number: PhoneNumber,
     message: str,
     debug: bool = True,
-    sender_phone_number: PhoneNumber = sender_phone_number,
+    sender_phone_number: PhoneNumber = settings.SMS_SENDER_PHONE_NUMBER,
 ) -> None:
     """
     Sends a SMS with provided message to provided phone number. 
@@ -41,7 +39,7 @@ def send_sms(
     if debug:
         print(
             f"""
-            DEBUG mode for send_sms\n
+            DEBUG mode is enabled for the function send_sms\n
             The following message is supposed to be sent from the phone number 
             {sender_phone_number} to {reciever_phone_number}:
             \n {message}

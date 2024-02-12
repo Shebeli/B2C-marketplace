@@ -122,10 +122,16 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "ecom_user.EcomUser"
 
-AUTHENTICATION_BACKENDS = [
-    "ecom_user.authentication.UsernameOrPhoneBackend",
-    "admin_user.authentication.AdminBackend",
-]
+# AUTHENTICATION_BACKENDS = [
+#     "ecom_user.authentication.UsernameOrPhoneBackend",
+#     "admin_user.authentication.AdminBackend",
+# ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
 
 REDIS_USERNAME = os.environ.get("REDIS_USERNAME")
 REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD")
