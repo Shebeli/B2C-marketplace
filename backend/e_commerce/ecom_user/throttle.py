@@ -1,6 +1,7 @@
-from rest_framework.throttling import SimpleRateThrottle
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
-class SMSThrottle(SimpleRateThrottle):
-    def get_cache_key(self, request, view):
-        
-        return super().get_cache_key(request, view)
+class SMSAnonRateThrottle(AnonRateThrottle):
+    rate = '2/minute'
+    
+class RegisterAnonRateThrottle(AnonRateThrottle):
+    rate = '5/minute'

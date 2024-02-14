@@ -2,20 +2,24 @@ import random
 import string
 
 from django.core.cache import cache
+from django.contrib.auth.tokens import default_token_generator
 from rest_framework import viewsets, mixins, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
-from rest_framework.throttling import UserRateThrottle
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.generics import get_object_or_404
 
+from .throttle import SMSAnonRateThrottle, RegisterAnonRateThrottle
 from .models import EcomUser
 from .serializers import (
     UserProfileSerializer,
     PhoneSerializer,
     CreateUserSerializer,
-    ChangePasswordSerializer,
-    VerifyCodeSerializer
+    ChangeCurrentPasswordSerializer,
+    ResetPasswordSerializer,
+    VerifyCodeSerializer,
+    VerifyCodeSerializer,
 )
 from .sms import (
     send_sms,
@@ -23,6 +27,9 @@ from .sms import (
     create_verify_register_message,
 )
 
+def get_code_cooldown_time(phone: str) -> str:
+    cache_key = f"code_cooldown_for_{phone}"
+    return cache.ttl(cache_key)
 
 class UserSignUpViewSet(viewsets.ViewSet):
     """
@@ -32,64 +39,127 @@ class UserSignUpViewSet(viewsets.ViewSet):
       to complete registaration (returns a token pair upon success)
     """
 
-    def get_register_code_cooldown_time(phone: str) -> str:
-        cache_key =f"register_code_cooldown_for_{phone}"
-        remaining_time = cache_key.ttl(cache_key) 
-        return remaining_time
-
-    # for the sake of consistency, this should be used rather than defining the key explicitly.    
-    def _get_register_code_cache_key(self, phone: str) -> str:
+    def get_register_code_cache_key(self, phone: str) -> str:
         return f"register_code_for_{phone}"
 
+    def create_random_code(length: int = 5) -> str:
+        return random.choice(string.digits for _ in range(length))
 
-    @action(detail=False, methods=["post"])
+    @action(detail=False, methods=["post"], throttle_classes=[SMSAnonRateThrottle])
     def register(self, request):
         serializer = PhoneSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        register_code = random.choice(string.digits for _ in range(5))
-        inputed_phone = serializer.data['phone']
-        code_cache_key = self._get_register_code_cache_key(inputed_phone)
-        code_cooldown_time = self.get_register_code_cooldown_time(inputed_phone)
+        register_code = self.create_random_code()
+        inputed_phone = serializer.data["phone"]
+        code_cooldown_time = self.get_code_cooldown_time("register_code_for",inputed_phone)
         if code_cooldown_time:
-            return Response({"remaining time": f"{code_cooldown_time}s"},status=status.HTTP_429_TOO_MANY_REQUESTS)
+            return Response(
+                {"cooldown time to request another code": f"{code_cooldown_time}s"},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
         send_sms(
             reciever_phone_number=inputed_phone,
             message=create_verify_register_message(register_code),
         )
-        cache.set(f"register_code_cooldown_for_{inputed_phone}", True, 60*2)
-        cache.set(self._get_register_code_cache_key(inputed_phone), register_code, 60 * 15)
-        return Response({"success": f"register code SMS sent for phone {inputed_phone}"}, status=status.HTTP_202_ACCEPTED)
+        cache.set(f"register_code_cooldown_for_{inputed_phone}", True, 60 * 2)
+        cache.set(
+            self.get_register_code_cache_key(inputed_phone), register_code, 60 * 15
+        )
+        return Response(
+            {"success": f"forgot pass code sent to user for phone {inputed_phone} by SMS"},
+            status=status.HTTP_202_ACCEPTED,
+        )
 
-    @action(detail=False, methods=["post"])
+    @action(detail=False, methods=["post"], throttle_classes=[RegisterAnonRateThrottle])
     def confirm_register(self, request):
         serializer = VerifyCodeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        cached_code = cache.get(self._get_register_code_cache_key(serializer.data['phone'])) 
+        cached_code = cache.get(
+            self.get_register_code_cache_key(serializer.data["phone"])
+        )
         if not cached_code:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "server is not expecting a verification code for this phone"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if serializer.data["code"] != cached_code:
+            return Response(
+                {"error": "verification code is incorrect."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         user = serializer.save()
         refresh = RefreshToken.for_user(user)
-        access = refresh.access_token
         return Response(
             {
                 "refresh": str(refresh),
-                "access": str(access),
+                "access": str(refresh.access_token),
             },
             status=status.HTTP_201_CREATED,
         )
 
+
 class UserForgotPasswordViewSet(viewsets.ViewSet):
     """
     Provides the following actions:
-    - forgot_password: Sends a reset password code to user.
+    - forgot_password: Sends a reset password code to user using SMS.
     - confirm_forgot_password: Input the code recieved from action 'reset_password' and
       allows the user to change their password by giving them access to the action called
-      change_forgotten_password
-    - change_forgotten_password: user can input their new password and update their password
+      reset_password
+    - reset_password: user can input their new password and update their password
       which after wards logs them in by returning a token pair.
     """
-    pass
 
+
+    @action(detail=False, methods=["POST"])
+    def forgot_password(self, request):
+        serializer = PhoneSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = get_object_or_404(EcomUser, phone=serializer.data['phone'])
+        code_cooldown_time = get_code_cooldown_time(user)
+        if code_cooldown_time:
+            return Response(
+                {"cooldown time to request another code": f"{code_cooldown_time}s"},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            ) 
+        forgot_code = self.create_random_code()
+        send_sms(
+            reciever_phone_number=user.phone,
+            message=create_forgot_password_message(forgot_code),
+        )
+        cache.set(f"forgot_pass_cooldown_for_{user.phone}")
+        cache.set(f"forgot_pass_code_for_{user.phone}")
+        return Response(
+            {"success": f"forgot pass code sent to user for phone {user.phone} by SMS"},
+            status=status.HTTP_202_ACCEPTED,
+        )
+        
+    @action(detail=False, methods=["POST"])
+    def confirm_forgot_password(self, request):
+        serializer = VerifyCodeSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = get_object_or_404(EcomUser, phone=serializer.data['phone'])
+        cached_code = cache.get(f"forgot_pass_code_for_{user.phone}")
+        if not cached_code:
+            return Response(
+                {"error": "server is not expecting a verification code for this phone"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if serializer.data["code"] != cached_code:
+            return Response(
+                {"error": "verification code is incorrect."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        password_reset_token = default_token_generator.make_token()
+        return Response(
+            {"password reset token": password_reset_token},
+            status=status.HTTP_202_ACCEPTED,
+        )
+
+    @action(detail=False, methods=['PUT'])
+    def reset_password(self, request):
+        ResetPasswordSerializer
+        password_reset_token = default_token_generator.check_token()
+    
 class UserProfileViewSet(
     viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelMixin
 ):
