@@ -112,7 +112,7 @@ class UserForgotPasswordViewSet(viewsets.ViewSet):
       allows the user to change their password by giving them a one time generated token
       to the next action reset_password.
     - reset_password: user can input their new password and update their password
-      which after wards logs them in by returning a token pair.
+      which after the password gets updated, a token pair is returned for authenticating.
     """
 
     @action(detail=False, methods=["POST"])
@@ -142,8 +142,8 @@ class UserForgotPasswordViewSet(viewsets.ViewSet):
     @action(detail=False, methods=["POST"])
     def confirm_forgot_password(self, request):
         """
-        The user is signed in after this action, its recommended to redirect user to reset_password action
-        but still can be skipped.
+        The user is signed in after this action, which afterwards should be
+        redirected to the next action, reset_password.
         """
         serializer = VerifyCodeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -159,7 +159,7 @@ class UserForgotPasswordViewSet(viewsets.ViewSet):
                 {"error": "verification code is incorrect."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        password_reset_token = default_token_generator.make_token()
+        password_reset_token = default_token_generator.make_token(user)
         return Response(
             {
                 "user_id": user.id,
@@ -170,7 +170,7 @@ class UserForgotPasswordViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['PUT'])
     def reset_password(self, request):
-        "One time access token should be provided which is retrieved from the previous action, confirm_forgot_password"
+        "Password reset token is retrieved from the previous action, confirm_forgot_password"
         serializer = ResetPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -178,7 +178,7 @@ class UserForgotPasswordViewSet(viewsets.ViewSet):
         refresh_token = RefreshToken.for_user(user)
         return Response(
             {"refresh": str(refresh_token), "access": str(refresh_token.access)},
-            status=status.HTTP_202_ACCEPTED,
+            status=status.HTTP_200_OK,
         )
 
 
@@ -195,3 +195,13 @@ class UserProfileViewSet(
     serializer_class = UserProfileSerializer
     queryset = EcomUser.objects.all()
     permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+    
+    @action(detail=False, methods=['PUT'])
+    def change_password(self, request):
+        "This is different from ForgotPasswordViewSet, since the user is already logged in and know their current password"
+        serializer = ChangeCurrentPasswordSerializer(request.user, request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response(status=status.HTTP_200_OK)
