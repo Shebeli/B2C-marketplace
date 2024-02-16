@@ -27,9 +27,11 @@ from .sms import (
     create_verify_register_message,
 )
 
+
 def get_code_cooldown_time(phone: str) -> str:
     cache_key = f"code_cooldown_for_{phone}"
     return cache.ttl(cache_key)
+
 
 class UserSignUpViewSet(viewsets.ViewSet):
     """
@@ -51,7 +53,9 @@ class UserSignUpViewSet(viewsets.ViewSet):
         serializer.is_valid(raise_exception=True)
         register_code = self.create_random_code()
         inputed_phone = serializer.data["phone"]
-        code_cooldown_time = self.get_code_cooldown_time("register_code_for",inputed_phone)
+        code_cooldown_time = self.get_code_cooldown_time(
+            "register_code_for", inputed_phone
+        )
         if code_cooldown_time:
             return Response(
                 {"cooldown time to request another code": f"{code_cooldown_time}s"},
@@ -66,7 +70,9 @@ class UserSignUpViewSet(viewsets.ViewSet):
             self.get_register_code_cache_key(inputed_phone), register_code, 60 * 15
         )
         return Response(
-            {"success": f"forgot pass code sent to user for phone {inputed_phone} by SMS"},
+            {
+                "success": f"forgot pass code sent to user for phone {inputed_phone} by SMS"
+            },
             status=status.HTTP_202_ACCEPTED,
         )
 
@@ -103,24 +109,23 @@ class UserForgotPasswordViewSet(viewsets.ViewSet):
     Provides the following actions:
     - forgot_password: Sends a reset password code to user using SMS.
     - confirm_forgot_password: Input the code recieved from action 'reset_password' and
-      allows the user to change their password by giving them access to the action called
-      reset_password
+      allows the user to change their password by giving them a one time generated token
+      to the next action reset_password.
     - reset_password: user can input their new password and update their password
       which after wards logs them in by returning a token pair.
     """
-
 
     @action(detail=False, methods=["POST"])
     def forgot_password(self, request):
         serializer = PhoneSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = get_object_or_404(EcomUser, phone=serializer.data['phone'])
+        user = get_object_or_404(EcomUser, phone=serializer.data["phone"])
         code_cooldown_time = get_code_cooldown_time(user)
         if code_cooldown_time:
             return Response(
                 {"cooldown time to request another code": f"{code_cooldown_time}s"},
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
-            ) 
+            )
         forgot_code = self.create_random_code()
         send_sms(
             reciever_phone_number=user.phone,
@@ -128,16 +133,21 @@ class UserForgotPasswordViewSet(viewsets.ViewSet):
         )
         cache.set(f"forgot_pass_cooldown_for_{user.phone}")
         cache.set(f"forgot_pass_code_for_{user.phone}")
+
         return Response(
             {"success": f"forgot pass code sent to user for phone {user.phone} by SMS"},
             status=status.HTTP_202_ACCEPTED,
         )
-        
+
     @action(detail=False, methods=["POST"])
     def confirm_forgot_password(self, request):
+        """
+        The user is signed in after this action, its recommended to redirect user to reset_password action
+        but still can be skipped.
+        """
         serializer = VerifyCodeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = get_object_or_404(EcomUser, phone=serializer.data['phone'])
+        user = get_object_or_404(EcomUser, phone=serializer.data["phone"])
         cached_code = cache.get(f"forgot_pass_code_for_{user.phone}")
         if not cached_code:
             return Response(
@@ -151,15 +161,27 @@ class UserForgotPasswordViewSet(viewsets.ViewSet):
             )
         password_reset_token = default_token_generator.make_token()
         return Response(
-            {"password reset token": password_reset_token},
+            {
+                "user_id": user.id,
+                "password reset token": password_reset_token,
+            },
             status=status.HTTP_202_ACCEPTED,
         )
 
     @action(detail=False, methods=['PUT'])
     def reset_password(self, request):
-        ResetPasswordSerializer
-        password_reset_token = default_token_generator.check_token()
-    
+        "One time access token should be provided which is retrieved from the previous action, confirm_forgot_password"
+        serializer = ResetPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        user = serializer.get_user()
+        refresh_token = RefreshToken.for_user(user)
+        return Response(
+            {"refresh": str(refresh_token), "access": str(refresh_token.access)},
+            status=status.HTTP_202_ACCEPTED,
+        )
+
+
 class UserProfileViewSet(
     viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelMixin
 ):
