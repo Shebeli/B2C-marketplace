@@ -57,7 +57,7 @@ class EcomUser(AbstractBaseUser):
         _("UserAccount Creation Date"), default=timezone.now
     )
 
-    USERNAME_FIELD = None
+    USERNAME_FIELD = 'phone'
 
     objects = EcomUserManager()
 

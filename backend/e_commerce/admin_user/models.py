@@ -16,7 +16,7 @@ class AdminUser(AbstractBaseUser):
     
     role = models.CharField(max_length=2, choices=AdminRoles)
     first_name = models.CharField(_("First Name"), max_length=50, blank=True)
-    last_name = models.CharField(_("Last Name"), max_length=50, blank=True)
+    last_name = models.CharField(_("Last Name"), m`ax_length=50, blank=True)
     email = models.EmailField(_("Email Address"), unique=True)
     username = models.CharField(
         _("Username"),

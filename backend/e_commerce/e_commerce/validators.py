@@ -11,17 +11,17 @@ def validate_phone(value: str) -> None:
         "IR",
     )
     if not phonenumbers.is_valid_number(parsed_phone):
-        raise ValidationError(_(f"Entered phone number '{value}' is not valid"))
+        raise ValidationError(_(f"Entered phone number '{value}' is not a valid phone number"))
 
 
 def validate_username(value: str) -> None:
     user_name_regex = r"^[\w.]+\Z"
     if not re.search(user_name_regex, value):
-        raise ValidationError(_(f"Entered username {value} is not valid"))
+        raise ValidationError(_(f"Entered username {value} is not a valid username."))
 
 
 def validate_national_code(value: str) -> None:
-    validation_error = ValidationError(_(f"Entered national code {value} is not valid"))
+    validation_error = ValidationError(_(f"Entered national code {value} is not a valid national code."))
     if not re.search(r"^\d{10}$", value):
         raise validation_error
     last_digit = int(value[-1])
@@ -37,4 +37,4 @@ def validate_national_code(value: str) -> None:
 def validate_postal_code(value: str) -> None:
     postal_code_regex = r"\b(?!(\d)\1{3})[13-9]{4}[1346-9][013-9]{5}\b"
     if not re.search(postal_code_regex, value):
-        raise ValidationError(_(f"Th"))
+        raise ValidationError(_(f"Entered postal code is not a valid postal code."))
