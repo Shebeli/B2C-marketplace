@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from e_commerce.validators import (
+from ecom_core.validators import (
     validate_phone,
     validate_username,
     validate_national_code,
@@ -32,10 +32,11 @@ class EcomUser(AbstractBaseUser):
             ),
         },
         max_length=50,
+        blank=True
     )
     email = models.EmailField(_("Email Address"), blank=True, unique=True)
     phone = models.CharField(
-        _("Phone Number"), max_length=13, validators=[validate_phone], unique=True
+        _("Phone Number"), max_length=13, validators=[validate_phone], unique=True, blank=True
     )
     national_code = models.CharField(
         _("National Code"),
@@ -63,6 +64,8 @@ class EcomUser(AbstractBaseUser):
 
     @property
     def full_name(self):
+        if not self.first_name and not self.last_name:
+            return None
         return f"{self.first_name} {self.last_name}"
 
     @property

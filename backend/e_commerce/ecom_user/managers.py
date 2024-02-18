@@ -1,12 +1,13 @@
+import phonenumbers
 from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
-import phonenumbers
 
+from .exceptions import MethodNotAllowedException
 
 class EcomUserManager(BaseUserManager):
 
-    def create_user(self, username, phone, email="", password=None):
+    def create_user(self, username='', phone='', email='', password=''):
         if not username and not phone:
             raise ValueError("Either username or phone should be provided")
         UserModel = get_user_model()
@@ -17,7 +18,7 @@ class EcomUserManager(BaseUserManager):
         email = self.normalize_email(email)
         user = self.model(
             username=username, phone=phone, email=email
-        )  # either username or phone can be null here
+        )  # either username or phone can be blank here
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -31,4 +32,4 @@ class EcomUserManager(BaseUserManager):
         return phone
     
     def create_superuser(self):
-        raise Exception(_("The project user model doesn't include staff or superuser. Use the command createsuperadmin instead."))
+        raise MethodNotAllowedException(_("The project user model doesn't include staff or superuser. Use the command createsuperadmin instead."))

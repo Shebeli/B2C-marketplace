@@ -1,8 +1,76 @@
 import pytest
+from contextlib import nullcontext as does_not_raise
+
+from django.core.exceptions import ValidationError
 
 from .models import EcomUser
+from .exceptions import MethodNotAllowedException
+
 
 @pytest.mark.django_db
-def test_user_create():
-    EcomUser.objects.create_user('Mike', '09377964142', 'Mikesbastion@gmail.com', 'MikesPassword')
-    assert EcomUser.objects.count() == 1
+def test_createsuperuser_raises_exception():
+    with pytest.raises(MethodNotAllowedException):
+        EcomUser.objects.create_superuser()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("username", ["john123", "JOHN", "shambile.meow", "Mike_1234"])
+def test_user_valid_username(username):
+    user = EcomUser.objects.create_user(username=username)
+    user.clean_fields()
+    user.save()
+    assert user.username == username
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "username", ["john_123@!", "JOHNبیسبیس", "][][][#@!#!", "-", "_", ".", "_._-"]
+)
+def test_user_invalid_username(username):
+    with pytest.raises(ValidationError):
+        user = EcomUser.objects.create_user(username=username)
+        user.clean_fields()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "phone", ["091232132131", "9898321313", "377974148", "091299999998"]
+)
+def test_user_invalid_phone(phone):
+    with pytest.raises(ValidationError):
+        user = EcomUser.objects.create_user(phone=phone)
+        user.clean_fields()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "phone", ["09377964142", "9377964142", "989377964142", "+989377964142"]
+)
+def test_user_phone_normalization(phone):
+    user = EcomUser.objects.create_user(
+        "Mike", phone, "Mikesbastion@gmail.com", "MikesPassword"
+    )
+    assert user.phone == "09377964142", "Check if phone is normalized"
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "national_code", ["0023070072", "0034549757", "0033303002", "5317163188"]
+)
+def test_user_valid_nationalcode(national_code):
+    user = EcomUser.objects.create_user("Mike", "09377964148")
+    user.national_code = national_code
+    user.clean_fields()
+    user.save()
+    assert user.national_code == national_code, "No validation errors should be raised"
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "national_code", ["1234567890", "0023070071", "0033203001", "53171631828"]
+)
+def test_user_invalid_nationalcode(national_code):
+    with pytest.raises(ValidationError):
+        user = EcomUser.objects.create_user("Mike", "09377964148")
+        user.national_code = national_code
+        user.clean_fields()

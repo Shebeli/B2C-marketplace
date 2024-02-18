@@ -186,10 +186,10 @@ class UserProfileViewSet(
     viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelMixin
 ):
     """
-    Required authentication: UserIsAuthenticated
     Provides the following actions:
     - retrieve: retrieves the current authenticated user profile.
     - update: update the current authenticated user profile info (except phone and email)
+    - change_password: for changing password, given that user is authenticated and they input their current password.
     """
 
     serializer_class = UserProfileSerializer

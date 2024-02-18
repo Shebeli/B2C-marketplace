@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 
 from .managers import AdminManager
-from e_commerce.validators import validate_username
+from ecom_core.validators import validate_username
 
 class AdminUser(AbstractBaseUser):
     ORDERMANAGER = 'OM'

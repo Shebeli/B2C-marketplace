@@ -2,6 +2,7 @@ import re
 
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
+from django.core import validators
 import phonenumbers
 
 
@@ -15,8 +16,10 @@ def validate_phone(value: str) -> None:
 
 
 def validate_username(value: str) -> None:
-    user_name_regex = r"^[\w.]+\Z"
-    if not re.search(user_name_regex, value):
+    "At least 3 english letters, non english letters are not allowed, only the special letters _ and . are allowed"
+    user_name_regex = r"^[\w._]+\Z"
+    user_name_pattern = re.compile(user_name_regex, re.ASCII)
+    if not re.search(user_name_pattern, value):
         raise ValidationError(_(f"Entered username {value} is not a valid username."))
 
 
