@@ -1,0 +1,7 @@
+[run]
+omit = 
+    manage.py
+    wsgi.py
+    asgi.py
+    tests/*
+    tests.py

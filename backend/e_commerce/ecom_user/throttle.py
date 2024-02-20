@@ -1,7 +1,7 @@
-from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+from rest_framework.throttling import AnonRateThrottle
 
 class SMSAnonRateThrottle(AnonRateThrottle):
     rate = '2/minute'
     
-class RegisterAnonRateThrottle(AnonRateThrottle):
+class CodeSubmitAnonRateThrottle(AnonRateThrottle):
     rate = '5/minute'

@@ -3,8 +3,10 @@ from contextlib import nullcontext as does_not_raise
 
 from django.core.exceptions import ValidationError
 
-from .models import EcomUser
-from .exceptions import MethodNotAllowedException
+from ..models import EcomUser
+from ..exceptions import MethodNotAllowedException
+
+
 
 
 @pytest.mark.django_db
@@ -12,9 +14,26 @@ def test_createsuperuser_raises_exception():
     with pytest.raises(MethodNotAllowedException):
         EcomUser.objects.create_superuser()
 
+@pytest.mark.django_db
+@pytest.mark.parametrize("postal_code", ["1653879533", "1653879531"])
+def test_user_valid_postal_codes(postal_code):
+    user = EcomUser.objects.create_user(username='test_user')
+    user.postal_code = postal_code
+    user.clean_fields()
+    user.save()
+    assert user.postal_code == postal_code
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("username", ["john123", "JOHN", "shambile.meow", "Mike_1234"])
+@pytest.mark.parametrize("postal_code", ["73432847932", "83427492", "1111879531"])
+def test_user_invalid_postal_codes(postal_code):
+    with pytest.raises(ValidationError):
+        user = EcomUser.objects.create_user(username='test_user')
+        user.postal_code = postal_code
+        user.clean_fields()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("username", ["john123", "JOHN", "shambile_21meow", "Mike_1234","A_Z_O", "S__ob"])
 def test_user_valid_username(username):
     user = EcomUser.objects.create_user(username=username)
     user.clean_fields()
@@ -24,7 +43,7 @@ def test_user_valid_username(username):
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-    "username", ["john_123@!", "JOHNبیسبیس", "][][][#@!#!", "-", "_", ".", "_._-"]
+    "username", ["john_123@!", "ewqیبسشیشdfasdیسش", "][][][#@!#!", "-", " f r q r _ 1 23", ".", "_._-", "12erq"]
 )
 def test_user_invalid_username(username):
     with pytest.raises(ValidationError):

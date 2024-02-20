@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.generics import get_object_or_404
 
-from .throttle import SMSAnonRateThrottle, RegisterAnonRateThrottle
+from .throttle import SMSAnonRateThrottle, CodeSubmitAnonRateThrottle
 from .models import EcomUser
 from .serializers import (
     UserProfileSerializer,
@@ -76,8 +76,8 @@ class UserSignUpViewSet(viewsets.ViewSet):
             status=status.HTTP_202_ACCEPTED,
         )
 
-    @action(detail=False, methods=["post"], throttle_classes=[RegisterAnonRateThrottle])
-    def confirm_register(self, request):
+    @action(detail=False, methods=["post"], throttle_classes=[CodeSubmitAnonRateThrottle])
+    def verify_register(self, request):
         serializer = VerifyCodeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         cached_code = cache.get(
@@ -107,7 +107,7 @@ class UserSignUpViewSet(viewsets.ViewSet):
 class UserForgotPasswordViewSet(viewsets.ViewSet):
     """
     Provides the following actions:
-    - forgot_password: Sends a reset password code to user using SMS.
+    - request_password_reset: Sends a reset password code to user using SMS.
     - confirm_forgot_password: Input the code recieved from action 'reset_password' and
       allows the user to change their password by giving them a one time generated token
       to the next action reset_password.
@@ -116,7 +116,7 @@ class UserForgotPasswordViewSet(viewsets.ViewSet):
     """
 
     @action(detail=False, methods=["POST"])
-    def forgot_password(self, request):
+    def request_password_reset(self, request):
         serializer = PhoneSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = get_object_or_404(EcomUser, phone=serializer.data["phone"])
@@ -139,8 +139,8 @@ class UserForgotPasswordViewSet(viewsets.ViewSet):
             status=status.HTTP_202_ACCEPTED,
         )
 
-    @action(detail=False, methods=["POST"])
-    def confirm_forgot_password(self, request):
+    @action(detail=False, methods=["POST"], throttle_classes=[CodeSubmitAnonRateThrottle])
+    def verify_password_reset(self, request):
         """
         The user is signed in after this action, which afterwards should be
         redirected to the next action, reset_password.

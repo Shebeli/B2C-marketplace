@@ -12,19 +12,23 @@ def validate_phone(value: str) -> None:
         "IR",
     )
     if not phonenumbers.is_valid_number(parsed_phone):
-        raise ValidationError(_(f"Entered phone number '{value}' is not a valid phone number"))
+        raise ValidationError(
+            _(f"Entered phone number '{value}' is not a valid phone number")
+        )
 
 
 def validate_username(value: str) -> None:
-    "At least 3 english letters, non english letters are not allowed, only the special letters _ and . are allowed"
-    user_name_regex = r"^[\w._]+\Z"
-    user_name_pattern = re.compile(user_name_regex, re.ASCII)
-    if not re.search(user_name_pattern, value):
+    "First letter should be english letter, should contain at least a total of 3 letters, minimum length is 3 and underscores are allowed"
+    user_name_regex = r"^(?=[a-zA-Z])(?=(?:[^a-zA-Z]*[a-zA-Z]){3})\w{4,}$"
+    pattern = re.compile(user_name_regex, re.RegexFlag.ASCII)
+    if not re.search(pattern, value):
         raise ValidationError(_(f"Entered username {value} is not a valid username."))
 
 
 def validate_national_code(value: str) -> None:
-    validation_error = ValidationError(_(f"Entered national code {value} is not a valid national code."))
+    validation_error = ValidationError(
+        _(f"Entered national code {value} is not a valid national code.")
+    )
     if not re.search(r"^\d{10}$", value):
         raise validation_error
     last_digit = int(value[-1])
@@ -38,6 +42,6 @@ def validate_national_code(value: str) -> None:
 
 
 def validate_postal_code(value: str) -> None:
-    postal_code_regex = r"\b(?!(\d)\1{3})[13-9]{4}[1346-9][013-9]{5}\b"
+    postal_code_regex = r"^(?!(\d)\1{3})[13-9]{4}[1346-9][013-9]{5}$"
     if not re.search(postal_code_regex, value):
         raise ValidationError(_(f"Entered postal code is not a valid postal code."))

@@ -14,15 +14,19 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.urls import path
+
+from django.urls import path, include
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
-    TokenVerifyView
+    TokenVerifyView,
 )
 
+from ecom_user.urls import router as ecom_user_router
+
 urlpatterns = [
-    path('api/user/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/user/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/user/verify/', TokenVerifyView.as_view(), name='token_verify'),
+    path("api/user/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/user/token/refresh", TokenRefreshView.as_view(), name="token_refresh"),
+    path("api/user/verify/", TokenVerifyView.as_view(), name="token_verify"),
+    path("api/user/", include((ecom_user_router.urls))),
 ]
