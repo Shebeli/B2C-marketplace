@@ -29,7 +29,7 @@ def create_forgot_password_message(code: Union[str, int]) -> str:
 def send_sms(
     reciever_phone_number: PhoneNumber,
     message: str,
-    debug: bool = True,
+    debug: bool = settings.DEBUG,
     sender_phone_number: PhoneNumber = settings.SMS_SENDER_PHONE_NUMBER,
 ) -> None:
     """

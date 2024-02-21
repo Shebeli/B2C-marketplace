@@ -33,10 +33,10 @@ def get_code_cooldown_time(phone: str) -> str:
     return cache.ttl(cache_key)
 
 
-class UserSignUpViewSet(viewsets.ViewSet):
+class UserSignupViewSet(viewsets.ViewSet):
     """
     Provides the following actions:
-    - register: Sends a verify register code SMS to user to complete their registration.
+    - request_register: Sends a verify register code SMS to user to complete their registration.
     - confirm_register: Input the code recieved from action 'register' by sms
       to complete registaration (returns a token pair upon success)
     """
@@ -48,7 +48,7 @@ class UserSignUpViewSet(viewsets.ViewSet):
         return random.choice(string.digits for _ in range(length))
 
     @action(detail=False, methods=["post"], throttle_classes=[SMSAnonRateThrottle])
-    def register(self, request):
+    def request_register(self, request):
         serializer = PhoneSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         register_code = self.create_random_code()
@@ -71,7 +71,7 @@ class UserSignUpViewSet(viewsets.ViewSet):
         )
         return Response(
             {
-                "success": f"forgot pass code sent to user for phone {inputed_phone} by SMS"
+                "success": f"register verification code sent to user for phone {inputed_phone} by SMS"
             },
             status=status.HTTP_202_ACCEPTED,
         )
@@ -205,3 +205,4 @@ class UserProfileViewSet(
         serializer = ChangeCurrentPasswordSerializer(request.user, request.data)
         serializer.is_valid(raise_exception=True)
         return Response(status=status.HTTP_200_OK)
+    

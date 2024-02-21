@@ -3,10 +3,8 @@ from contextlib import nullcontext as does_not_raise
 
 from django.core.exceptions import ValidationError
 
-from ..models import EcomUser
-from ..exceptions import MethodNotAllowedException
-
-
+from ecom_user.models import EcomUser
+from ecom_user.exceptions import MethodNotAllowedException
 
 
 @pytest.mark.django_db
