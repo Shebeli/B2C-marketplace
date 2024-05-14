@@ -3,6 +3,7 @@ import pytest
 from django.urls import reverse
 from rest_framework.test import APIClient
 
+from ecom_user.utils import create_sms_cooldown_cache_key, create_phone_verify_cache_key
 
 @pytest.fixture
 def user_password():
@@ -63,7 +64,7 @@ def register_verification_code(db, api_client, cache):
     url = reverse("user-signup-request-register")
     data = {"phone": "09377964148"}
     api_client.post(url, data=data)
-    return cache.get(f"register_code_for_{data['phone']}")
+    return cache.get(create_phone_verify_cache_key(data['phone']))
 
 
 @pytest.mark.django_db

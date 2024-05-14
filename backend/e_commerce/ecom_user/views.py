@@ -44,7 +44,7 @@ class UserSignupViewSet(viewsets.ViewSet):
         register_code = generate_random_code()
         inputted_phone = serializer.data["phone"]
         sms_cooldown_cache_key = create_sms_cooldown_cache_key(inputted_phone)
-        code_cooldown_time = cache.ttl(sms_cooldown_cache_key)
+        code_cooldown_time = cache.get(sms_cooldown_cache_key)
         if code_cooldown_time:
             return Response(
                 {"cooldown time to request another code": f"{code_cooldown_time}s"},
@@ -69,13 +69,13 @@ class UserSignupViewSet(viewsets.ViewSet):
     def verify_register(self, request):
         serializer = VerifyCodeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        cached_code = cache.get(create_verification_msg(serializer.data["phone"]))
+        cached_code = cache.get(create_phone_verify_cache_key(serializer.validated_data["phone"]))
         if not cached_code:
             return Response(
                 {"error": "server is not expecting a verification code for this phone"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if serializer.data["code"] != cached_code:
+        if serializer.validated_data["code"] != cached_code:
             return Response(
                 {"error": "verification code is incorrect."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -108,7 +108,7 @@ class UserForgotPasswordViewSet(viewsets.ViewSet):
         serializer = PhoneSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = get_object_or_404(EcomUser, phone=serializer.data["phone"])
-        code_cooldown_time = cache.ttl(create_sms_cooldown_cache_key(user.phone))
+        code_cooldown_time = cache.get(create_sms_cooldown_cache_key(user.phone))
         if code_cooldown_time:
             return Response(
                 {"cooldown time to request another code": f"{code_cooldown_time}s"},

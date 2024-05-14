@@ -139,6 +139,10 @@ class ResetPasswordSerializer(serializers.Serializer):
 class VerifyCodeSerializer(PhoneSerializer):
     code = serializers.CharField()
 
+    class Meta:
+        model = EcomUser
+        fields = ["phone", "code"]
+
     def validate_code(self, code):
         if len(code) != 5:
             raise serializers.ValidationError(_("The inputed code length isn't 5"))
