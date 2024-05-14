@@ -133,22 +133,22 @@ REST_FRAMEWORK = {
     )
 }
 
-REDIS_USERNAME = os.environ.get("REDIS_USERNAME")
-REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD")
-REDIS_HOST = os.environ.get("REDIS_HOST")
-REDIS_PORT = os.environ.get("REDIS_PORT")
 
 SMS_USERNAME = os.environ.get("SMS_USERNAME")
 SMS_PASSWORD = os.environ.get("SMS_PASSWORD")
 SMS_SENDER_PHONE_NUMBER = os.environ.get("SMS_PHONE")
 
-if None in [REDIS_USERNAME, REDIS_PASSWORD, REDIS_HOST, REDIS_PORT]:
+
+REDIS_HOST = os.environ.get("REDIS_HOST")
+REDIS_PORT = os.environ.get("REDIS_PORT")
+
+if None in [REDIS_HOST, REDIS_PORT]:
     raise ValueError("One or more of the redis env variables are not set.")
 
 
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": f"redis://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}",
+        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}",
     }
 }

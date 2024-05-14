@@ -35,6 +35,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
             password=validated_data["password"],
         )
 
+
 class PhoneSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -44,10 +45,11 @@ class PhoneSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         return EcomUser.objects.create_user(phone=validated_data["phone"])
 
-    def update(self, user_instance, validated_data):
-        user_instance.phone = validated_data.get("phone", user_instance.phone)
-        user_instance.save()
-        return user_instance
+    def update(self, instance, validated_data):  # instance is Ecomuser object
+        instance.phone = validated_data.get("phone")
+        instance.save()
+        return instance
+
 
 class ChangeCurrentPasswordSerializer(serializers.Serializer):
     "The request in view should be passed to this serializer through context as 'request'."
@@ -56,7 +58,6 @@ class ChangeCurrentPasswordSerializer(serializers.Serializer):
     new_password_verify = serializers.CharField(
         max_length=128, write_only=True, required=True
     )
-
 
     def validate_old_password(self, old_password):
         user = self.instance
@@ -67,10 +68,12 @@ class ChangeCurrentPasswordSerializer(serializers.Serializer):
         return old_password
 
     def validate(self, data):
-        if data["new_password"] != data["new_password"]:
-            raise serializers.ValidationError(_("Passwords don't match."))
+        if data["new_password"] != data["new_password_verify"]:
+            raise serializers.ValidationError(
+                _("New Password and its confirmation don't match.")
+            )
         try:
-            validate_password(data['new_password'], user=self.instance)
+            validate_password(data["new_password"], user=self.instance)
         except ValidationError as errors:
             raise serializers.ValidationError(errors)
         return data
@@ -80,29 +83,38 @@ class ChangeCurrentPasswordSerializer(serializers.Serializer):
         user_instance.save()
         return user_instance
 
+
 class ResetPasswordSerializer(serializers.Serializer):
     """
-    For users who have forgotten their password. Also validates the token 
-    using django's password reset token generator check_token() method.
-    The attribute "user" which is the user instance becomes available 
-    after validate_id has been called.
+    For users who have forgotten their password. Also validates the token
+    using django's password reset token generator method "check_token()".
+    The attribute "user" which is the user instance, becomes available
+    after the method 'validate_id' has been called.
     """
-    user_id = serializers.IntegerField(label='ID', read_only=True)
+
+    user_id = serializers.IntegerField(label="ID", read_only=True)
     token = serializers.CharField()
     new_password = serializers.CharField(max_length=128, write_only=True, required=True)
     new_password_verify = serializers.CharField(
         max_length=128, write_only=True, required=True
     )
-    
+
     def get_user(self):
-        "Should be used after validate_id has been called implicilty after .is_valid is called"
-        return getattr(self, "_user", None)
-    
+        "Should be used after serializer method .is_valid() has been called"
+        if not self._user:
+            serializers.ValidationError(
+                "The serializer should be validated first using the method '.is_valid'. "
+            )
+        return getattr(self, "_user")
+
     def validate_id(self, id):
+        "Will also set the _user attribute to the user object that has been found using the passed in arguement 'id'."
         try:
             user = EcomUser.objects.get(id=id)
         except EcomUser.DoesNotExist:
-            raise serializers.ValidationError(_("The provided user object id does not exist"))
+            raise serializers.ValidationError(
+                _("The provided user object id does not exist")
+            )
         self._user = user
         return id
 
@@ -111,13 +123,12 @@ class ResetPasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError(_("Passwords don't match."))
         user = self._user
         try:
-            validate_password(data['new_password'], user=user)
+            validate_password(data["new_password"], user=user)
         except ValidationError as errors:
             raise serializers.ValidationError(errors)
-        if not default_token_generator.check_token(user, data['token']):
+        if not default_token_generator.check_token(user, data["token"]):
             raise serializers.ValidationError(_("Provided token does not match"))
         return data
-
 
     def save(self):
         user = self._user
@@ -125,16 +136,14 @@ class ResetPasswordSerializer(serializers.Serializer):
         user.save()
 
 
-
 class VerifyCodeSerializer(PhoneSerializer):
     code = serializers.CharField()
 
     def validate_code(self, code):
-        try:
-            code = int(code)
-            if len(code) != 5:
-                raise serializers.ValidationError(_("The entered code length isn't 5"))
-        except ValueError:
-            raise serializers.ValidationError(_("The entered code contains non-digits"))
+        if len(code) != 5:
+            raise serializers.ValidationError(_("The inputed code length isn't 5"))
+        if any(digit not in "0123456789" for digit in code):
+            raise serializers.ValidationError(
+                _("The inputed code cannot contain non-digits")
+            )
         return code
-

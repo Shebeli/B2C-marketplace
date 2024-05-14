@@ -1,6 +1,3 @@
-import random
-import string
-
 from django.core.cache import cache
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework import viewsets, mixins, status
@@ -21,72 +18,62 @@ from .serializers import (
     VerifyCodeSerializer,
     VerifyCodeSerializer,
 )
-from .sms import (
+from .utils import (
+    create_sms_cooldown_cache_key,
+    create_phone_verify_cache_key,
+    create_forgot_password_msg,
+    create_verification_msg,
     send_sms,
-    create_forgot_password_message,
-    create_verify_register_message,
+    generate_random_code,
 )
-
-
-def get_code_cooldown_time(phone: str) -> str:
-    cache_key = f"code_cooldown_for_{phone}"
-    return cache.ttl(cache_key)
 
 
 class UserSignupViewSet(viewsets.ViewSet):
     """
     Provides the following actions:
-    - request_register: Sends a verify register code SMS to user to complete their registration.
-    - confirm_register: Input the code recieved from action 'register' by sms
-      to complete registaration (returns a token pair upon success)
+    - request_register: Sends a register verficiation code SMS to user which is to be used in the next action.
+    - confirm_register: Input the code recieved from previous action 'request_register'
+      in order to complete the registration. A pair of access and refresh token will be sent
+      in a successful response.
     """
-
-    def get_register_code_cache_key(self, phone: str) -> str:
-        return f"register_code_for_{phone}"
-
-    def create_random_code(length: int = 5) -> str:
-        return random.choice(string.digits for _ in range(length))
 
     @action(detail=False, methods=["post"], throttle_classes=[SMSAnonRateThrottle])
     def request_register(self, request):
         serializer = PhoneSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        register_code = self.create_random_code()
-        inputed_phone = serializer.data["phone"]
-        code_cooldown_time = self.get_code_cooldown_time(
-            "register_code_for", inputed_phone
-        )
+        register_code = generate_random_code()
+        inputted_phone = serializer.data["phone"]
+        sms_cooldown_cache_key = create_sms_cooldown_cache_key(inputted_phone)
+        code_cooldown_time = cache.ttl(sms_cooldown_cache_key)
         if code_cooldown_time:
             return Response(
                 {"cooldown time to request another code": f"{code_cooldown_time}s"},
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
             )
         send_sms(
-            reciever_phone_number=inputed_phone,
-            message=create_verify_register_message(register_code),
+            reciever_phone_number=inputted_phone,
+            message=create_verification_msg(register_code),
         )
-        cache.set(f"register_code_cooldown_for_{inputed_phone}", True, 60 * 2)
-        cache.set(
-            self.get_register_code_cache_key(inputed_phone), register_code, 60 * 15
-        )
+        cache.set(create_phone_verify_cache_key(inputted_phone), register_code, 60 * 15)
+        cache.set(sms_cooldown_cache_key, True, 60 * 2)
         return Response(
             {
-                "success": f"register verification code sent to user for phone {inputed_phone} by SMS"
+                "success": f"register verification code sent to user for phone {inputted_phone} by SMS"
             },
             status=status.HTTP_202_ACCEPTED,
         )
 
-    @action(detail=False, methods=["post"], throttle_classes=[CodeSubmitAnonRateThrottle])
+    @action(
+        detail=False, methods=["post"], throttle_classes=[CodeSubmitAnonRateThrottle]
+    )
     def verify_register(self, request):
         serializer = VerifyCodeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        cached_code = cache.get(
-            self.get_register_code_cache_key(serializer.data["phone"])
-        )
+        cached_code = cache.get(create_verification_msg(serializer.data["phone"]))
         if not cached_code:
             return Response(
                 {"error": "server is not expecting a verification code for this phone"},
-                status=status.HTTP_404_NOT_FOUND,
+                status=status.HTTP_400_BAD_REQUEST,
             )
         if serializer.data["code"] != cached_code:
             return Response(
@@ -106,78 +93,64 @@ class UserSignupViewSet(viewsets.ViewSet):
 
 class UserForgotPasswordViewSet(viewsets.ViewSet):
     """
+    Should be used when the user forgets their password, which gives access to one
+    time authentication (its recommended to redirect the user for password change
+    after the processs).
     Provides the following actions:
-    - request_password_reset: Sends a reset password code to user using SMS.
-    - confirm_forgot_password: Input the code recieved from action 'reset_password' and
-      allows the user to change their password by giving them a one time generated token
-      to the next action reset_password.
-    - reset_password: user can input their new password and update their password
-      which after the password gets updated, a token pair is returned for authenticating.
+    - request_onetime_auth: sends a verification code using SMS to the inputted phone
+      number, which is required in the next router action.
+    - verify_onetime_auth: verify the one time authentication using the code recieved
+      from previous action.
     """
 
-    @action(detail=False, methods=["POST"])
-    def request_password_reset(self, request):
+    @action(detail=False, methods=["POST"], throttle_classes=[SMSAnonRateThrottle])
+    def request_onetime_auth(self, request):
         serializer = PhoneSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = get_object_or_404(EcomUser, phone=serializer.data["phone"])
-        code_cooldown_time = get_code_cooldown_time(user)
+        code_cooldown_time = cache.ttl(create_sms_cooldown_cache_key(user.phone))
         if code_cooldown_time:
             return Response(
                 {"cooldown time to request another code": f"{code_cooldown_time}s"},
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
             )
-        forgot_code = self.create_random_code()
+        verification_code = generate_random_code()
         send_sms(
             reciever_phone_number=user.phone,
-            message=create_forgot_password_message(forgot_code),
+            message=create_forgot_password_msg(verification_code),
         )
-        cache.set(f"forgot_pass_cooldown_for_{user.phone}")
-        cache.set(f"forgot_pass_code_for_{user.phone}")
+        cache.set(create_sms_cooldown_cache_key(user.phone), True, 60 * 2)
+        cache.set(create_phone_verify_cache_key(user.phone), verification_code, 60 * 15)
 
-        return Response(
-            {"success": f"forgot pass code sent to user for phone {user.phone} by SMS"},
-            status=status.HTTP_202_ACCEPTED,
-        )
-
-    @action(detail=False, methods=["POST"], throttle_classes=[CodeSubmitAnonRateThrottle])
-    def verify_password_reset(self, request):
-        """
-        The user is signed in after this action, which afterwards should be
-        redirected to the next action, reset_password.
-        """
-        serializer = VerifyCodeSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = get_object_or_404(EcomUser, phone=serializer.data["phone"])
-        cached_code = cache.get(f"forgot_pass_code_for_{user.phone}")
-        if not cached_code:
-            return Response(
-                {"error": "server is not expecting a verification code for this phone"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        if serializer.data["code"] != cached_code:
-            return Response(
-                {"error": "verification code is incorrect."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        password_reset_token = default_token_generator.make_token(user)
         return Response(
             {
-                "user_id": user.id,
-                "password reset token": password_reset_token,
+                "success": f"verification code has been sent using SMS to this phone number: {user.phone}"
             },
             status=status.HTTP_202_ACCEPTED,
         )
 
-    @action(detail=False, methods=['PUT'])
-    def reset_password(self, request):
-        "Password reset token is retrieved from the previous action, confirm_forgot_password"
-        serializer = ResetPasswordSerializer(data=request.data)
+    @action(detail=False, methods=["post"], throttle_classes=[SMSAnonRateThrottle])
+    def verify_onetime_auth(self, request):
+        serializer = VerifyCodeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        user = serializer.get_user()
-        refresh_token = RefreshToken.for_user(user)
+        cached_code = cache.get(create_phone_verify_cache_key(serializer.data["phone"]))
+        if not cached_code:
+            return Response(
+                {"error": "server is not expecting a verification code for this phone"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if serializer.data["code"] != cached_code:
+            return Response(
+                {"error": "verification code is incorrect"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        user = EcomUser.objects.get(phone=serializer.data["phone"])
+        refresh = RefreshToken.for_user(user)
         return Response(
-            {"refresh": str(refresh_token), "access": str(refresh_token.access)},
+            {
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+            },
             status=status.HTTP_200_OK,
         )
 
@@ -186,10 +159,14 @@ class UserProfileViewSet(
     viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelMixin
 ):
     """
-    Provides the following actions:
-    - retrieve: retrieves the current authenticated user profile.
-    - update: update the current authenticated user profile info (except phone and email)
-    - change_password: for changing password, given that user is authenticated and they input their current password.
+    Provides the following actions (assuming the current user is authenticated):
+    - retrieve: retrieves the current user profile.
+    - update: update the current user profile info (except phone, email and password)
+    - change_password: for changing current password.
+    - change_phone_request: for changing current phone number, a verification code is sent to the new phone
+        and then used in the next action to complete the phone number update process.
+    - change_phone_verify: for verifying the new phone number, the verification code from previous action
+        should be inputted for verfication.
     """
 
     serializer_class = UserProfileSerializer
@@ -198,11 +175,50 @@ class UserProfileViewSet(
 
     def get_object(self):
         return self.request.user
-    
-    @action(detail=False, methods=['PUT'])
+
+    @action(detail=False, methods=["put"])
     def change_password(self, request):
-        "This is different from ForgotPasswordViewSet, since the user is already logged in and know their current password"
         serializer = ChangeCurrentPasswordSerializer(request.user, request.data)
         serializer.is_valid(raise_exception=True)
         return Response(status=status.HTTP_200_OK)
-    
+
+    @action(detail=False, methods=["post"])
+    def change_phone_request(self, request):
+        serializer = PhoneSerializer(request.user, request.data)
+        serializer.is_valid(raise_exception=True)
+        new_phone = serializer.data["phone"]
+        sms_cooldown_cache_key = create_sms_cooldown_cache_key(new_phone)
+        if cache.get(sms_cooldown_cache_key):
+            return Response(
+                f"Too many code requests, please try again in {cache.ttl(sms_cooldown_cache_key)} seconds",
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+        verification_code = generate_random_code()
+        send_sms(
+            reciever_phone_number=new_phone,
+            message=create_verification_msg(verification_code),
+        )
+        cache.set(
+            create_phone_verify_cache_key(new_phone),
+            verification_code,
+            60 * 15,
+        )
+        cache.set(create_sms_cooldown_cache_key(new_phone), True, 60 * 2)
+        return Response(status=status.HTTP_202_ACCEPTED)
+
+    @action(detail=False, methods=["put"])
+    def change_phone_verify(self, request):
+        serializer = VerifyCodeSerializer(request.data)
+        serializer.is_valid(raise_exception=True)
+        cached_code = cache.get(create_phone_verify_cache_key(serializer.data["phone"]))
+        if not cached_code:
+            return Response(
+                {"error": "server is not expecting a verification code for this phone"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if serializer.data["code"] != cached_code:
+            return Response(
+                "The inputted code is invalid", status=status.HTTP_400_BAD_REQUEST
+            )
+        serializer.save()
+        return Response("Phone number changed succesfuly", status=status.HTTP_200_OK)

@@ -1,28 +1,28 @@
-import requests
-import base64
-import re
+import string
+import random
 from datetime import datetime
-
 from typing import NewType, Union
+
 from django.conf import settings
+from django.core.cache import cache
 
 PhoneNumber = NewType("PhoneNumber", str)
 TimeFormat = NewType("TimeFormat", str)
 
-# auth = f"{settings.SMS_USERNAME}:{settings.SMS_PASSWORD}"
-# encoded_auth = base64.b64encode(auth.encode())
-# headers = {"Authorization": f"Basic {encoded_auth}"}
+# the following constants are base string templates which are used to construct common cache keys.
+VERIFY_PHONE_CACHE_BASE_KEY = "verify_code_for_"
+SMS_COOLDOWN_CACHE_BASE_KEY = "cooldown_for_"
 
 
 def current_time(time_format: TimeFormat = "%H:%M:%S") -> str:
     return datetime.now().strftime(time_format)
 
 
-def create_verify_register_message(code: Union[str, int]) -> str:
+def create_verification_msg(code: Union[str, int]) -> str:
     return f"کد فعالسازی: {code}\nسامانه پیچی کالا\nزمان ارسال {current_time()}"
 
 
-def create_forgot_password_message(code: Union[str, int]) -> str:
+def create_forgot_password_msg(code: Union[str, int]) -> str:
     return f"کد فراموشی رمز عبور: {code}\nسامانه پیچی کالا\nزمان ارسال {current_time()}"
 
 
@@ -33,8 +33,8 @@ def send_sms(
     sender_phone_number: PhoneNumber = settings.SMS_SENDER_PHONE_NUMBER,
 ) -> None:
     """
-    Sends a SMS with provided message to provided phone number. 
-    if debug mode is enabled, no real SMS will be sent, instead it will print it in the console
+    Sends a SMS with provided message to provided phone number.
+    if debug mode is enabled, no real SMS will be sent, instead the message will be printed in the console.
     """
     if debug:
         print(
@@ -46,4 +46,18 @@ def send_sms(
             """
         )
         return None
-    return None # to be implemented later
+    return None  # to be implemented later
+
+
+# the purpose of setting a cooldown for register is that it prevents the user
+# from spamming the SMS service.
+def create_sms_cooldown_cache_key(phone: str) -> str:
+    return SMS_COOLDOWN_CACHE_BASE_KEY + phone
+
+
+def create_phone_verify_cache_key(phone: str) -> str:
+    return VERIFY_PHONE_CACHE_BASE_KEY + phone
+
+
+def generate_random_code(length: int = 5) -> str:
+    return "".join(random.choice(string.digits) for _ in range(length))
