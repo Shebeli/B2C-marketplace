@@ -34,12 +34,12 @@ def send_sms(
 ) -> None:
     """
     Sends a SMS with provided message to provided phone number.
-    if debug mode is enabled, no real SMS will be sent, instead the message will be printed in the console.
+    if debug mode is enabled, no real SMS will be sent, instead the message will be printed in the terminal.
     """
     if debug:
         print(
             f"""
-            DEBUG mode is enabled for the function send_sms\n
+            DEBUG mode is enabled for the function send_sms:\n
             The following message is supposed to be sent from the phone number 
             {sender_phone_number} to {reciever_phone_number}:
             \n {message}

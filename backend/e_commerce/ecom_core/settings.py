@@ -30,11 +30,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # custom apps
     "ecom_user",
     "admin_user",
-    # 3rd party
+    # 3rd party apps
     "rest_framework",
     "rest_framework_simplejwt",
+    "django_extensions",
+
 ]
 
 MIDDLEWARE = [
