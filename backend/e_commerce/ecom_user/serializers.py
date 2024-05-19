@@ -4,6 +4,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
+from ecom_core.validators import validate_phone, validate_verification_code
 from .models import EcomUser
 
 
@@ -35,53 +36,29 @@ class CreateUserSerializer(serializers.ModelSerializer):
             password=validated_data["password"],
         )
 
-
-class PhoneSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = EcomUser
-        fields = ["phone"]
+# registering, updating and authenticating without inputting password are all handled using OTPs via SMS.
+class UserPhoneSerializer(serializers.Serializer):
+    phone = serializers.CharField(max_length=13, validators=[validate_phone])
 
     def create(self, validated_data):
         return EcomUser.objects.create_user(phone=validated_data["phone"])
 
-    def update(self, instance, validated_data):  # instance is Ecomuser object
+    def update(self, instance, validated_data):
         instance.phone = validated_data.get("phone")
         instance.save()
         return instance
 
 
-class ChangeCurrentPasswordSerializer(serializers.Serializer):
-    "The request in view should be passed to this serializer through context as 'request'."
-    old_password = serializers.CharField(max_length=128, write_only=True, required=True)
-    new_password = serializers.CharField(max_length=128, write_only=True, required=True)
-    new_password_verify = serializers.CharField(
-        max_length=128, write_only=True, required=True
-    )
+class UserPhoneVerificationSerializer(UserPhoneSerializer):
+    verification_code = serializers.CharField()
 
-    def validate_old_password(self, old_password):
-        user = self.instance
-        if not user.check_password(old_password):
-            raise serializers.ValidationError(
-                _("Inputed current password is incorrect.")
-            )
-        return old_password
 
-    def validate(self, data):
-        if data["new_password"] != data["new_password_verify"]:
-            raise serializers.ValidationError(
-                _("New Password and its confirmation don't match.")
-            )
-        try:
-            validate_password(data["new_password"], user=self.instance)
-        except ValidationError as errors:
-            raise serializers.ValidationError(errors)
-        return data
+class OTPAuthSerializer(serializers.Serializer):
+    phone = serializers.CharField(max_length=13, validators=[validate_phone])
 
-    def update(self, user_instance, validated_data):
-        user_instance.set_password(validated_data["new_password"])
-        user_instance.save()
-        return user_instance
+
+class OTPAuthVerificationSerializer(OTPAuthSerializer):
+    verification_code = serializers.CharField(validators=[validate_verification_code])
 
 
 class ResetPasswordSerializer(serializers.Serializer):
@@ -136,18 +113,40 @@ class ResetPasswordSerializer(serializers.Serializer):
         user.save()
 
 
-class VerifyCodeSerializer(PhoneSerializer):
-    code = serializers.CharField()
+class ChangeCurrentPasswordSerializer(serializers.Serializer):
+    "The request in view should be passed to this serializer through context as 'request'."
+    old_password = serializers.CharField(max_length=128, write_only=True, required=True)
+    new_password = serializers.CharField(max_length=128, write_only=True, required=True)
+    new_password_verify = serializers.CharField(
+        max_length=128, write_only=True, required=True
+    )
 
-    class Meta:
-        model = EcomUser
-        fields = ["phone", "code"]
-
-    def validate_code(self, code):
-        if len(code) != 5:
-            raise serializers.ValidationError(_("The inputed code length isn't 5"))
-        if any(digit not in "0123456789" for digit in code):
+    def validate_old_password(self, old_password):
+        user = self.instance
+        if not user:
             raise serializers.ValidationError(
-                _("The inputed code cannot contain non-digits")
+                "An ecomuser instance should be passed to this serializer before validating"
             )
-        return code
+        if not isinstance(user, EcomUser):
+            raise serializers.ValidationError(
+                "The passed in instance should be an instance of Ecomuser"
+            )
+        if not user.check_password(old_password):
+            raise serializers.ValidationError(_("Inputted password is incorrect."))
+        return old_password
+
+    def validate(self, data):
+        if data["new_password"] != data["new_password_verify"]:
+            raise serializers.ValidationError(
+                _("New Password and its confirmation don't match.")
+            )
+        try:
+            validate_password(data["new_password"], user=self.instance)
+        except ValidationError as errors:
+            raise serializers.ValidationError(errors)
+        return data
+
+    def update(self, user_instance, validated_data):
+        user_instance.set_password(validated_data["new_password"])
+        user_instance.save()
+        return user_instance

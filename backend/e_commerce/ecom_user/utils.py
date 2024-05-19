@@ -61,3 +61,16 @@ def create_phone_verify_cache_key(phone: str) -> str:
 
 def generate_random_code(length: int = 5) -> str:
     return "".join(random.choice(string.digits) for _ in range(length))
+
+def process_phone_verification(phone_number):
+    verification_code = generate_random_code()
+    send_sms(
+        reciever_phone_number=phone_number,
+        message=create_verification_msg(verification_code),
+    )
+    cache.set(
+        create_phone_verify_cache_key(phone_number),
+        verification_code,
+        60 * 15,
+    )
+    cache.set(create_sms_cooldown_cache_key(phone_number), True, 60 * 2)

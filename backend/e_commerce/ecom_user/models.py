@@ -13,7 +13,7 @@ from .managers import EcomUserManager
 
 
 class EcomUser(AbstractBaseUser):
-    "This model does not contain any superuser or staff attributes as its handled in the seperate model named AdminUser"
+    "This model does not contain any superuser or staff attributes as its handled in a seperate model named 'AdminUser'"
     first_name = models.CharField(_("First Name"), max_length=50, blank=True)
     last_name = models.CharField(_("Last Name"), max_length=50, blank=True)
     username = models.CharField(

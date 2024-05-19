@@ -27,9 +27,9 @@ def cache():
 @pytest.fixture
 def generate_user(db, django_user_model, user_password):
     def make_user(**kwargs):
-        if not kwargs["phone"]:
+        if not kwargs.get("phone"):
             kwargs["phone"] = "09377964142"
-        if not kwargs["username"]:
+        if not kwargs.get("phone"):
             kwargs["username"] = "some_test_username"
         kwargs["password"] = user_password
         return django_user_model.objects.create_user(**kwargs)
@@ -78,7 +78,7 @@ def register_verification_code(db, api_client, cache, user_data):
 @pytest.mark.django_db
 def test_correct_code_for_verifying_register(api_client, register_verification_code, user_data):
     url = reverse("user-signup-verify-registration-request")
-    user_data['code'] = register_verification_code
+    user_data['verification_code'] = register_verification_code
     response = api_client.post(url, data=user_data)
     assert response.status_code == 201
     assert isinstance(response.data["access"], str)
@@ -87,14 +87,14 @@ def test_correct_code_for_verifying_register(api_client, register_verification_c
 @pytest.mark.django_db
 def test_incorrect_code_for_verifying_register(api_client, register_verification_code, user_data):
     url = reverse("user-signup-verify-registration-request")
-    user_data['code'] = '12345'
+    user_data['verification_code'] = '12345'
     response = api_client.post(url, data=user_data)
     assert response.status_code == 400
 
 @pytest.mark.django_db
 def test_unexpected_code_for_verifying_register(api_client, user_data):
     url = reverse("user-signup-verify-registration-request")
-    user_data['code'] = '12345'
+    user_data['verification_code'] = '12345'
     response = api_client.post(url, data=user_data)
     assert response.status_code == 400
 
@@ -103,15 +103,17 @@ def test_unexpected_code_for_verifying_register(api_client, user_data):
 # request_onetime_auth
 
 @pytest.mark.django_db
-def test_user_valid_request_onetime_auth(api_client, user_data):
+def test_user_valid_request_onetime_auth(api_client, user_data, generate_user):
     url = reverse("user-onetime-auth-request-auth")
+    generate_user()
     response = api_client.post(url, data=user_data)
     assert response.status_code == 202
 
 
 @pytest.mark.django_db
-def test_user_too_many_onetime_auth_requests(api_client, user_data):
+def test_user_too_many_onetime_auth_requests(api_client, user_data, generate_user):
     url = reverse("user-onetime-auth-request-auth")
+    generate_user()
     api_client.post(url, data=user_data)
     response = api_client.post(url, data=user_data)
     assert response.status_code == 429
@@ -120,8 +122,9 @@ def test_user_too_many_onetime_auth_requests(api_client, user_data):
 # verify_onetime_auth
 
 @pytest.fixture
-def onetime_auth_verification_code(db, api_client, cache, user_data):
+def onetime_auth_verification_code(db, api_client, cache, user_data, generate_user):
     url = reverse("user-onetime-auth-request-auth")
+    generate_user()
     response = api_client.post(url, data=user_data)
     print([response.data, response.status_code])
     return cache.get(create_phone_verify_cache_key(user_data["phone"]))
@@ -129,22 +132,25 @@ def onetime_auth_verification_code(db, api_client, cache, user_data):
 @pytest.mark.django_db
 def test_correct_verification_code_for_verifying_onetime_auth(api_client, user_data, onetime_auth_verification_code):
     url = reverse("user-onetime-auth-verify-auth-request")
-    user_data["code"] = onetime_auth_verification_code
+    user_data["verification_code"] = onetime_auth_verification_code
     response = api_client.post(url, data=user_data)
+    assert response.status_code == 200
     assert isinstance(response.data['access'], str)
     assert isinstance(response.data['refresh'], str)
 
 @pytest.mark.django_db
 def test_incorrect_verification_code_for_verifying_onetime_auth(api_client, user_data, onetime_auth_verification_code):
     url = reverse("user-onetime-auth-verify-auth-request")
-    user_data["code"] = "12345"
+    user_data["verification_code"] = "12345"
     response = api_client.post(url, data=user_data)
     assert response.status_code == 400
+    assert response.data == {"error": "verification code is incorrect"}
 
 @pytest.mark.django_db
 def test_unexpected_verification_code_for_verfying_onetime_auth(api_client, user_data):
     url = reverse("user-onetime-auth-verify-auth-request")
-    user_data["code"] = '12345'
+    user_data["verification_code"] = '12345'
     response = api_client.post(url, data=user_data)
     assert response.status_code == 400
+    assert response.data == {"error": "server is not expecting a verification code for this phone"}
 

@@ -45,3 +45,11 @@ def validate_postal_code(value: str) -> None:
     postal_code_regex = r"^(?!(\d)\1{3})[13-9]{4}[1346-9][013-9]{5}$"
     if not re.search(postal_code_regex, value):
         raise ValidationError(_(f"Entered postal code is not a valid postal code."))
+
+
+def validate_verification_code(code: str):
+    if len(code) != 5:
+        raise ValidationError(_("The inputed code length isn't 5"))
+    if any(digit not in "0123456789" for digit in code):
+        raise ValidationError(_("The inputed code cannot contain non-digits"))
+    

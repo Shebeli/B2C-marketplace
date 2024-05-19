@@ -4,4 +4,4 @@ class SMSAnonRateThrottle(AnonRateThrottle):
     rate = '25/minute'
     
 class CodeSubmitAnonRateThrottle(AnonRateThrottle):
-    rate = '5/minute'
+    rate = '25/minute'
