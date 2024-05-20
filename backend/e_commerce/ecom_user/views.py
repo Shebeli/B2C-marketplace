@@ -1,6 +1,6 @@
 from django.core.cache import cache
-from django.contrib.auth.tokens import default_token_generator
-from rest_framework import viewsets, mixins, status
+from rest_framework import status
+from rest_framework.viewsets import ViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -15,22 +15,17 @@ from .serializers import (
     OTPAuthSerializer,
     OTPAuthVerificationSerializer,
     ChangeCurrentPasswordSerializer,
-    ResetPasswordSerializer,
     UserPhoneVerificationSerializer,
     UserPhoneVerificationSerializer,
 )
 from .utils import (
     create_sms_cooldown_cache_key,
     create_phone_verify_cache_key,
-    create_forgot_password_msg,
-    create_verification_msg,
-    send_sms,
-    generate_random_code,
     process_phone_verification,
 )
 
 
-class UserSignupViewSet(viewsets.ViewSet):
+class UserSignupViewSet(ViewSet):
     """
     Provides the following actions:
     - request_registration: Sends a register verficiation code SMS to user which is to be used in the next action.
@@ -89,7 +84,7 @@ class UserSignupViewSet(viewsets.ViewSet):
         )
 
 
-class UserOnetimeAuthViewSet(viewsets.ViewSet):
+class UserOnetimeAuthViewSet(ViewSet):
     """
     Should be used when the user forgets their password or they want to login without
     inputting their password, which gives them access to one time authentication.
@@ -147,9 +142,7 @@ class UserOnetimeAuthViewSet(viewsets.ViewSet):
         )
 
 
-class UserProfileViewSet(
-    viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelMixin
-):
+class UserProfileViewSet(ViewSet):
     """
     Provides the following actions (assuming the current user is authenticated):
     - retrieve: retrieves the current user profile.
@@ -161,12 +154,20 @@ class UserProfileViewSet(
         should be inputted inorder to complete the phone number update process.
     """
 
-    serializer_class = UserProfileSerializer
-    queryset = EcomUser.objects.all()
     permission_classes = [IsAuthenticated]
 
-    def get_object(self):
-        return self.request.user
+    @action(detail=False, methods=["get"])
+    def get_profile(self, request):
+        serializer = UserProfileSerializer(self.request.user)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["put"])
+    def update_profile(self, request):
+        serializer = UserProfileSerializer(
+            self.request.user, request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=["put"])
     def change_password(self, request):

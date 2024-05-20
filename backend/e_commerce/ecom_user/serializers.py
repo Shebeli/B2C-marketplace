@@ -15,7 +15,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = EcomUser
         exclude = ["last_login", "is_active", "password"]
-        read_only_fields = ["phone", "email"]
+        read_only_fields = ["phone", "email", "date_created"]
 
 
 # for creating a user
@@ -114,9 +114,8 @@ class ResetPasswordSerializer(serializers.Serializer):
 
 
 class ChangeCurrentPasswordSerializer(serializers.Serializer):
-    "The request in view should be passed to this serializer through context as 'request'."
-    old_password = serializers.CharField(max_length=128, write_only=True, required=True)
-    new_password = serializers.CharField(max_length=128, write_only=True, required=True)
+    old_password = serializers.CharField(max_length=64, write_only=True, required=True)
+    new_password = serializers.CharField(max_length=64, write_only=True, required=True)
     new_password_verify = serializers.CharField(
         max_length=128, write_only=True, required=True
     )

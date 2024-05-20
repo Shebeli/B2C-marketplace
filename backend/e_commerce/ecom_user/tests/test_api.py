@@ -42,8 +42,9 @@ def api_client():
 
 
 @pytest.fixture
-def api_client_with_credentials(db, generate_user, api_client):
-    user = generate_user()
+def api_client_with_credentials(db, user, api_client):
+    if not user:
+        user = generate_user()
     api_client.force_authenticate(user=user)
     yield api_client
     api_client.force_authenticate(user=None)
@@ -154,3 +155,38 @@ def test_unexpected_verification_code_for_verfying_onetime_auth(api_client, user
     assert response.status_code == 400
     assert response.data == {"error": "server is not expecting a verification code for this phone"}
 
+# UserProfileViewSet
+
+@pytest.mark.django_db
+def test_correct_password_change(api_client_with_credentials, generate_user):
+    current_password = '123456AbC!@#'
+    new_password = "382u13#!@FDAS"
+    user = generate_user(password=current_password)
+    api_client = api_client_with_credentials(user)
+    url = reverse("user-profile-change-password")
+    request_data = {
+        "old_password": current_password, 
+        "new_password": new_password, 
+        "new_password_verify": new_password
+        }
+    response = api_client.post(url, data=request_data)
+    assert response.status_code == 200
+
+@pytest.mark.django_db
+def test_updating_trivial_profile_info(api_client_with_credentials):
+    api_client = api_client_with_credentials()
+    request_data = {
+        "first_name": "John",
+        "last_name": "Cena",
+        "username": "JohnFreakingCena",
+        "email": "JohnCena123@gmail.com",
+    }
+    url = reverse("user-profile-get-profile")
+    response = api_client.put(url, request_data)
+    assert response.status_code == 200
+    # check to see if the profile info got updated
+
+
+
+# @pytest.mark.django
+# def test_phone_request
