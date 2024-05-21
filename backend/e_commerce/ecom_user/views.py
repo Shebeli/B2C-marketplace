@@ -145,8 +145,8 @@ class UserOnetimeAuthViewSet(ViewSet):
 class UserProfileViewSet(ViewSet):
     """
     Provides the following actions (assuming the current user is authenticated):
-    - retrieve: retrieves the current user profile.
-    - update: update the current user profile info (except phone, email and password)
+    - get_profile: retrieves the current user profile.
+    - update_profile: update the current user profile info (except phone, email and password)
     - change_password: for changing current password.
     - change_phone_request: for requesting to change user's current phone number, a verification code  is sent
       to the new phone and then used in the next action to complete the phone number update process.
@@ -157,16 +157,17 @@ class UserProfileViewSet(ViewSet):
     permission_classes = [IsAuthenticated]
 
     @action(detail=False, methods=["get"])
-    def get_profile(self, request):
-        serializer = UserProfileSerializer(self.request.user)
+    def get_info(self, request):
+        serializer = UserProfileSerializer(request.user)
         return Response(serializer.data)
 
     @action(detail=False, methods=["put"])
-    def update_profile(self, request):
+    def update_info(self, request):
         serializer = UserProfileSerializer(
             self.request.user, request.data, partial=True
         )
         serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(serializer.data)
 
     @action(detail=False, methods=["put"])

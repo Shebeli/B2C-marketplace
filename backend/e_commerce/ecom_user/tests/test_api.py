@@ -11,10 +11,6 @@ from ecom_user.utils import create_sms_cooldown_cache_key, create_phone_verify_c
 
 
 @pytest.fixture
-def user_password():
-    return "$tR0nG165P@sSwe;oRd09_"
-
-@pytest.fixture
 def user_data():
     return {"phone": "09377964142"}
 
@@ -25,13 +21,14 @@ def cache():
     cache.clear()
 
 @pytest.fixture
-def generate_user(db, django_user_model, user_password):
+def generate_user(db, django_user_model):
     def make_user(**kwargs):
         if not kwargs.get("phone"):
             kwargs["phone"] = "09377964142"
         if not kwargs.get("phone"):
             kwargs["username"] = "some_test_username"
-        kwargs["password"] = user_password
+        if not kwargs.get("password"):
+            kwargs['password'] = 'P@s$W0RrD$24'
         return django_user_model.objects.create_user(**kwargs)
     return make_user
 
@@ -42,12 +39,13 @@ def api_client():
 
 
 @pytest.fixture
-def api_client_with_credentials(db, user, api_client):
-    if not user:
-        user = generate_user()
-    api_client.force_authenticate(user=user)
-    yield api_client
-    api_client.force_authenticate(user=None)
+def api_client_with_credentials(db, api_client, generate_user):
+    def generate_api_client(user=None):
+        if not user:
+            user = generate_user()
+        api_client.force_authenticate(user=user)
+        return api_client
+    return generate_api_client
 
 # UserSignUpViewSet router actions:
 
@@ -169,7 +167,8 @@ def test_correct_password_change(api_client_with_credentials, generate_user):
         "new_password": new_password, 
         "new_password_verify": new_password
         }
-    response = api_client.post(url, data=request_data)
+    response = api_client.put(url, data=request_data)
+    print(response.data)
     assert response.status_code == 200
 
 @pytest.mark.django_db
@@ -181,12 +180,15 @@ def test_updating_trivial_profile_info(api_client_with_credentials):
         "username": "JohnFreakingCena",
         "email": "JohnCena123@gmail.com",
     }
-    url = reverse("user-profile-get-profile")
+    url = reverse("user-profile-update-info")
     response = api_client.put(url, request_data)
     assert response.status_code == 200
     # check to see if the profile info got updated
-
-
+    url = reverse("user-profile-get-info")
+    response = api_client.get(url)
+    print(response.data)
+    assert response.status_code == 200
+    assert response.data['first_name'] == "John"
 
 # @pytest.mark.django
 # def test_phone_request

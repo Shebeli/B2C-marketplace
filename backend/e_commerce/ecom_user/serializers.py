@@ -131,7 +131,7 @@ class ChangeCurrentPasswordSerializer(serializers.Serializer):
                 "The passed in instance should be an instance of Ecomuser"
             )
         if not user.check_password(old_password):
-            raise serializers.ValidationError(_("Inputted password is incorrect."))
+            raise serializers.ValidationError(_("Current password is incorrect."))
         return old_password
 
     def validate(self, data):
