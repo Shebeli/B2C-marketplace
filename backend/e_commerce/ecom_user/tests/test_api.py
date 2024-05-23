@@ -140,7 +140,7 @@ def test_correct_verification_code_for_verifying_onetime_auth(api_client, user_d
 @pytest.mark.django_db
 def test_incorrect_verification_code_for_verifying_onetime_auth(api_client, user_data, onetime_auth_verification_code):
     url = reverse("user-onetime-auth-verify-auth-request")
-    user_data["verification_code"] = "12345"
+    user_data["verification_code"] = "123456"
     response = api_client.post(url, data=user_data)
     assert response.status_code == 400
     assert response.data == {"error": "verification code is incorrect"}
@@ -148,7 +148,7 @@ def test_incorrect_verification_code_for_verifying_onetime_auth(api_client, user
 @pytest.mark.django_db
 def test_unexpected_verification_code_for_verfying_onetime_auth(api_client, user_data):
     url = reverse("user-onetime-auth-verify-auth-request")
-    user_data["verification_code"] = '12345'
+    user_data["verification_code"] = '123456'
     response = api_client.post(url, data=user_data)
     assert response.status_code == 400
     assert response.data == {"error": "server is not expecting a verification code for this phone"}
@@ -168,7 +168,6 @@ def test_correct_password_change(api_client_with_credentials, generate_user):
         "new_password_verify": new_password
         }
     response = api_client.put(url, data=request_data)
-    print(response.data)
     assert response.status_code == 200
 
 @pytest.mark.django_db
@@ -190,5 +189,28 @@ def test_updating_trivial_profile_info(api_client_with_credentials):
     assert response.status_code == 200
     assert response.data['first_name'] == "John"
 
-# @pytest.mark.django
-# def test_phone_request
+@pytest.mark.django_db
+def test_phone_change_process(api_client_with_credentials, cache):
+    # first, submit a request to change the phone number
+    api_client = api_client_with_credentials()
+    new_phone = "09377964143"
+    change_phone_request_data = {
+        "phone": new_phone
+    }
+    url = reverse("user-profile-change-phone-request")
+    response = api_client.put(url, change_phone_request_data)
+    assert response.status_code == 202
+    # second, verify the new phone using the verification code which is sent via SMS.
+    verification_code = cache.get(create_phone_verify_cache_key(new_phone))
+    url = reverse("user-profile-change-phone-verify")
+    change_phone_verify_data = {
+        "phone": new_phone,
+        "verification_code": verification_code
+    }
+    response = api_client.put(url, change_phone_verify_data)
+    assert response.status_code == 200
+    # last, check to see if the phone number was updated.
+    url = reverse("user-profile-get-info") 
+    response = api_client.get(url)
+    assert response.status_code == 200
+    assert response.data['phone'] == new_phone

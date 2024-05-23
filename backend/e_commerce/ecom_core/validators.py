@@ -46,10 +46,10 @@ def validate_postal_code(value: str) -> None:
     if not re.search(postal_code_regex, value):
         raise ValidationError(_(f"Entered postal code is not a valid postal code."))
 
-
+# the OTP length should be specified in django project settings
 def validate_verification_code(code: str):
-    if len(code) != 5:
-        raise ValidationError(_("The inputed code length isn't 5"))
+    if len(code) != 6:
+        raise ValidationError(_("The inputed code length isn't 6"))
     if any(digit not in "0123456789" for digit in code):
         raise ValidationError(_("The inputed code cannot contain non-digits"))
     

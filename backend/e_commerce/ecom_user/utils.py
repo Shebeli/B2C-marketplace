@@ -59,7 +59,7 @@ def create_phone_verify_cache_key(phone: str) -> str:
     return VERIFY_PHONE_CACHE_BASE_KEY + phone
 
 
-def generate_random_code(length: int = 5) -> str:
+def generate_random_code(length: int = 6) -> str:
     return "".join(random.choice(string.digits) for _ in range(length))
 
 def process_phone_verification(phone_number):

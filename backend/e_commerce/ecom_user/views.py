@@ -38,7 +38,7 @@ class UserSignupViewSet(ViewSet):
     def request_registration(self, request):
         serializer = UserPhoneSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        inputted_phone = serializer.data["phone"]
+        inputted_phone = serializer.validated_data["phone"]
         sms_cooldown_cache_key = create_sms_cooldown_cache_key(inputted_phone)
         code_cooldown_time = cache.ttl(sms_cooldown_cache_key)
         if code_cooldown_time:
@@ -46,7 +46,7 @@ class UserSignupViewSet(ViewSet):
                 {"cooldown time to request another code": f"{code_cooldown_time}s"},
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
             )
-        process_phone_verification(serializer.data["phone"])
+        process_phone_verification(serializer.validated_data["phone"])
         return Response(
             {
                 "success": f"register verification code sent to user for phone {inputted_phone} via SMS"
@@ -89,9 +89,9 @@ class UserOnetimeAuthViewSet(ViewSet):
     Should be used when the user forgets their password or they want to login without
     inputting their password, which gives them access to one time authentication.
     Provides the following actions:
-    - request_auth: sends a verification code using SMS to the inputted phone
+    - request_auth: sends an OTP using SMS to the inputted phone
       number, which is required in the next router action.
-    - verify_auth_request: verify the one time authentication using the code recieved
+    - verify_auth_request: verify the one time authentication using the OTP recieved
       from previous action.
     """
 
@@ -144,7 +144,7 @@ class UserOnetimeAuthViewSet(ViewSet):
 
 class UserProfileViewSet(ViewSet):
     """
-    Provides the following actions (assuming the current user is authenticated):
+    Provides the following actions (requires the current user to be authenticated):
     - get_profile: retrieves the current user profile.
     - update_profile: update the current user profile info (except phone, email and password)
     - change_password: for changing current password.
@@ -176,13 +176,13 @@ class UserProfileViewSet(ViewSet):
         serializer.is_valid(raise_exception=True)
         return Response(status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=["post"], throttle_classes=[SMSAnonRateThrottle])
+    @action(detail=False, methods=["put"], throttle_classes=[SMSAnonRateThrottle])
     def change_phone_request(self, request):
         serializer = UserPhoneSerializer(request.user, request.data)
         serializer.is_valid(raise_exception=True)
-        new_phone = serializer.data["phone"]
+        new_phone = serializer.validated_data["phone"]
         sms_cooldown_cache_key = create_sms_cooldown_cache_key(new_phone)
-        if cache.get(sms_cooldown_cache_key):
+        if cache.get(create_sms_cooldown_cache_key(new_phone)):
             return Response(
                 f"Too many code requests, please try again in {cache.ttl(sms_cooldown_cache_key)} seconds",
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -194,15 +194,15 @@ class UserProfileViewSet(ViewSet):
         detail=False, methods=["put"], throttle_classes=[CodeSubmitAnonRateThrottle]
     )
     def change_phone_verify(self, request):
-        serializer = UserPhoneVerificationSerializer(request.data)
+        serializer = UserPhoneVerificationSerializer(request.user, request.data)
         serializer.is_valid(raise_exception=True)
-        cached_code = cache.get(create_phone_verify_cache_key(serializer.data["phone"]))
+        cached_code = cache.get(create_phone_verify_cache_key(serializer.validated_data["phone"]))
         if not cached_code:
             return Response(
                 {"error": "server is not expecting a verification code for this phone"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if serializer.data["verification_code"] != cached_code:
+        if serializer.validated_data["verification_code"] != cached_code:
             return Response(
                 "The inputted code is invalid", status=status.HTTP_400_BAD_REQUEST
             )

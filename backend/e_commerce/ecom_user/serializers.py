@@ -2,6 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError
+from rest_framework.validators import UniqueValidator
 from rest_framework import serializers
 
 from ecom_core.validators import validate_phone, validate_verification_code
@@ -36,22 +37,31 @@ class CreateUserSerializer(serializers.ModelSerializer):
             password=validated_data["password"],
         )
 
+
 # registering, updating and authenticating without inputting password are all handled using OTPs via SMS.
 class UserPhoneSerializer(serializers.Serializer):
     phone = serializers.CharField(max_length=13, validators=[validate_phone])
 
-    def create(self, validated_data):
-        return EcomUser.objects.create_user(phone=validated_data["phone"])
 
+class UserPhoneVerificationSerializer(serializers.Serializer):
+    verification_code = serializers.CharField(write_only=True, validators=[validate_verification_code])
+    phone = serializers.CharField(max_length=13, validators=[validate_phone, UniqueValidator(queryset=EcomUser.objects.all())])
+
+    def create(self, validated_data):
+        user = EcomUser.objects.create_user(phone=validated_data['phone'])
+        user.set_unusable_password()
+        user.save()
+        return user
+    
     def update(self, instance, validated_data):
-        instance.phone = validated_data.get("phone")
+        instance.phone = validated_data.get("phone", instance.phone)
         instance.save()
         return instance
 
-
-class UserPhoneVerificationSerializer(UserPhoneSerializer):
-    verification_code = serializers.CharField()
-
+    # def to_representation(self, instance):
+    #     ret = {
+    #         "phone": self.data 
+    #     }
 
 class OTPAuthSerializer(serializers.Serializer):
     phone = serializers.CharField(max_length=13, validators=[validate_phone])
