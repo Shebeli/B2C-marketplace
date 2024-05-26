@@ -19,49 +19,31 @@ class UserProfileSerializer(serializers.ModelSerializer):
         read_only_fields = ["phone", "email", "date_created"]
 
 
-# for creating a user
-class CreateUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EcomUser
-        fields = ["username", "phone", "password"]
-        extra_kwargs = {"password": {"write_only": True}}
-
-    def create(self, validated_data):
-        if not validated_data["phone"] and not validated_data["username"]:
-            raise serializers.ValidationError(
-                _("Either phone or username should be provided for user creation.")
-            )
-        return EcomUser.objects.create_user(
-            username=validated_data["username"],
-            phone=validated_data["phone"],
-            password=validated_data["password"],
-        )
-
-
 # registering, updating and authenticating without inputting password are all handled using OTPs via SMS.
 class UserPhoneSerializer(serializers.Serializer):
     phone = serializers.CharField(max_length=13, validators=[validate_phone])
 
 
 class UserPhoneVerificationSerializer(serializers.Serializer):
-    verification_code = serializers.CharField(write_only=True, validators=[validate_verification_code])
-    phone = serializers.CharField(max_length=13, validators=[validate_phone, UniqueValidator(queryset=EcomUser.objects.all())])
+    verification_code = serializers.CharField(
+        write_only=True, validators=[validate_verification_code]
+    )
+    phone = serializers.CharField(
+        max_length=13,
+        validators=[validate_phone, UniqueValidator(queryset=EcomUser.objects.all())],
+    )
 
     def create(self, validated_data):
-        user = EcomUser.objects.create_user(phone=validated_data['phone'])
+        user = EcomUser.objects.create_user(phone=validated_data["phone"])
         user.set_unusable_password()
         user.save()
         return user
-    
+
     def update(self, instance, validated_data):
         instance.phone = validated_data.get("phone", instance.phone)
         instance.save()
         return instance
 
-    # def to_representation(self, instance):
-    #     ret = {
-    #         "phone": self.data 
-    #     }
 
 class OTPAuthSerializer(serializers.Serializer):
     phone = serializers.CharField(max_length=13, validators=[validate_phone])
@@ -69,58 +51,6 @@ class OTPAuthSerializer(serializers.Serializer):
 
 class OTPAuthVerificationSerializer(OTPAuthSerializer):
     verification_code = serializers.CharField(validators=[validate_verification_code])
-
-
-class ResetPasswordSerializer(serializers.Serializer):
-    """
-    For users who have forgotten their password. Also validates the token
-    using django's password reset token generator method "check_token()".
-    The attribute "user" which is the user instance, becomes available
-    after the method 'validate_id' has been called.
-    """
-
-    user_id = serializers.IntegerField(label="ID", read_only=True)
-    token = serializers.CharField()
-    new_password = serializers.CharField(max_length=128, write_only=True, required=True)
-    new_password_verify = serializers.CharField(
-        max_length=128, write_only=True, required=True
-    )
-
-    def get_user(self):
-        "Should be used after serializer method .is_valid() has been called"
-        if not self._user:
-            serializers.ValidationError(
-                "The serializer should be validated first using the method '.is_valid'. "
-            )
-        return getattr(self, "_user")
-
-    def validate_id(self, id):
-        "Will also set the _user attribute to the user object that has been found using the passed in arguement 'id'."
-        try:
-            user = EcomUser.objects.get(id=id)
-        except EcomUser.DoesNotExist:
-            raise serializers.ValidationError(
-                _("The provided user object id does not exist")
-            )
-        self._user = user
-        return id
-
-    def validate(self, data):
-        if data["new_password"] != data["new_password_verify"]:
-            raise serializers.ValidationError(_("Passwords don't match."))
-        user = self._user
-        try:
-            validate_password(data["new_password"], user=user)
-        except ValidationError as errors:
-            raise serializers.ValidationError(errors)
-        if not default_token_generator.check_token(user, data["token"]):
-            raise serializers.ValidationError(_("Provided token does not match"))
-        return data
-
-    def save(self):
-        user = self._user
-        user.set_password(self.validated_data["new_password"])
-        user.save()
 
 
 class ChangeCurrentPasswordSerializer(serializers.Serializer):
