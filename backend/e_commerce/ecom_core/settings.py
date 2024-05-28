@@ -3,6 +3,8 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
+from rest_framework.serializers import Serializer
+
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -33,6 +35,7 @@ INSTALLED_APPS = [
     # custom apps
     "ecom_user",
     "admin_user",
+    "product",
     # 3rd party apps
     "rest_framework",
     "rest_framework_simplejwt",
@@ -158,3 +161,5 @@ CACHES = {
         }
     }
 }
+
+SHELL_PLUS_SUBCLASSES_IMPORT = [Serializer]
