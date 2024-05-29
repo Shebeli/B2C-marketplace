@@ -3,10 +3,10 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 
-from .managers import AdminManager
+from .managers import EcomAdminManager
 from ecom_core.validators import validate_username
 
-class AdminUser(AbstractBaseUser):
+class EcomAdmin(AbstractBaseUser):
     ORDERMANAGER = 'OM'
     INVENTORYMANAGER = 'IM'
     SUPERVISOR = 'SV'
@@ -46,7 +46,7 @@ class AdminUser(AbstractBaseUser):
         _("AdminAccount Creation Date"), default=timezone.now
     )
 
-    objects = AdminManager()
+    objects = EcomAdminManager()
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
@@ -57,7 +57,7 @@ class AdminUser(AbstractBaseUser):
 
     @property
     def is_admin(self):
-        "To distinguish user model from admin model by using this method"
+        "To distinguish user model from admin model"
         return True
 
     @property

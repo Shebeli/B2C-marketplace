@@ -1,12 +1,17 @@
 from django.db import models
 
 
+class Category(models.Model):
+    name = models.CharField(max_length=30)
+
+
 class Product(models.Model):
     name = models.CharField(max_length=50)
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, null=True)
     description = models.CharField(max_length=200)
     technical_detail = models.CharField(max_length=200)
     image = models.ImageField()
-    price = models.DecimalField(max_digits=20, decimal_places=2)
+    price = models.DecimalField(max_digits=20, decimal_places=2, null=True)
 
 
 class ProductVariant(models.Model):
@@ -14,11 +19,9 @@ class ProductVariant(models.Model):
         Product, on_delete=models.CASCADE, related_name="variants"
     )
     variation = models.CharField(max_length=50)
-    price = models.DecimalField(max_digits=20, decimal_places=2)
+    price = models.DecimalField(max_digits=20, decimal_places=2, null=True)
     stock = models.PositiveIntegerField()
-    reserved_stock = (
-        models.PositiveIntegerField()
-    )  # stock and reserved_stock are independent of each other.
+    reserved_stock = models.PositiveIntegerField(default=0)
 
     @property
     def available_stock(self):
@@ -35,13 +38,6 @@ class ProductImage(models.Model):
         ProductVariant, on_delete=models.CASCADE, related_name="images"
     )
     image = models.ImageField()
-
-
-class Category(models.Model):
-    product = models.ManyToManyField(
-        Product, related_name="categories", db_table="ProductCategory"
-    )
-    name = models.CharField(max_length=30)
 
 
 class Tag(models.Model):

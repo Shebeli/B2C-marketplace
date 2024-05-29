@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class AdminUserConfig(AppConfig):
+class EcomAdminConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "admin_user"
+    name = "ecom_admin"

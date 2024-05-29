@@ -3,15 +3,15 @@ from product.models import Product, ProductImage, ProductVariant, Tag, Category
 
 
 # Abstract
-class ProductVariantImageSerializer(serializers.ModelSerializer):
+class VariantImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImage
         exclude = ["product_variation"]
 
 
 # Abstract
-class ProductVariantSerializer(serializers.ModelSerializer):
-    images = ProductVariantImageSerializer(many=True)
+class VariantSerializer(serializers.ModelSerializer):
+    images = VariantImageSerializer(many=True)
 
     class Meta:
         model = ProductVariant
@@ -19,17 +19,28 @@ class ProductVariantSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    "For listing all associated information for a single product"
-    variants = ProductVariantSerializer(many=True)
+    variants = VariantSerializer(many=True)
+    category = serializers.CharField(source="category.name")
 
     class Meta:
         model = Product
-        fields = ["id", "name", "description", "technical_detail", "variants"]
+        fields = [
+            "id",
+            "name",
+            "category",
+            "description",
+            "technical_detail",
+            "image",
+            "variants",
+        ]
 
 
 class ProductListSerializer(serializers.ModelSerializer):
-    "For listing all available products, but with limited information for each product"
-
     class Meta:
         model = Product
         fields = ["id", "name", "price", "image"]
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = '__all__'

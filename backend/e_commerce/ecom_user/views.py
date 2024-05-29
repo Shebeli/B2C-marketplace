@@ -6,10 +6,11 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.generics import get_object_or_404
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from .throttle import SMSAnonRateThrottle, CodeSubmitAnonRateThrottle
-from .models import EcomUser
-from .serializers import (
+from ecom_user.throttle import SMSAnonRateThrottle, CodeSubmitAnonRateThrottle
+from ecom_user.models import EcomUser
+from ecom_user.serializers import (
     UserProfileSerializer,
     UserPhoneSerializer,
     OTPAuthSerializer,
@@ -18,7 +19,7 @@ from .serializers import (
     UserPhoneVerificationSerializer,
     UserPhoneVerificationSerializer,
 )
-from .utils import (
+from ecom_user.utils import (
     create_sms_cooldown_cache_key,
     create_phone_verify_cache_key,
     process_phone_verification,
@@ -30,9 +31,11 @@ class UserSignupViewSet(ViewSet):
     Provides the following actions:
     - request_registration: Sends a register verficiation code SMS to user which is to be used in the next action.
     - verify_registration_request: Input the code recieved from previous action 'request_register'
-      in order to complete the registration. A pair of access and refresh token will be sent
-      in a successful response.
+      in order to complete the registration. A pair of access and refresh token will be the sent in a
+      succesful response data.
     """
+
+    authentication_classes = [JWTAuthentication]
 
     @action(detail=False, methods=["post"], throttle_classes=[SMSAnonRateThrottle])
     def request_registration(self, request):
@@ -87,13 +90,15 @@ class UserSignupViewSet(ViewSet):
 class UserOnetimeAuthViewSet(ViewSet):
     """
     Should be used when the user forgets their password or they want to login without
-    inputting their password, which gives them access to one time authentication.
+    inputting their password, which gives them access to one time authentication using OTP via SMS.
     Provides the following actions:
-    - request_auth: sends an OTP using SMS to the inputted phone
-      number, which is required in the next router action.
+    - request_auth: sends an OTP via SMS to the inputted phone
+      number, which is required in the next action.
     - verify_auth_request: verify the one time authentication using the OTP recieved
       from previous action.
     """
+
+    authentication_classes = [JWTAuthentication]
 
     @action(detail=False, methods=["post"], throttle_classes=[SMSAnonRateThrottle])
     def request_auth(self, request):
@@ -148,12 +153,14 @@ class UserProfileViewSet(ViewSet):
     - get_profile: retrieves the current user profile.
     - update_profile: update the current user profile info (except phone, email and password)
     - change_password: for changing current password.
-    - change_phone_request: for requesting to change user's current phone number, a verification code  is sent
-      to the new phone and then used in the next action to complete the phone number update process.
+    - change_phone_request: for submitting a request to change user's current phone number,
+        a verification code  is sent to the new phone and then used in the next action
+        to complete the phone number update process.
     - change_phone_verify: for verifying the new phone number, the verification code from previous action
-        should be inputted inorder to complete the phone number update process.
+    should be inputted inorder to complete the phone number update process.
     """
 
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     @action(detail=False, methods=["get"])
@@ -196,7 +203,9 @@ class UserProfileViewSet(ViewSet):
     def change_phone_verify(self, request):
         serializer = UserPhoneVerificationSerializer(request.user, request.data)
         serializer.is_valid(raise_exception=True)
-        cached_code = cache.get(create_phone_verify_cache_key(serializer.validated_data["phone"]))
+        cached_code = cache.get(
+            create_phone_verify_cache_key(serializer.validated_data["phone"])
+        )
         if not cached_code:
             return Response(
                 {"error": "server is not expecting a verification code for this phone"},

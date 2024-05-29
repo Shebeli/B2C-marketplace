@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.core import validators
 import phonenumbers
 
+from rest_framework_simplejwt.serializers
 
 def validate_phone(value: str) -> None:
     parsed_phone = phonenumbers.parse(

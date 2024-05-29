@@ -34,13 +34,12 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # custom apps
     "ecom_user",
-    "admin_user",
+    "ecom_admin",
     "product",
     # 3rd party apps
     "rest_framework",
     "rest_framework_simplejwt",
     "django_extensions",
-
 ]
 
 MIDDLEWARE = [
@@ -129,14 +128,17 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "ecom_user.EcomUser"
 
 # AUTHENTICATION_BACKENDS = [
-#     "ecom_user.authentication.UsernameOrPhoneBackend",
-#     "admin_user.authentication.AdminBackend",
+#     "user.authentication.UsernameOrPhoneBackend",
+#     "ecom_admin.authentication.AdminBackend",
 # ]
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "ecom_admin.authentication.EcomAdminJWTAuthentication",
+    ),
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 15,
 }
 
 
@@ -149,17 +151,16 @@ REDIS_HOST = os.environ.get("REDIS_HOST")
 REDIS_PORT = os.environ.get("REDIS_PORT")
 
 if None in [REDIS_HOST, REDIS_PORT]:
-    raise ValueError("One or more of the redis env variables are not set.")
+    raise ValueError("One or more of the redis variables should not be None.")
 
 
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient"
-        }
+        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
     }
 }
+
 
 SHELL_PLUS_SUBCLASSES_IMPORT = [Serializer]

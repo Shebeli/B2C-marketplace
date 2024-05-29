@@ -1,4 +1,4 @@
-from admin_user.models import AdminUser
+from ecom_admin.models import EcomAdmin
 from django.contrib.auth.management.commands import createsuperuser
 
 class Command(createsuperuser.Command):
@@ -6,5 +6,5 @@ class Command(createsuperuser.Command):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.UserModel = AdminUser
+        self.UserModel = EcomAdmin
         

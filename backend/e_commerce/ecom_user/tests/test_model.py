@@ -3,12 +3,12 @@ import pytest
 from django.core.exceptions import ValidationError
 
 from ecom_user.models import EcomUser
-from ecom_user.exceptions import MethodNotAllowedException
+from ecom_user.exceptions import CommandNotAllowedException
 
 
 @pytest.mark.django_db
 def test_createsuperuser_raises_exception():
-    with pytest.raises(MethodNotAllowedException):
+    with pytest.raises(CommandNotAllowedException):
         EcomUser.objects.create_superuser()
 
 
