@@ -20,7 +20,7 @@ class EcomUser(AbstractBaseUser):
         _("Username"),
         unique=True,
         help_text=_(
-            "Maximum of 100 characters. Only letters, digits and the special character . are allowed"
+            "Maximum of 40 characters. Only letters, digits and the special character . are allowed"
         ),
         validators=[validate_username],
         error_messages={
@@ -31,16 +31,17 @@ class EcomUser(AbstractBaseUser):
                 "The username is invalid. Please refer to username help text."
             ),
         },
-        max_length=50,
+        max_length=40,
         blank=True
     )
     email = models.EmailField(_("Email Address"), blank=True, unique=True)
     phone = models.CharField(
-        _("Phone Number"), max_length=13, validators=[validate_phone], unique=True, blank=True
+        _("Phone Number"), max_length=13, validators=[validate_phone], unique=True
     )
     national_code = models.CharField(
         _("National Code"),
         blank=True,
+        null=True,
         max_length=10,
         validators=[validate_national_code],
         unique=True
@@ -48,6 +49,7 @@ class EcomUser(AbstractBaseUser):
     postal_code = models.CharField(
         _("Postal Code"),
         blank=True,
+        null=True,
         max_length=10,
         validators=[validate_postal_code],
         unique=True

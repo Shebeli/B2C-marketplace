@@ -2,10 +2,11 @@ import re
 
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
-from django.core import validators
+from django.conf import settings
 import phonenumbers
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import Token
 
-from rest_framework_simplejwt.serializers
 
 def validate_phone(value: str) -> None:
     parsed_phone = phonenumbers.parse(
@@ -47,10 +48,17 @@ def validate_postal_code(value: str) -> None:
     if not re.search(postal_code_regex, value):
         raise ValidationError(_(f"Entered postal code is not a valid postal code."))
 
-# the OTP length should be specified in django project settings
-def validate_verification_code(code: str):
-    if len(code) != 6:
-        raise ValidationError(_("The inputed code length isn't 6"))
+
+def validate_verification_code(code: str) -> None:
+    expected_code_length = settings.OTP_LENGTH
+    if len(code) != expected_code_length:
+        raise ValidationError(
+            _(f"The inputed code length isn't {expected_code_length}")
+        )
     if any(digit not in "0123456789" for digit in code):
         raise ValidationError(_("The inputed code cannot contain non-digits"))
-    
+
+
+def validate_token_type(token: Token, expected_user_type: str) -> None:
+    if token.get("user_type") != expected_user_type:
+        raise TokenError("Provided token doesn't contain the expected user type claim")

@@ -41,7 +41,7 @@ class EcomAdmin(AbstractBaseUser):
         max_length=100,
     )
 
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     date_created = models.DateTimeField(
         _("AdminAccount Creation Date"), default=timezone.now
     )

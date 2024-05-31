@@ -127,10 +127,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "ecom_user.EcomUser"
 
-# AUTHENTICATION_BACKENDS = [
-#     "user.authentication.UsernameOrPhoneBackend",
-#     "ecom_admin.authentication.AdminBackend",
-# ]
+AUTHENTICATION_BACKENDS = [
+    "ecom_user.authentication.UsernameOrPhoneBackend",
+    "ecom_admin.authentication.AdminBackend",
+]
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -162,5 +162,15 @@ CACHES = {
     }
 }
 
-
 SHELL_PLUS_SUBCLASSES_IMPORT = [Serializer]
+
+OTP_LENGTH = os.environ.get("OTP_LENGTH")
+if not OTP_LENGTH:
+    OTP_LENGTH = 6
+else:
+    try:
+        OTP_LENGTH = abs(int(OTP_LENGTH))
+    except (ValueError, TypeError):
+        raise ValueError(
+            "OTP_LENGTH env variable should be set, and it should be a positive integer"
+        )

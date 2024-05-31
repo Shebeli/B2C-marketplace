@@ -6,9 +6,8 @@ class EcomAdminManager(BaseUserManager):
     def create_user(self, email, username, password, **extra_fields):
         if not username or not email:
             raise ValueError(_("Username and email should be provided"))
-        if extra_fields.get("role") == self.model.SUPERADMIN.value:
+        if extra_fields.get("role") == self.model.SUPERADMIN:
             raise ValueError(_("Superadmin cannot be created this way. use the command createsuperadmin instead."))
-        extra_fields.set("is_active", False)
         ecom_admin = self.model(
             username=self.model.normalize_username(username),
             email=self.normalize_email(email),
@@ -25,7 +24,7 @@ class EcomAdminManager(BaseUserManager):
             username=self.model.normalize_username(username),
             email=self.normalize_email(email),
             is_active=True,
-            role= self.model.SUPERADMIN.value
+            role= self.model.SUPERADMIN
         )
         ecom_admin.set_password(password)
         ecom_admin.save()

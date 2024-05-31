@@ -10,7 +10,7 @@ class UsernameOrPhoneBackend(ModelBackend):
         if (username is None and phone is None) or password is None:
             return
         UserModel = get_user_model()
-        try:  # phone and username are unique fields and one of them can null but not both.
+        try:  # phone and username are unique fields and one of them can be null but not both.
             user = UserModel.objects.get(Q(username=username) | Q(phone=phone))
         except UserModel.DoesNotExist:
             return None
