@@ -60,5 +60,5 @@ def test_admin_can_obtain_access_token(api_client, refresh_token, admin_instance
     response = api_client.post(url, data={"refresh": str(refresh_token)})
     assert response.status_code == 200
     token = AccessToken(response.data["access"]) 
-    assert token
+    assert token['user_type'] == 'admin'
     

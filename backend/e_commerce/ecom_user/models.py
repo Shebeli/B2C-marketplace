@@ -36,7 +36,7 @@ class EcomUser(AbstractBaseUser):
     )
     email = models.EmailField(_("Email Address"), blank=True, unique=True)
     phone = models.CharField(
-        _("Phone Number"), max_length=13, validators=[validate_phone], unique=True
+        _("Phone Number"), max_length=13, validators=[validate_phone], unique=True, blank=True
     )
     national_code = models.CharField(
         _("National Code"),

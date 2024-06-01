@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 from pathlib import Path
 from dotenv import load_dotenv
@@ -128,15 +129,20 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "ecom_user.EcomUser"
 
 AUTHENTICATION_BACKENDS = [
-    "ecom_user.authentication.UsernameOrPhoneBackend",
-    "ecom_admin.authentication.AdminBackend",
+    "ecom_user.authentication.EcomUserBackend",
+    "ecom_admin.authentication.EcomAdminBackend",
 ]
 
 REST_FRAMEWORK = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "ecom_user.authentication.EcomUserJWTAuthentication",
         "ecom_admin.authentication.EcomAdminJWTAuthentication",
     ),
+    "TOKEN_OBTAIN_SERIALIZER": "ecom_user.jwt.serializers.EcomUserTokenObtainPairSerializer",
+    "TOKEN_REFRESH_SERIALIZER": "ecom_user.jwt.serializers.EcomUserTokenRefreshSerializer",
+    "TOKEN_VERIFY_SERIALIZER": "ecom_user.jwt.serializers.EcomUserTokenVerifySerializer",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 15,
 }
@@ -171,6 +177,4 @@ else:
     try:
         OTP_LENGTH = abs(int(OTP_LENGTH))
     except (ValueError, TypeError):
-        raise ValueError(
-            "OTP_LENGTH env variable should be set, and it should be a positive integer"
-        )
+        raise ValueError("OTP_LENGTH env variable should be a positive integer")

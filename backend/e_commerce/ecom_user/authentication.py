@@ -1,16 +1,19 @@
+from typing import Tuple
 from django.db.models import Q
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
+from rest_framework.request import Request
+from rest_framework_simplejwt.authentication import JWTAuthentication, AuthUser
+from rest_framework_simplejwt.tokens import Token
+from rest_framework_simplejwt.exceptions import InvalidToken
 
-from django.conf import settings
 
-
-class UsernameOrPhoneBackend(ModelBackend):
+class EcomUserBackend(ModelBackend):
     def authenticate(self, request, username=None, phone=None, password=None, **kwargs):
         if (username is None and phone is None) or password is None:
             return
         UserModel = get_user_model()
-        try:  # phone and username are unique fields and one of them can be null but not both.
+        try:  # phone and username are unique fields and only one of them is required.
             user = UserModel.objects.get(Q(username=username) | Q(phone=phone))
         except UserModel.DoesNotExist:
             return None
@@ -24,3 +27,13 @@ class UsernameOrPhoneBackend(ModelBackend):
             return UserModel.objects.get(pk=user_id)
         except UserModel.DoesNotExist:
             return None
+
+
+class EcomUserJWTAuthentication(JWTAuthentication):
+    def authenticate(self, request: Request) -> Tuple[AuthUser, Token] | None:
+        user, token = super().authenticate(request)
+        if token.get("user_type") != "normal":
+            raise InvalidToken(
+                "This token user's type doesn't have the required authorization"
+            )
+        return user, token
