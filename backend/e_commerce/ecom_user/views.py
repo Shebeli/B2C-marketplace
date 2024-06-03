@@ -6,7 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.generics import get_object_or_404
-from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.authentication import BaseAuthentication
 
 from ecom_user.throttle import SMSAnonRateThrottle, CodeSubmitAnonRateThrottle
 from ecom_user.models import EcomUser
@@ -24,6 +24,8 @@ from ecom_user.utils import (
     create_phone_verify_cache_key,
     process_phone_verification,
 )
+from ecom_user.authentication import EcomUserJWTAuthentication
+from ecom_user.permissions import IsAnonymous
 
 
 class UserSignupViewSet(ViewSet):
@@ -35,7 +37,7 @@ class UserSignupViewSet(ViewSet):
       succesful response data.
     """
 
-    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAnonymous]
 
     @action(detail=False, methods=["post"], throttle_classes=[SMSAnonRateThrottle])
     def request_registration(self, request):
@@ -98,7 +100,7 @@ class UserOnetimeAuthViewSet(ViewSet):
       from previous action.
     """
 
-    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAnonymous]
 
     @action(detail=False, methods=["post"], throttle_classes=[SMSAnonRateThrottle])
     def request_auth(self, request):
@@ -160,7 +162,7 @@ class UserProfileViewSet(ViewSet):
     should be inputted inorder to complete the phone number update process.
     """
 
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [EcomUserJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     @action(detail=False, methods=["get"])

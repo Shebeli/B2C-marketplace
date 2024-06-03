@@ -2,16 +2,49 @@ from django.db import models
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=30)
+    name = models.CharField(max_length=30, unique=True, db_index=True)
 
+
+class Tag(models.Model):
+    name = models.CharField(max_length=30, unique=True, db_index=True)
+
+    def __str__(self) -> str:
+        return self.name
 
 class Product(models.Model):
     name = models.CharField(max_length=50)
-    category = models.ForeignKey(Category, on_delete=models.PROTECT, null=True)
     description = models.CharField(max_length=200)
-    technical_detail = models.CharField(max_length=200)
-    image = models.ImageField()
-    price = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    main_image = models.ImageField()
+    main_price = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, null=True)
+    tags = models.ManyToManyField(Tag, related_name="products")
+
+
+class TechnicalDetailAttribute(models.Model):
+    name = models.CharField(
+        max_length=40, verbose_name="technical attribute", db_index=True
+    )
+
+    def save(self, *args, **kwargs):
+        self.name = self.name.capitalize()
+        super().save(*args, **kwargs)
+
+
+class TechnicalDetail(models.Model):
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="technical_details"
+    )
+    attribute = models.ForeignKey(
+        TechnicalDetailAttribute,
+        on_delete=models.CASCADE,
+        related_name="technical_details",
+    )
+    value = models.CharField(
+        max_length=50, verbose_name="technical attribute description"
+    )
+
+    class Meta:
+        unique_together = ("product", "attribute")
 
 
 class ProductVariant(models.Model):
@@ -33,15 +66,8 @@ class ProductVariant(models.Model):
         return super().save(*args, **kwargs)
 
 
-class ProductImage(models.Model):
-    product_variation = models.ForeignKey(
+class ProductVariantImage(models.Model):
+    product_variant = models.ForeignKey(
         ProductVariant, on_delete=models.CASCADE, related_name="images"
     )
     image = models.ImageField()
-
-
-class Tag(models.Model):
-    product = models.ManyToManyField(
-        Product, related_name="tags", db_table="ProductTag"
-    )
-    name = models.CharField(max_length=30)

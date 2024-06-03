@@ -36,7 +36,10 @@ class EcomAdminJWTAuthentication(JWTAuthentication):
         self.user_model = EcomAdmin
 
     def authenticate(self, request: Request) -> Tuple[EcomAdmin, Token] | None:
-        user, token = super().authenticate(request)
+        auth_info = super().authenticate(request)
+        if not auth_info:
+            return None
+        token, user = auth_info
         if token.get("user_type") != "admin":
             raise InvalidToken(
                 "This token's user type doesn't have the required authorization."

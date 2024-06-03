@@ -31,7 +31,10 @@ class EcomUserBackend(ModelBackend):
 
 class EcomUserJWTAuthentication(JWTAuthentication):
     def authenticate(self, request: Request) -> Tuple[AuthUser, Token] | None:
-        user, token = super().authenticate(request)
+        auth_info = super().authenticate(request)
+        if not auth_info:
+            return None
+        user, token = auth_info  
         if token.get("user_type") != "normal":
             raise InvalidToken(
                 "This token user's type doesn't have the required authorization"
