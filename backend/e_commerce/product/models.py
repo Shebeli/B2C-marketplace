@@ -11,10 +11,11 @@ class Tag(models.Model):
     def __str__(self) -> str:
         return self.name
 
+
 class Product(models.Model):
     name = models.CharField(max_length=50)
     description = models.CharField(max_length=200)
-    main_image = models.ImageField()
+    main_image = models.ImageField(blank=True)
     main_price = models.DecimalField(max_digits=20, decimal_places=2, null=True)
     category = models.ForeignKey(Category, on_delete=models.PROTECT, null=True)
     tags = models.ManyToManyField(Tag, related_name="products")

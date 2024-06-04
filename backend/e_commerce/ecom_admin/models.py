@@ -59,6 +59,10 @@ class EcomAdmin(AbstractBaseUser):
     def is_admin(self):
         "To distinguish user model from admin model"
         return True
+    
+    @property
+    def is_staff(self):
+        return True
 
     @property
     def full_name(self):

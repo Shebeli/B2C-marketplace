@@ -1,10 +1,10 @@
 from rest_framework.mixins import ListModelMixin
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import ParseError, NotFound
-from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.decorators import action
 
 from product.models import Product, Category, Tag
 from product.serializers import (
@@ -12,6 +12,7 @@ from product.serializers import (
     ProductListSerializer,
     CategorySerializer,
     TagSerializer,
+    TechnicalDetailSerializer
 )
 from product.permissions import IsAdminOrReadOnly
 
@@ -77,3 +78,11 @@ class TagViewSet(ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+
+
+class ProductsTechnicalDetailViewSet(ModelViewSet):
+    permission_classes = [IsAdminUser]
+    queryset = Product.objects.all()
+    serializer_class = TechnicalDetailSerializer
+
+    # def 
