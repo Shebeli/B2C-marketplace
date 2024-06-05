@@ -62,3 +62,38 @@ def validate_verification_code(code: str) -> None:
 def validate_token_type(token: Token, expected_user_type: str) -> None:
     if token.get("user_type") != expected_user_type:
         raise TokenError("Provided token doesn't contain the expected user type claim")
+
+
+def validate_bank_card_number(card_number: str) -> None:
+    if len(card_number) != 16:
+        raise ValidationError("Provided bank card number length should be 16")
+    r = [
+        (1 if (i + 1) % 2 == 0 else 2) * int(card_number[i])
+        for i in range(len(card_number))
+    ]
+    r = [(i - 9 if i > 9 else i) for i in r]
+    if not sum(r) % 10 == 0:
+        raise ValidationError("Provided bank card number is not valid")
+
+def validate_iban(iban: str) -> None: #IR062960000000100324200001
+    if len(iban) != 26:
+        raise Exception("Provided IBAN length should be 26")
+    character_map = {
+        'A': 10, 'B': 11, 'C': 12, 'D': 13, 'E': 14, 'F': 15, 'G': 16, 'H': 17, 'I': 18, 'J': 19,
+        'K': 20, 'L': 21, 'M': 22, 'N': 23, 'O': 24, 'P': 25, 'Q': 26, 'R': 27, 'S': 28, 'T': 29,
+        'U': 30, 'V': 31, 'W': 32, 'X': 33, 'Y': 34, 'Z': 35,
+    }
+    iban_letters = list(iban)[4:]
+    for letter in iban[:4]:
+        if letter in character_map.keys():
+            first_digit, second_digit = list(str(character_map[letter])) # e.g. 12 -> ['1','2']
+            iban_letters.append(first_digit)
+            iban_letters.append(second_digit)
+        else:
+            iban_letters.append(letter)
+    if not int(''.join(iban_letters)) % 97 == 1:
+        raise Exception("Provided IBAN isn't valid")
+
+def validate_rating(rating: float):
+    if not 1 <= rating <= 5:
+        raise ValidationError("Provided rating should be between 1 and 5")

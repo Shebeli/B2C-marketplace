@@ -7,30 +7,8 @@ from ecom_core.validators import (
     validate_phone,
     validate_username,
     validate_national_code,
-    validate_postal_code,
 )
-from .managers import EcomUserManager
-
-
-class CustomerProfileAddress(models.Model):
-    customer_profile = models.ForeignKey(
-        "CustomerProfile", on_delete=models.CASCADE, related_name="addresses"
-    )
-    address = models.CharField(max_length=250)
-    postal_code = models.CharField(
-        _("Postal Code"),
-        null=True,
-        max_length=10,
-        validators=[validate_postal_code],
-        unique=True,
-    )
-
-
-class CustomerProfile(models.Model):
-    user = models.OneToOneField(
-        "EcomUser", on_delete=models.CASCADE, related_name="profile"
-    )
-    wallet = models.PositiveIntegerField(default=0)
+from ecom_user.managers import EcomUserManager
 
 
 class EcomUser(AbstractBaseUser):
