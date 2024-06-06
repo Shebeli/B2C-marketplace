@@ -8,13 +8,35 @@ from ecom_core.validators import (
     validate_username,
     validate_national_code,
     validate_postal_code,
+    validate_bank_card_number,
+    validate_iban,
+    validate_rating,
 )
 from .managers import EcomUserManager
 
 
+class State(models.Model):
+    name = models.CharField(max_length=30)
+
+
+class City(models.Model):
+    name = models.CharField(max_length=30)
+    state = models.ForeignKey(State, on_delete=models.CASCADE)
+
+
+class CustomerProfile(models.Model):
+    user = models.OneToOneField(
+        "EcomUser", on_delete=models.CASCADE, related_name="profile"
+    )
+    wallet = models.PositiveIntegerField(default=0)
+    profile_picture = models.ImageField(
+        upload_to="profile_pictures/customers/", null=True, blank=True
+    )
+
+
 class CustomerProfileAddress(models.Model):
     customer_profile = models.ForeignKey(
-        "CustomerProfile", on_delete=models.CASCADE, related_name="addresses"
+        CustomerProfile, on_delete=models.CASCADE, related_name="addresses"
     )
     address = models.CharField(max_length=250)
     postal_code = models.CharField(
@@ -26,11 +48,34 @@ class CustomerProfileAddress(models.Model):
     )
 
 
-class CustomerProfile(models.Model):
-    user = models.OneToOneField(
-        "EcomUser", on_delete=models.CASCADE, related_name="profile"
+class SellerProfile(models.Model):
+    user = models.ForeignKey("EcomUser", on_delete=models.CASCADE)
+    store_name = models.CharField(max_length=50, unique=True, null=True)
+    store_address = models.CharField(max_length=250)
+    store_description = models.TextField(blank=True)
+    is_verified = models.BooleanField(default=False)
+    products_sold = models.PositiveIntegerField(default=0)
+    rating = models.DecimalField(
+        default=0.0, decimal_places=1, max_digits=5, validators=validate_rating
     )
-    wallet = models.PositiveIntegerField(default=0)
+    profile_picture = models.ImageField(
+        upload_to="profile_pictures/sellers/", null=True, blank=True
+    )
+    website = models.URLField(blank=True)
+    established_date = models.DateField(
+        null=True, blank=True
+    )  # whenever profile is verified, this field should be inputted
+
+
+class SellerProfileBusinessLicense(models.Model):
+    seller_profile = models.ForeignKey(SellerProfile, on_delete=models.CASCADE)
+
+
+class SellerProfileBankAccount(models.Model):
+    seller_profile = models.ForeignKey(SellerProfile, on_delete=models.CASCADE)
+    card_number = models.CharField(max_length=16, validators=validate_bank_card_number)
+    card_owner_fullname = models.CharField(max_length=50, blank=True)
+    iban = models.CharField(max_length=28, validators=validate_iban)
 
 
 class EcomUser(AbstractBaseUser):
@@ -71,7 +116,10 @@ class EcomUser(AbstractBaseUser):
         validators=[validate_national_code],
         unique=True,
     )
+    city = models.ForeignKey(City, on_delete=models.SET_NULL, null=True, blank=True)
+    state = models.ForeignKey(State, on_delete=models.SET_NULL, null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    balance = models.IntegerField(default=0)
     date_created = models.DateTimeField(
         _("UserAccount Creation Date"), default=timezone.now
     )
@@ -79,6 +127,15 @@ class EcomUser(AbstractBaseUser):
     USERNAME_FIELD = "phone"
 
     objects = EcomUserManager()
+
+    # we always want a seller profile and a customer profile to be created for the user.
+    # also, you might ask, why not use the django signals instead?
+    # read django's own documentation warning on when to use django signals:
+    # https://docs.djangoproject.com/en/5.0/topics/signals/#module-django.dispatch
+    def save(self, *args, **kwargs):
+        SellerProfile.objects.create(user=self)
+        CustomerProfile.objects.create(user=self)
+        return super().save(self, *args, **kwargs)
 
     @property
     def full_name(self):

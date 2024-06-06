@@ -19,7 +19,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
         read_only_fields = ["phone", "email", "date_created"]
 
 
-# registering, updating and authenticating without inputting password are all handled using OTPs via SMS.
 class UserPhoneSerializer(serializers.Serializer):
     phone = serializers.CharField(max_length=13, validators=[validate_phone])
 
