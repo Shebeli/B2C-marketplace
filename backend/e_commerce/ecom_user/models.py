@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from django.contrib.auth.models import AbstractBaseUser
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -7,79 +7,14 @@ from ecom_core.validators import (
     validate_phone,
     validate_username,
     validate_national_code,
-    validate_postal_code,
-    validate_bank_card_number,
-    validate_iban,
-    validate_rating,
 )
+from ecom_user_profile.models import SellerProfile, CustomerProfile, City, State
+
 from .managers import EcomUserManager
 
 
-class State(models.Model):
-    name = models.CharField(max_length=30)
-
-
-class City(models.Model):
-    name = models.CharField(max_length=30)
-    state = models.ForeignKey(State, on_delete=models.CASCADE)
-
-
-class CustomerProfile(models.Model):
-    user = models.OneToOneField(
-        "EcomUser", on_delete=models.CASCADE, related_name="profile"
-    )
-    wallet = models.PositiveIntegerField(default=0)
-    profile_picture = models.ImageField(
-        upload_to="profile_pictures/customers/", null=True, blank=True
-    )
-
-
-class CustomerProfileAddress(models.Model):
-    customer_profile = models.ForeignKey(
-        CustomerProfile, on_delete=models.CASCADE, related_name="addresses"
-    )
-    address = models.CharField(max_length=250)
-    postal_code = models.CharField(
-        _("Postal Code"),
-        null=True,
-        max_length=10,
-        validators=[validate_postal_code],
-        unique=True,
-    )
-
-
-class SellerProfile(models.Model):
-    user = models.ForeignKey("EcomUser", on_delete=models.CASCADE)
-    store_name = models.CharField(max_length=50, unique=True, null=True)
-    store_address = models.CharField(max_length=250)
-    store_description = models.TextField(blank=True)
-    is_verified = models.BooleanField(default=False)
-    products_sold = models.PositiveIntegerField(default=0)
-    rating = models.DecimalField(
-        default=0.0, decimal_places=1, max_digits=5, validators=validate_rating
-    )
-    profile_picture = models.ImageField(
-        upload_to="profile_pictures/sellers/", null=True, blank=True
-    )
-    website = models.URLField(blank=True)
-    established_date = models.DateField(
-        null=True, blank=True
-    )  # whenever profile is verified, this field should be inputted
-
-
-class SellerProfileBusinessLicense(models.Model):
-    seller_profile = models.ForeignKey(SellerProfile, on_delete=models.CASCADE)
-
-
-class SellerProfileBankAccount(models.Model):
-    seller_profile = models.ForeignKey(SellerProfile, on_delete=models.CASCADE)
-    card_number = models.CharField(max_length=16, validators=validate_bank_card_number)
-    card_owner_fullname = models.CharField(max_length=50, blank=True)
-    iban = models.CharField(max_length=28, validators=validate_iban)
-
-
 class EcomUser(AbstractBaseUser):
-    "This model does not contain any superuser or staff attributes as its handled in a seperate model named 'AdminUser'"
+    "This model does not contain any superuser or staff attributes as its handled in a seperate model named 'EcomAdmin'"
     first_name = models.CharField(_("First Name"), max_length=50, blank=True)
     last_name = models.CharField(_("Last Name"), max_length=50, blank=True)
     username = models.CharField(
@@ -128,14 +63,17 @@ class EcomUser(AbstractBaseUser):
 
     objects = EcomUserManager()
 
-    # we always want a seller profile and a customer profile to be created for the user.
-    # also, you might ask, why not use the django signals instead?
-    # read django's own documentation warning on when to use django signals:
+    # we always want a seller and a customer profile to be created when an ecomuser is created.
+    # also, you might ask, why not use django signals instead?
+    # its a personal preference, but you can also read django's
+    # own documentation warning about django signals:
     # https://docs.djangoproject.com/en/5.0/topics/signals/#module-django.dispatch
+
     def save(self, *args, **kwargs):
-        SellerProfile.objects.create(user=self)
-        CustomerProfile.objects.create(user=self)
-        return super().save(self, *args, **kwargs)
+        with transaction.atomic():
+            super().save(self, *args, **kwargs)
+            SellerProfile.objects.create(user=self)
+            CustomerProfile.objects.create(user=self)
 
     @property
     def full_name(self):

@@ -11,7 +11,7 @@ from rest_framework.authentication import BaseAuthentication
 from ecom_user.throttle import SMSAnonRateThrottle, CodeSubmitAnonRateThrottle
 from ecom_user.models import EcomUser
 from ecom_user.serializers import (
-    UserProfileSerializer,
+    UserAccountSerializer,
     UserPhoneSerializer,
     OTPAuthSerializer,
     OTPAuthVerificationSerializer,
@@ -149,17 +149,17 @@ class UserOnetimeAuthViewSet(ViewSet):
         )
 
 
-class UserProfileViewSet(ViewSet):
+class UserAccountViewSet(ViewSet):
     """
     Provides the following actions (requires the current user to be authenticated):
-    - get_profile: retrieves the current user profile.
-    - update_profile: update the current user profile info (except phone, email and password)
+    - get_info: retrieves the current user account info.
+    - update_info: update the current user account info (except phone, email and password)
     - change_password: for changing current password.
-    - change_phone_request: for submitting a request to change user's current phone number,
-        a verification code  is sent to the new phone and then used in the next action
-        to complete the phone number update process.
+    - change_phone_request: for changing user's current phone password by requesting an OTP via SMS,
+      a verification code is sent to the new phone and then used in the next action
+      to complete the phone number update process.
     - change_phone_verify: for verifying the new phone number, the verification code from previous action
-    should be inputted inorder to complete the phone number update process.
+      should be inputted inorder to complete the phone number update process.
     """
 
     authentication_classes = [EcomUserJWTAuthentication]
@@ -167,12 +167,12 @@ class UserProfileViewSet(ViewSet):
 
     @action(detail=False, methods=["get"])
     def get_info(self, request):
-        serializer = UserProfileSerializer(request.user)
+        serializer = UserAccountSerializer(request.user)
         return Response(serializer.data)
 
     @action(detail=False, methods=["put"])
     def update_info(self, request):
-        serializer = UserProfileSerializer(
+        serializer = UserAccountSerializer(
             self.request.user, request.data, partial=True
         )
         serializer.is_valid(raise_exception=True)
@@ -219,3 +219,4 @@ class UserProfileViewSet(ViewSet):
             )
         serializer.save()
         return Response("Phone number changed succesfuly", status=status.HTTP_200_OK)
+

@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # custom apps
     "ecom_user",
+    "ecom_user_profile",
     "ecom_admin",
     "product",
     # 3rd party apps

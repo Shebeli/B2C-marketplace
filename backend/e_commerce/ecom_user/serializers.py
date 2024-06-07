@@ -9,14 +9,14 @@ from ecom_core.validators import validate_phone, validate_verification_code
 from .models import EcomUser
 
 
-# displaying user profile, updating profile except for phone number
-class UserProfileSerializer(serializers.ModelSerializer):
+class UserAccountSerializer(serializers.ModelSerializer):
+    "Account and personal general information"
     full_name = serializers.CharField(source="get_fullname", read_only=True)
 
     class Meta:
         model = EcomUser
         exclude = ["last_login", "is_active", "password"]
-        read_only_fields = ["phone", "email", "date_created"]
+        read_only_fields = ["phone", "email", "date_created", "balance"]
 
 
 class UserPhoneSerializer(serializers.Serializer):

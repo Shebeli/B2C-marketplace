@@ -77,7 +77,7 @@ def validate_bank_card_number(card_number: str) -> None:
 
 def validate_iban(iban: str) -> None: #IR062960000000100324200001
     if len(iban) != 26:
-        raise Exception("Provided IBAN length should be 26")
+        raise ValidationError("Provided IBAN length should be 26")
     character_map = {
         'A': 10, 'B': 11, 'C': 12, 'D': 13, 'E': 14, 'F': 15, 'G': 16, 'H': 17, 'I': 18, 'J': 19,
         'K': 20, 'L': 21, 'M': 22, 'N': 23, 'O': 24, 'P': 25, 'Q': 26, 'R': 27, 'S': 28, 'T': 29,
@@ -92,8 +92,8 @@ def validate_iban(iban: str) -> None: #IR062960000000100324200001
         else:
             iban_letters.append(letter)
     if not int(''.join(iban_letters)) % 97 == 1:
-        raise Exception("Provided IBAN isn't valid")
+        raise ValidationError("Provided IBAN isn't valid")
 
-def validate_rating(rating: float):
+def validate_rating(rating: float) -> None:
     if not 1 <= rating <= 5:
         raise ValidationError("Provided rating should be between 1 and 5")
