@@ -2,10 +2,10 @@ from rest_framework import serializers
 
 from ecom_user_profile.models import (
     SellerProfile,
-    SellerProfileBankAccount,
-    SellerProfileBusinessLicense,
+    SellerBankAccount,
+    SellerBusinessLicense,
     CustomerProfile,
-    CustomerProfileAddress,
+    CustomerAddress,
 )
 
 
@@ -16,10 +16,11 @@ class CustomerProfileSerializer(serializers.ModelSerializer):
         read_only_fields = ["wallet"]
 
 
-class CustomerProfileAddressSerializer(serializers.ModelSerializer):
+class CustomerAddressSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CustomerProfileAddress
+        model = CustomerAddress
         fields = "__all__"
+        # extra_kwargs = {"user": {"write_only": True}}
 
 
 class SellerProfileSerializer(serializers.ModelSerializer):
@@ -34,13 +35,13 @@ class SellerProfileSerializer(serializers.ModelSerializer):
         ]
 
 
-class SellerProfileBusinessSerializer(serializers.ModelSerializer):
+class SellerBusinessLicenseSerializer(serializers.ModelSerializer):
     class Meta:
-        model = SellerProfileBusinessLicense
+        model = SellerBusinessLicense
         fields = "__all__"
 
 
-class SellerProfileBankAccount(serializers.ModelSerializer):
+class SellerBankAccountSerializer(serializers.ModelSerializer):
     class Meta:
-        model = SellerProfileBankAccount
+        model = SellerBankAccount
         fields = "__all__"

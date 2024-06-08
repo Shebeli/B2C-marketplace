@@ -34,7 +34,7 @@ CUSTOMER_PROFILE_DEFAULT_PREFERENCES = {
 
 class CustomerProfile(models.Model):
     user = models.OneToOneField(
-        "ecom_user.EcomUser", on_delete=models.CASCADE, related_name="profile"
+        "ecom_user.EcomUser", on_delete=models.CASCADE, related_name="customer_profile"
     )
     profile_picture = models.ImageField(
         upload_to="profile_pictures/customers/", null=True, blank=True
@@ -42,9 +42,11 @@ class CustomerProfile(models.Model):
     preferences = models.JSONField(blank=True, null=True)
 
 
-class CustomerProfileAddress(models.Model):
-    customer_profile = models.ForeignKey(
-        CustomerProfile, on_delete=models.CASCADE, related_name="addresses"
+class CustomerAddress(models.Model):
+    user = models.ForeignKey(
+        "ecom_user.EcomUser",
+        on_delete=models.CASCADE,
+        related_name="customer_addresses",
     )
     address = models.CharField(max_length=250)
     postal_code = models.CharField(
@@ -57,10 +59,12 @@ class CustomerProfileAddress(models.Model):
 
 
 class SellerProfile(models.Model):
-    user = models.ForeignKey("ecom_user.EcomUser", on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        "ecom_user.EcomUser", on_delete=models.CASCADE, related_name="seller_profile"
+    )
     store_name = models.CharField(max_length=50, unique=True, null=True)
     store_address = models.CharField(max_length=250)
-    store_description = models.TextField(blank=True)
+    store_description = models.CharField(max_length=500, blank=True)
     is_verified = models.BooleanField(default=False)
     products_sold = models.PositiveIntegerField(default=0)
     rating = models.DecimalField(
@@ -75,14 +79,22 @@ class SellerProfile(models.Model):
     )  # whenever profile is verified, this field should be inputted
 
 
-class SellerProfileBusinessLicense(models.Model):
-    seller_profile = models.ForeignKey(SellerProfile, on_delete=models.CASCADE)
+class SellerBusinessLicense(models.Model):
+    user = models.ForeignKey(
+        "ecom_user.EcomUser",
+        on_delete=models.CASCADE,
+        related_name="seller_business_licenses",
+    )
     submitted_date = models.DateTimeField(auto_now_add=True)
     license_picture = models.ImageField(upload_to="business_licenses/")
 
 
-class SellerProfileBankAccount(models.Model):
-    seller_profile = models.ForeignKey(SellerProfile, on_delete=models.CASCADE)
+class SellerBankAccount(models.Model):
+    user = models.ForeignKey(
+        "ecom_user.EcomUser",
+        on_delete=models.CASCADE,
+        related_name="seller_bank_accounts",
+    )
     card_number = models.CharField(
         max_length=16, validators=[validate_bank_card_number]
     )
