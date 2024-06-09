@@ -111,11 +111,6 @@ def test_unexpected_code_for_verifying_register(api_client, user_data):
     assert response.status_code == 400
 
 
-# UserForgotPasswordViewSet
-
-# request_onetime_auth
-
-
 @pytest.mark.django_db
 def test_user_valid_request_onetime_auth(api_client, user_data, generate_user):
     url = reverse("user-onetime-auth-request-auth")
@@ -131,9 +126,6 @@ def test_user_too_many_onetime_auth_requests(api_client, user_data, generate_use
     api_client.post(url, data=user_data)
     response = api_client.post(url, data=user_data)
     assert response.status_code == 429
-
-
-# verify_onetime_auth
 
 
 @pytest.fixture
@@ -179,16 +171,13 @@ def test_unexpected_verification_code_for_verfying_onetime_auth(api_client, user
     }
 
 
-# UserProfileViewSet
-
-
 @pytest.mark.django_db
 def test_correct_password_change(api_client_with_credentials, generate_user):
     current_password = "123456AbC!@#"
     new_password = "382u13#!@FDAS"
     user = generate_user(password=current_password)
     api_client = api_client_with_credentials(user)
-    url = reverse("user-profile-change-password")
+    url = reverse("user-account-change-password")
     request_data = {
         "old_password": current_password,
         "new_password": new_password,
@@ -199,7 +188,7 @@ def test_correct_password_change(api_client_with_credentials, generate_user):
 
 
 @pytest.mark.django_db
-def test_updating_trivial_profile_info(api_client_with_credentials):
+def test_updating_trivial_account_info(api_client_with_credentials):
     api_client = api_client_with_credentials()
     request_data = {
         "first_name": "John",
@@ -207,11 +196,11 @@ def test_updating_trivial_profile_info(api_client_with_credentials):
         "username": "JohnFreakingCena",
         "email": "JohnCena123@gmail.com",
     }
-    url = reverse("user-profile-update-info")
+    url = reverse("user-account-update-info")
     response = api_client.put(url, request_data)
     assert response.status_code == 200
-    # check to see if the profile info got updated
-    url = reverse("user-profile-get-info")
+    # check to see if the account info got updated
+    url = reverse("user-account-get-info")
     response = api_client.get(url)
     print(response.data)
     assert response.status_code == 200
@@ -224,12 +213,12 @@ def test_phone_change_process(api_client_with_credentials, cache):
     api_client = api_client_with_credentials()
     new_phone = "09377964143"
     change_phone_request_data = {"phone": new_phone}
-    url = reverse("user-profile-change-phone-request")
+    url = reverse("user-account-change-phone-request")
     response = api_client.put(url, change_phone_request_data)
     assert response.status_code == 202
     # second, verify the new phone using the verification code which has been sent via SMS.
     verification_code = cache.get(create_phone_verify_cache_key(new_phone))
-    url = reverse("user-profile-change-phone-verify")
+    url = reverse("user-account-change-phone-verify")
     change_phone_verify_data = {
         "phone": new_phone,
         "verification_code": verification_code,
@@ -237,7 +226,7 @@ def test_phone_change_process(api_client_with_credentials, cache):
     response = api_client.put(url, change_phone_verify_data)
     assert response.status_code == 200
     # and for the last step, check to see if the phone number was updated.
-    url = reverse("user-profile-get-info")
+    url = reverse("user-account-get-info")
     response = api_client.get(url)
     assert response.status_code == 200
     assert response.data["phone"] == new_phone

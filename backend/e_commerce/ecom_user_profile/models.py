@@ -1,6 +1,8 @@
 from django.db import models
+from django.core.cache import cache
 
 from django.utils.translation import gettext_lazy as _
+from django.core import exceptions
 
 from ecom_core.validators import (
     validate_iban,
@@ -18,6 +20,13 @@ class City(models.Model):
     name = models.CharField(max_length=30)
     state = models.ForeignKey(State, on_delete=models.CASCADE)
 
+
+# Instead of storing any extra information or preferences for the customer in
+# a table field or column, a more flexible way to store them is to instead
+# use a JSON field.
+# The following constant is a template for the JSON field,
+# which holds the most common information or preferences for each customer
+# for this web application and is subject to change at any given time.
 
 CUSTOMER_PROFILE_DEFAULT_PREFERENCES = {
     "notifications": {"email": True, "sms": True, "frequency": "1/week"},
@@ -38,6 +47,11 @@ class CustomerProfile(models.Model):
     )
     profile_picture = models.ImageField(
         upload_to="profile_pictures/customers/", null=True, blank=True
+    )
+    birth_date = models.DateField(blank=True, null=True)
+    bio = models.CharField(max_length=300, blank=True)
+    wishlist = models.ManyToManyField(
+        "product.Product", related_name="wishlisted_by", blank=True
     )
     preferences = models.JSONField(blank=True, null=True)
 
@@ -77,6 +91,23 @@ class SellerProfile(models.Model):
     established_date = models.DateField(
         null=True, blank=True
     )  # whenever profile is verified, this field should be inputted
+
+    
+    # def verify_eligiblity(self):
+    #     redis_client = cache.client.get_client()
+    #     required_fields = redis_client.smembers("seller_required_fields")
+    #     if not required_fields:
+    #         required_fields = ["store_name", "store_description", "store_address"]
+    #         redis_client.sadd("seller_required_fields", required_fields)
+    #     for field_name in required_fields:
+    #         self.
+    #         field = getattr(self, field_name)
+    #         if not field:
+    #             raise exceptions.ValidationError(
+    #                 f"The field '{field}' doesn't exist on the SellerProfile model"
+    #             )
+                
+            
 
 
 class SellerBusinessLicense(models.Model):

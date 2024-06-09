@@ -2,9 +2,20 @@ import pytest
 
 from django.core.exceptions import ValidationError
 
+from ecom_core.validators import validate_postal_code
 from ecom_user.models import EcomUser
 from ecom_user.exceptions import CommandNotAllowedException
 
+# ---------------
+#    Fixtures
+# ---------------
+
+
+
+
+# ---------------
+#   Test Cases
+# ---------------
 
 @pytest.mark.django_db
 def test_createsuperuser_raises_exception():
@@ -24,11 +35,9 @@ def test_user_valid_postal_codes(postal_code):
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("postal_code", ["73432847932", "83427492", "1111879531"])
-def test_user_invalid_postal_codes(postal_code):
+def test_invalid_postal_codes(postal_code):
     with pytest.raises(ValidationError):
-        user = EcomUser.objects.create_user(username="test_user")
-        user.postal_code = postal_code
-        user.clean_fields()
+        validate_postal_code(postal_code)
 
 
 @pytest.mark.django_db

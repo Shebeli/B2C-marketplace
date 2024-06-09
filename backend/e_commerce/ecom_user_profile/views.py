@@ -1,15 +1,11 @@
 from rest_framework.generics import (
-    get_object_or_404,
     GenericAPIView,
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
-from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework import mixins
 
-from rest_framework.viewsets import ModelViewSet, ViewSet, GenericViewSet
-from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -39,7 +35,6 @@ class CustomerProfileAPIView(
     permission_classes = [IsAuthenticated]
     serializer_class = CustomerProfileSerializer
     queryset = CustomerProfile.objects.all()
-    # lookup_field = ""
 
     def get_object(self):
         return self.get_queryset().get(user=self.request.user)
@@ -55,6 +50,10 @@ class CustomerProfileAPIView(
 
 
 class CustomerAddressList(ListCreateAPIView):
+    """
+    Note that if an attempt is made to create more than 5 addresses,
+    it would be limited by getting a 400 response
+    """
     authentication_classes = [EcomUserJWTAuthentication]
     permission_classes = [IsAuthenticated, IsOwner]
     queryset = CustomerAddress.objects.all()
@@ -74,6 +73,9 @@ class CustomerAddressList(ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         self.check_address_limit()
         return super().create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 
 class CustomerAddressDetail(RetrieveUpdateDestroyAPIView):
@@ -117,6 +119,9 @@ class SellerBusinessLicenseList(ListCreateAPIView):
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
 
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
 
 class SellerBusinessLicenseDetail(RetrieveUpdateDestroyAPIView):
     authentication_classes = [EcomUserJWTAuthentication]
@@ -136,6 +141,9 @@ class SellerBankAccountList(ListCreateAPIView):
 
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 
 class SellerBankAccountDetail(RetrieveUpdateDestroyAPIView):
