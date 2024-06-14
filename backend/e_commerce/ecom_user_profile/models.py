@@ -1,6 +1,11 @@
+import datetime
+import logging
+from typing import List
+
 from django.db import models
 from django.core.cache import cache
-
+from django.conf import settings
+from django.db.models.fields import Field
 from django.utils.translation import gettext_lazy as _
 from django.core import exceptions
 
@@ -90,24 +95,72 @@ class SellerProfile(models.Model):
     website = models.URLField(blank=True)
     established_date = models.DateField(
         null=True, blank=True
-    )  # whenever profile is verified, this field should be inputted
+    )  # whenever profile is verified, this field will be inputted.
 
-    
-    # def verify_eligiblity(self):
-    #     redis_client = cache.client.get_client()
-    #     required_fields = redis_client.smembers("seller_required_fields")
-    #     if not required_fields:
-    #         required_fields = ["store_name", "store_description", "store_address"]
-    #         redis_client.sadd("seller_required_fields", required_fields)
-    #     for field_name in required_fields:
-    #         self.
-    #         field = getattr(self, field_name)
-    #         if not field:
-    #             raise exceptions.ValidationError(
-    #                 f"The field '{field}' doesn't exist on the SellerProfile model"
-    #             )
-                
+    # If the seller is trying to verify their eligibilty for the first time,
+    # validate their eligibility, then their seller account status will be verified by updating
+    # their associated  fields.
+    # However, if the eligbility required fields gets changed during production,
+    # all sellers who have been already verified will have their eligibility revalidated,
+    # and if they are not eligible anymore, their verification field will be set to False.
+
+    def reverify_verified_sellers(self):
+        "After the seller required fields are changed by an EcomAdmin, this method should be called."
+        verified_sellers = self.objects.filter(is_verified=True)
+        for seller in verified_sellers:
+            try:
+                seller._validate_eligibility()
+            except exceptions.ValidationError as e:
+                seller.is_verified = False
+                seller.save()
+                logging.warning(e, exc_info=True)
+
+    def verify_eligibility(self) -> None:
+        "Will update the seller's fields established_date and is_verified if no exception is raised"
+        self._validate_eligibility()
+        self._update_eligible_seller_fields()
+
+    def _update_eligible_seller_fields(self) -> None:
+        "Should be called only when seller has been verified"
+        if not self.established_date:
+            self.established_date = datetime.date.today()
+        self.is_verified = True
+        self.save()
+
+    def _validate_eligibility(self) -> None:
+        required_fields = self._get_required_seller_fields()
+        self._validate_seller_required_fields(required_fields)
+
+    def _get_required_seller_fields(self) -> List[str]:
+        redis_client = cache.client.get_client()
+        required_fields = redis_client.smembers("seller_required_fields")
+        if not required_fields:
+            return settings.DEFAULT_REQUIRED_SELLER_FIELDS
+        return [field.decode() for field in required_fields]
+
+    def _validate_seller_required_fields(self, required_fields: List[str]) -> None:
+        errors = {}
+        invalid_field_names = self._get_invalid_field_names(required_fields)
+        valid_field_names = [field for field in required_fields if field not in invalid_field_names]
+        empty_fields = self._get_empty_fields(valid_field_names)
+        if invalid_field_names:
+            errors["invalid_fields"] = f"The following field's doesn't exist: {", ".join(invalid_field_names)}"
+        if empty_fields:
+            errors["empty_fields"] = f"The following field's are empty or null: {", ".join(empty_fields)}"
+        if errors:
+            raise exceptions.ValidationError(errors)
             
+
+    def _get_invalid_field_names(self, field_names: List[str]) -> List[str]:
+        model_field_names = (field.name for field in self._meta.get_fields())
+        valid_field_names = [
+            field for field in field_names if field not in model_field_names
+        ]
+        return valid_field_names
+
+    def _get_empty_fields(self, field_names: List[str]) -> List[str]:
+        empty_fields = [field for field in field_names if not getattr(self, field)]
+        return empty_fields
 
 
 class SellerBusinessLicense(models.Model):

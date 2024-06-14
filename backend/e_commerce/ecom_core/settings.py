@@ -179,3 +179,5 @@ else:
         OTP_LENGTH = abs(int(OTP_LENGTH))
     except (ValueError, TypeError):
         raise ValueError("OTP_LENGTH env variable should be a positive integer")
+
+DEFAULT_REQUIRED_SELLER_FIELDS = ['store_name', 'store_description', 'store_address']
