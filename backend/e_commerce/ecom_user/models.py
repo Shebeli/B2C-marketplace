@@ -63,19 +63,8 @@ class EcomUser(AbstractBaseUser):
 
     objects = EcomUserManager()
 
-    # We always want a seller and a customer profile to be created when an ecomuser is created.
-    # Also, you might ask, why not use django signals instead?
-    # Its a personal preference since they make the code harder to debug and maintain,
-    # but you can also read django's official documentation warning about django signals:
-    # https://docs.djangoproject.com/en/5.0/topics/signals/#module-django.dispatch
-
-    def save(self, *args, **kwargs):
-        with transaction.atomic():
-            super().save(*args, **kwargs)
-            if not SellerProfile.objects.filter(user=self).exists():
-                SellerProfile.objects.create(user=self)
-            if not CustomerProfile.objects.filter(user=self).exists():
-                CustomerProfile.objects.create(user=self)
+    def has_reached_address_limit(self, limit=5):
+        return self.customer_addresses.count() >= limit
 
     @property
     def full_name(self):

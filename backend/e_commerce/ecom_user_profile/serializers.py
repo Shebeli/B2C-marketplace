@@ -26,12 +26,11 @@ class CustomerAddressSerializer(serializers.ModelSerializer):
         exclude = ["user"]
 
     def create(self, validated_data):
-        user = self.context["user"]
-        if not user:
+        if not validated_data.get("user"):
             raise serializers.ValidationError(
                 "An instance of user should be provided using the keyword 'user' when calling save()"
             )
-        return CustomerAddress.objects.create(user=user, **validated_data)
+        return CustomerAddress.objects.create(**validated_data)
 
 
 class SellerProfileSerializer(serializers.ModelSerializer):
@@ -52,12 +51,11 @@ class SellerBusinessLicenseSerializer(serializers.ModelSerializer):
         exclude = ["user"]
 
     def create(self, validated_data):
-        user = self.context["user"]
-        if not user:
+        if not validated_data.get("user"):
             raise serializers.ValidationError(
                 "An instance of user should be provided using the keyword 'user' when calling save()"
             )
-        return CustomerAddress.objects.create(user=user, **validated_data)
+        return SellerBusinessLicense.objects.create(**validated_data)
 
 
 class SellerBankAccountSerializer(serializers.ModelSerializer):
@@ -66,9 +64,8 @@ class SellerBankAccountSerializer(serializers.ModelSerializer):
         exclude = ["user"]
 
     def create(self, validated_data):
-        user = self.context["user"]
-        if not user:
+        if not validated_data.get("user"):
             raise serializers.ValidationError(
                 "An instance of user should be provided using the keyword 'user' when calling save()"
             )
-        return CustomerAddress.objects.create(user=user, **validated_data)
+        return SellerBankAccount.objects.create(**validated_data)

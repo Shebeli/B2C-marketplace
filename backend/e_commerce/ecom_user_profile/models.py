@@ -104,7 +104,7 @@ class SellerProfile(models.Model):
     # all sellers who have been already verified will have their eligibility revalidated,
     # and if they are not eligible anymore, their verification field will be set to False.
 
-    def reverify_verified_sellers(self):
+    def reverify_verified_sellers(self) -> None:
         "After the seller required fields are changed by an EcomAdmin, this method should be called."
         verified_sellers = self.objects.filter(is_verified=True)
         for seller in verified_sellers:

@@ -37,7 +37,7 @@ class CustomerProfileAPIView(
     queryset = CustomerProfile.objects.all()
 
     def get_object(self):
-        return self.get_queryset().get(user=self.request.user)
+        return self.get_queryset().get_or_create(user=self.request.user)[0]
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
@@ -51,27 +51,26 @@ class CustomerProfileAPIView(
 
 class CustomerAddressList(ListCreateAPIView):
     """
-    Note that if an attempt is made to create more than 5 addresses,
-    it would be limited by getting a 400 response
+    Note that if a request is made to create more than 5 addresses,
+    the request gets prohibited by a 400 response.
     """
+
     authentication_classes = [EcomUserJWTAuthentication]
     permission_classes = [IsAuthenticated, IsOwner]
     queryset = CustomerAddress.objects.all()
     serializer_class = CustomerAddressSerializer
 
+    # since the queryset is filtered by current user, the permission class 'IsOwner' seems to
+    # be redundent, however, it adds a level of security with a small overhead.
     def get_queryset(self):
-        return self.queryset.filter(user=self.request.user)
-
-    def check_address_limit(self):
-        addresses_count = self.get_queryset().count()
-        if addresses_count >= 5:
-            return Response(
-                {"limit count": "this user cannot create more than 5 addresses"},
-                status.HTTP_400_BAD_REQUEST,
-            )
+        return self.queryset.filter(user=self.request.user).order_by("id")
 
     def create(self, request, *args, **kwargs):
-        self.check_address_limit()
+        if self.request.user.has_reached_address_limit():
+            return Response(
+                {"limit count": "this user cannot create more than 5 addresses"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
@@ -98,7 +97,7 @@ class SellerProfileAPIView(
     queryset = SellerProfile.objects.all()
 
     def get_object(self):
-        return self.get_queryset().get(user=self.request.user)
+        return self.get_queryset().get_or_create(user=self.request.user)[0]
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
@@ -117,7 +116,7 @@ class SellerBusinessLicenseList(ListCreateAPIView):
     serializer_class = SellerBusinessLicenseSerializer
 
     def get_queryset(self):
-        return self.queryset.filter(user=self.request.user)
+        return self.queryset.filter(user=self.request.user).order_by("id")
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -140,7 +139,7 @@ class SellerBankAccountList(ListCreateAPIView):
     serializer_class = SellerBankAccountSerializer
 
     def get_queryset(self):
-        return self.queryset.filter(user=self.request.user)
+        return self.queryset.filter(user=self.request.user).order_by("id")
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
