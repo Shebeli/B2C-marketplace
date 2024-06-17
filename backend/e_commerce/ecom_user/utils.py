@@ -10,8 +10,8 @@ PhoneNumber = NewType("PhoneNumber", str)
 TimeFormat = NewType("TimeFormat", str)
 
 # the following constants are base string templates which are used to construct common cache keys.
-VERIFY_PHONE_CACHE_BASE_KEY = "verify_code_for_"
-SMS_COOLDOWN_CACHE_BASE_KEY = "cooldown_for_"
+VERIFY_PHONE_CACHE_BASE_KEY = "verify:"
+SMS_COOLDOWN_CACHE_BASE_KEY = "cooldown:"
 
 
 def current_time(time_format: TimeFormat = "%H:%M:%S") -> str:
@@ -49,8 +49,6 @@ def send_sms(
     return None  # to be implemented later
 
 
-# the purpose of setting a cooldown for register is that it prevents the user
-# from spamming the SMS service.
 def create_sms_cooldown_cache_key(phone: str) -> str:
     return SMS_COOLDOWN_CACHE_BASE_KEY + phone
 
@@ -63,9 +61,9 @@ def generate_random_code(length: int = 6) -> str:
     return "".join(random.choice(string.digits) for _ in range(length))
 
 
-def process_phone_verification(phone_number):
+def process_phone_verification(phone_number: PhoneNumber):
     """
-    Generate a verification code, send the verification code via SMS to the provided 
+    Generate a verification code, send the verification code via SMS to the provided
     phone number and create caches using the phone number and the generated code.
     """
     verification_code = generate_random_code()

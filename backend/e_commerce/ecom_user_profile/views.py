@@ -9,7 +9,7 @@ from rest_framework import mixins
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ecom_user_profile.permissions import IsOwner
+from ecom_core.permissions import IsOwner
 from ecom_user_profile.models import (
     CustomerProfile,
     CustomerAddress,

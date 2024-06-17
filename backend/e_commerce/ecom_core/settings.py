@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "django_extensions",
+    "django_filters",
 ]
 
 MIDDLEWARE = [
@@ -80,8 +81,12 @@ WSGI_APPLICATION = "ecom_core.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "e_commerce",
+        'USER': 'postgres',
+        'PASSWORD': '1234',
+        'HOST': 'localhost',
+        'PORT': '5433'
     }
 }
 
@@ -180,4 +185,4 @@ else:
     except (ValueError, TypeError):
         raise ValueError("OTP_LENGTH env variable should be a positive integer")
 
-DEFAULT_REQUIRED_SELLER_FIELDS = ['store_name', 'store_description', 'store_address']
+DEFAULT_REQUIRED_SELLER_FIELDS = ["store_name", "store_description", "store_address"]

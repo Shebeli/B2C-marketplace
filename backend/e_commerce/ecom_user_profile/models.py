@@ -5,7 +5,6 @@ from typing import List
 from django.db import models
 from django.core.cache import cache
 from django.conf import settings
-from django.db.models.fields import Field
 from django.utils.translation import gettext_lazy as _
 from django.core import exceptions
 
@@ -87,7 +86,7 @@ class SellerProfile(models.Model):
     is_verified = models.BooleanField(default=False)
     products_sold = models.PositiveIntegerField(default=0)
     rating = models.DecimalField(
-        default=0.0, decimal_places=1, max_digits=5, validators=[validate_rating]
+        default=0.0, max_digits=1, decimal_places=1, validators=[validate_rating]
     )
     profile_picture = models.ImageField(
         upload_to="profile_pictures/sellers/", null=True, blank=True
@@ -102,7 +101,8 @@ class SellerProfile(models.Model):
     # their associated  fields.
     # However, if the eligbility required fields gets changed during production,
     # all sellers who have been already verified will have their eligibility revalidated,
-    # and if they are not eligible anymore, their verification field will be set to False.
+    # and if they are not eligible anymore, their verification field 'is_verified' will 
+    # be set to False.
 
     def reverify_verified_sellers(self) -> None:
         "After the seller required fields are changed by an EcomAdmin, this method should be called."
@@ -125,7 +125,7 @@ class SellerProfile(models.Model):
         if not self.established_date:
             self.established_date = datetime.date.today()
         self.is_verified = True
-        self.save()
+        self.save(update_fields=['established_date', 'is_verified'])
 
     def _validate_eligibility(self) -> None:
         required_fields = self._get_required_seller_fields()
@@ -139,14 +139,14 @@ class SellerProfile(models.Model):
         return [field.decode() for field in required_fields]
 
     def _validate_seller_required_fields(self, required_fields: List[str]) -> None:
-        errors = {}
         invalid_field_names = self._get_invalid_field_names(required_fields)
         valid_field_names = [field for field in required_fields if field not in invalid_field_names]
         empty_fields = self._get_empty_fields(valid_field_names)
+        errors = {}
         if invalid_field_names:
-            errors["invalid_fields"] = f"The following field's doesn't exist: {", ".join(invalid_field_names)}"
+            errors["invalid_fields"] = f"The following field(s) doesn't exist on EcomUser: {", ".join(invalid_field_names)}"
         if empty_fields:
-            errors["empty_fields"] = f"The following field's are empty or null: {", ".join(empty_fields)}"
+            errors["empty_fields"] = f"The following field(s) are empty or null: {", ".join(empty_fields)}"
         if errors:
             raise exceptions.ValidationError(errors)
             

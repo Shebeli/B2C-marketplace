@@ -54,6 +54,22 @@ def api_client_with_credentials(db, api_client, generate_user):
     return generate_api_client
 
 
+@pytest.fixture
+def register_verification_code(db, api_client, cache, user_data):
+    url = reverse("user-signup-request-registration")
+    api_client.post(url, data=user_data)
+    return cache.get(create_phone_verify_cache_key(user_data["phone"]))
+
+
+@pytest.fixture
+def onetime_auth_verification_code(db, api_client, cache, user_data, generate_user):
+    url = reverse("user-onetime-auth-request-auth")
+    generate_user()
+    response = api_client.post(url, data=user_data)
+    print([response.data, response.status_code])
+    return cache.get(create_phone_verify_cache_key(user_data["phone"]))
+
+
 # ---------------
 #   Test Cases
 # ---------------
@@ -72,13 +88,6 @@ def test_user_too_many_register_requests(api_client, user_data):
     api_client.post(url, data=user_data)
     response = api_client.post(url, data=user_data)
     assert response.status_code == 429
-
-
-@pytest.fixture
-def register_verification_code(db, api_client, cache, user_data):
-    url = reverse("user-signup-request-registration")
-    api_client.post(url, data=user_data)
-    return cache.get(create_phone_verify_cache_key(user_data["phone"]))
 
 
 @pytest.mark.django_db
@@ -126,15 +135,6 @@ def test_user_too_many_onetime_auth_requests(api_client, user_data, generate_use
     api_client.post(url, data=user_data)
     response = api_client.post(url, data=user_data)
     assert response.status_code == 429
-
-
-@pytest.fixture
-def onetime_auth_verification_code(db, api_client, cache, user_data, generate_user):
-    url = reverse("user-onetime-auth-request-auth")
-    generate_user()
-    response = api_client.post(url, data=user_data)
-    print([response.data, response.status_code])
-    return cache.get(create_phone_verify_cache_key(user_data["phone"]))
 
 
 @pytest.mark.django_db
@@ -216,6 +216,7 @@ def test_phone_change_process(api_client_with_credentials, cache):
     url = reverse("user-account-change-phone-request")
     response = api_client.put(url, change_phone_request_data)
     assert response.status_code == 202
+
     # second, verify the new phone using the verification code which has been sent via SMS.
     verification_code = cache.get(create_phone_verify_cache_key(new_phone))
     url = reverse("user-account-change-phone-verify")
@@ -226,6 +227,7 @@ def test_phone_change_process(api_client_with_credentials, cache):
     response = api_client.put(url, change_phone_verify_data)
     assert response.status_code == 200
     # and for the last step, check to see if the phone number was updated.
+
     url = reverse("user-account-get-info")
     response = api_client.get(url)
     assert response.status_code == 200
