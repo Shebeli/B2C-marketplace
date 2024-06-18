@@ -1,3 +1,5 @@
+from typing import Any
+
 import phonenumbers
 from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth import get_user_model
@@ -24,7 +26,7 @@ class EcomUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def normalize_phone(self, phone) -> any:
+    def normalize_phone(self, phone) -> str:
         if phone:
             parsed_phone = phonenumbers.parse(phone, "IR")
             phone = phonenumbers.format_number(

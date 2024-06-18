@@ -88,7 +88,7 @@ class ProductTagSerializer(serializers.ModelSerializer):
 class ProductListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ["id", "name", "price", "image"]
+        fields = ["id", "name", "main_price", "image"]
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -102,7 +102,8 @@ class TagSerializer(serializers.ModelSerializer):
         model = Tag
         fields = "__all__"
 
+
 class TechnicalDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = TechnicalDetail
-        fields = '__all__'
+        fields = "__all__"

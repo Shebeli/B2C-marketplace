@@ -58,9 +58,9 @@ class Product(models.Model):
 
     @property
     def available_stock(self):
-        return self.variants.aggregate(
-            available_stock=Sum(F("stock") - F("reserved_stock"))
-        )
+        return self.variants.aggregate(available_stock=Sum(F("available_stock")))[
+            "available_stock"
+        ]
 
 
 class ProductVariant(models.Model):
@@ -71,13 +71,14 @@ class ProductVariant(models.Model):
     price = models.PositiveIntegerField()
     stock = models.PositiveIntegerField()
     reserved_stock = models.PositiveIntegerField(default=0)
+    available_stock = models.GeneratedField(
+        expression=F("stock") - F("reserved_stock"),
+        output_field=models.PositiveIntegerField(),
+        db_persist=True,
+    )
     numbers_sold = models.PositiveIntegerField(
         default=0
-    )  # whenever a product is recieved by a customer and 3 days have passed since, this field should be incremented.
-
-    @property
-    def available_stock(self):
-        return self.stock - self.reserved_stock
+    )  # whenever a product is recieved by a customer and n days have passed since, this field should be incremented.
 
     def save(self, *args, **kwargs):
         if self.reserved_stock > self.stock:
