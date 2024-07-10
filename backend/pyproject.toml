@@ -25,6 +25,7 @@ tqdm = "^4.66.4"
 psycopg = {extras = ["binary"], version = "^3.1.19"}
 mysqlclient = "^2.2.4"
 django-extensions = "^3.2.3"
+drf-spectacular = "^0.27.2"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "ecom_core.settings"

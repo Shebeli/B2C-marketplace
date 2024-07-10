@@ -1,12 +1,12 @@
 from typing import Union
 
-
+# to be implemented later
 def increase_view_count(
     cooldown_period: int = 3600 * 24,
     instance_name: Union[str | None] = None,
 ):
     """
-    For incrementing the view count of an django model instance and 
+    For incrementing the view count of an django model instance and
     setting a cooldown period by using the current client's IP.
     """
 
