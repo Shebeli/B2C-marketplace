@@ -10,3 +10,9 @@ class IsAdminOrReadOnly(BasePermission):
             or request.user.is_admin
             and request.user.is_authenticated
         )
+
+class IsSellerVerified(BasePermission):
+    def has_permission(self, request, view):
+        return bool(
+            request.user.seller_profile.is_verified
+        )

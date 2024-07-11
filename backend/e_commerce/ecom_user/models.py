@@ -1,5 +1,5 @@
 from django.db import models, transaction
-from django.contrib.auth.models import AbstractBaseUser
+from django.contrib.auth.models import AbstractBaseUser, AbstractUser
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -20,6 +20,8 @@ class EcomUser(AbstractBaseUser):
     username = models.CharField(
         _("Username"),
         unique=True,
+        blank=True,
+        null=True,
         help_text=_(
             "Maximum of 40 characters. Only letters, digits and the special character . are allowed"
         ),
@@ -33,23 +35,23 @@ class EcomUser(AbstractBaseUser):
             ),
         },
         max_length=40,
-        blank=True,
     )
-    email = models.EmailField(_("Email Address"), blank=True, unique=True)
+    email = models.EmailField(_("Email Address"), blank=True, unique=True, null=True)
     phone = models.CharField(
         _("Phone Number"),
         max_length=13,
         validators=[validate_phone],
         unique=True,
         blank=True,
+        null=True,
     )
     national_code = models.CharField(
         _("National Code"),
         blank=True,
         null=True,
+        unique=True,
         max_length=10,
         validators=[validate_national_code],
-        unique=True,
     )
     city = models.ForeignKey(City, on_delete=models.SET_NULL, null=True, blank=True)
     state = models.ForeignKey(State, on_delete=models.SET_NULL, null=True, blank=True)
@@ -62,6 +64,14 @@ class EcomUser(AbstractBaseUser):
     USERNAME_FIELD = "phone"
 
     objects = EcomUserManager()
+
+    def save(self, *args, **kwargs):
+        with transaction.atomic():
+            super().save(*args, **kwargs)
+            if not SellerProfile.objects.filter(user=self).exists():
+                SellerProfile.objects.create(user=self)
+            if not CustomerProfile.objects.filter(user=self).exists():
+                CustomerProfile.objects.create(user=self)
 
     def has_reached_address_limit(self, limit=5):
         return self.customer_addresses.count() >= limit

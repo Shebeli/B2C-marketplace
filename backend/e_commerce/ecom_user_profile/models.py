@@ -77,7 +77,7 @@ class CustomerAddress(models.Model):
 
 
 class SellerProfile(models.Model):
-    user = models.ForeignKey(
+    user = models.OneToOneField(
         "ecom_user.EcomUser", on_delete=models.CASCADE, related_name="seller_profile"
     )
     store_name = models.CharField(max_length=50, unique=True, null=True)
@@ -131,6 +131,7 @@ class SellerProfile(models.Model):
         required_fields = self._get_required_seller_fields()
         self._validate_seller_required_fields(required_fields)
 
+    # Required fields are retrieved from cache, which is subject to change by admins at any given time.
     def _get_required_seller_fields(self) -> List[str]:
         redis_client = cache.client.get_client()
         required_fields = redis_client.smembers("seller_required_fields")
@@ -152,10 +153,7 @@ class SellerProfile(models.Model):
             
 
     def _get_invalid_field_names(self, field_names: List[str]) -> List[str]:
-        model_field_names = (field.name for field in self._meta.get_fields())
-        valid_field_names = [
-            field for field in field_names if field not in model_field_names
-        ]
+        valid_field_names = [field.name for field in self._meta.get_fields()]
         return valid_field_names
 
     def _get_empty_fields(self, field_names: List[str]) -> List[str]:

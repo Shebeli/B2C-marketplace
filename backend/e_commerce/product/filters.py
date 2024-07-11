@@ -7,7 +7,7 @@ class ProductFilter(filters.FilterSet):
     subcategory = filters.CharFilter(
         field_name="subcategory__name", lookup_expr="iexact"
     )
-    tags = filters.ChoiceFilter(method="filter_by_tag_names")
+    tags = filters.CharFilter(method="filter_by_tag_names")
     price_min = filters.NumberFilter(field_name="main_price", lookup_expr="gte")
     price_max = filters.NumberFilter(field_name="main_price", lookup_expr="lte")
     in_stock = filters.BooleanFilter(method="filter_in_stock")

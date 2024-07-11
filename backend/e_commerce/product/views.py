@@ -26,14 +26,18 @@ from product.serializers import (
 )
 from product.permissions import IsAdminOrReadOnly
 from product.filters import ProductFilter
+from product.permissions import IsSellerVerified
 from ecom_core.permissions import IsOwner
 
 
 class ProductList(ListCreateAPIView):
     """
-    Providing a subcategory via query parameter in the URL is required and the
-    provided subcategory name should already exist in the database, since the
-    products belonging to the provided subcategory are retrieved.
+    Providing a subcategory via query parameter in the URL is required.
+    ordering field options: main_price, rating, created_at, view_count.
+    if you want the ordering to be descending, use - in front of the field.
+    example: ?ordering=-view_count
+    tags provided by the query parameter should be seperated by comma.
+    example: ?tags=tag1,tag2 
     """
 
     permission_classes = [IsAdminOrReadOnly | IsOwner]
@@ -50,7 +54,9 @@ class ProductList(ListCreateAPIView):
             raise ValidationError(
                 "query parameter 'subcategory' should be provided", "no_query_param"
             )
-        return super().get_queryset(self)
+        if not SubCategory.objects.filter(name__iexact=subcategory_name).exists():
+            raise ValidationError("subcategory does not exist", "subcategory_not_found")
+        return super().get_queryset()
 
 
 class ProductDetail(RetrieveUpdateDestroyAPIView):
@@ -77,42 +83,11 @@ class ProductDetail(RetrieveUpdateDestroyAPIView):
             redis_client.setex(redis_key, cooldown_period, 1)  # 1 is a dummy value
         return Response(serializer.data)
 
-
-class TagProductsList(ListAPIView):
-    "For listing all products belonging to a certain tag or list of tags"
-    permission_classes = [AllowAny]
+class ShopProductList(ListAPIView):
+    "Lists all products belonging to current authenticated seller"
+    permission_classes = [IsSellerVerified]
     queryset = Product.objects.all()
     serializer_class = ProductListSerializer
-
-    def get_tag_names_or_400(self):
-        tag_names = self.request.query_params.getlist("tags")
-        if not tag_names:
-            raise ValidationError(
-                "query parameter 'tag' should be provided", "no_query_param"
-            )
-        return tag_names
-
+    
     def get_queryset(self):
-        tag_names = self.get_tag_names_or_400()
-        products = self.queryset.filter(tags__name__in=tag_names)
-        if not products:
-            raise NotFound("No products were found with the given tag name(s)")
-        return products
-
-
-# class CategoryViewSet(ModelViewSet):
-#     permission_classes = [IsAdminOrReadOnly]
-#     queryset = Category.objects.all()
-#     serializer_class = CategorySerializer
-
-
-# class TagViewSet(ModelViewSet):
-#     permission_classes = [IsAdminOrReadOnly]
-#     queryset = Tag.objects.all()
-#     serializer_class = TagSerializer
-
-
-# class ProductsTechnicalDetailViewSet(ModelViewSet):
-#     permission_classes = [IsAdminUser]
-#     queryset = Product.objects.all()
-#     serializer_class = TechnicalDetailSerializer
+        return super().get_queryset().filter(owner=self.request.user)

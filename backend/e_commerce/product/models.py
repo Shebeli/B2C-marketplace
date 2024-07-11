@@ -32,7 +32,7 @@ class Tag(models.Model):
 
 
 class Product(models.Model):
-    user = models.ForeignKey(
+    owner = models.ForeignKey(
         EcomUser,
         on_delete=models.SET_NULL,
         null=True,

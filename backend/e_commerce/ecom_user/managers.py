@@ -10,7 +10,7 @@ from .exceptions import CommandNotAllowedException
 
 class EcomUserManager(BaseUserManager):
 
-    def create_user(self, username="", phone="", email="", password=""):
+    def create_user(self, username=None, phone=None, email=None, password=""):
         if not username and not phone:
             raise ValueError("Either username or phone should be provided")
         UserModel = get_user_model()
@@ -18,7 +18,8 @@ class EcomUserManager(BaseUserManager):
             username = UserModel.normalize_username(username)
         if phone:
             phone = self.normalize_phone(phone)
-        email = self.normalize_email(email)
+        if email:
+            email = self.normalize_email(email)
         user = self.model(
             username=username, phone=phone, email=email
         )  # either username or phone can be blank here
