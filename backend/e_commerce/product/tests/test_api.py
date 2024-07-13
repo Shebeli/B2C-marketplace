@@ -1,6 +1,7 @@
 import pytest
 
 from django.urls import reverse
+from django.core.cache import cache
 from rest_framework.test import APIClient
 
 from ecom_user.models import EcomUser
@@ -10,6 +11,13 @@ from product.models import Product
 # ---------------
 #    Fixtures
 # ---------------
+
+
+@pytest.fixture(autouse=True)
+def clear_cache():
+    cache.clear()
+    yield
+    cache.clear()
 
 
 @pytest.fixture
@@ -77,3 +85,31 @@ def test_seller_can_update_owned_product(
     response = api_client_with_seller_credentials.patch(url, data={"name": "new name"})
     assert response.status_code == 200
     assert response.data["name"] == "new name"
+
+
+@pytest.mark.django_db
+def test_product_view_count_increases_on_view(
+    api_client_with_seller_credentials, seller_instance
+):
+    client_ip = "127.0.0.1"  # default ip used by APIClient
+    redis_client = cache.client.get_client()
+    product = Product.objects.create(
+        owner=seller_instance, name="sample", main_price=100
+    )
+    url = reverse("product-detail", args=[product.id])
+    response = api_client_with_seller_credentials.get(url)
+    assert response.status_code == 200
+    redis_key = f"product:{product.id}:ip:{client_ip}"
+    assert redis_client.exists(redis_key) == 1
+    product = Product.objects.get(id=product.id)
+    assert product.view_count == 1
+
+
+@pytest.mark.django_db
+def test_product_can_be_created(api_client_with_seller_credentials):
+    url = reverse("product-list")
+    api_client_with_seller_credentials.post(url, data={"name": "meow", "main_price": 200, })
+
+@pytest.mark.django_db
+def test_product_list_filter(api_client_with_customer_credentials):
+    pass

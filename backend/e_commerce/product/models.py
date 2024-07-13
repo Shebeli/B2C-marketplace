@@ -44,22 +44,28 @@ class Product(models.Model):
     description = models.CharField(max_length=500)
     main_image = models.ImageField(blank=True)
     main_price = models.PositiveIntegerField()
-    subcategory = models.ForeignKey(SubCategory, on_delete=models.SET_NULL, null=True)
+    subcategory = models.ForeignKey(SubCategory, on_delete=models.SET_NULL)
     tags = models.ManyToManyField(Tag, related_name="products")
     rating = models.DecimalField(
         default=0.0, max_digits=1, decimal_places=1, validators=[validate_rating]
     )
     view_count = models.PositiveIntegerField(default=0)
-    # numbers_sold = models.PositiveIntegerField(default=0)
 
     def increase_view_count(self) -> None:
-        self.view_count = F("view_count") + 1
+        self.view_count = F("view_count") + 1  # to avoid race condition
         self.save(update_fields=["view_count"])
+        # self.refresh_from_db(fields=['view_count'])
 
     @property
     def available_stock(self):
         return self.variants.aggregate(available_stock=Sum(F("available_stock")))[
             "available_stock"
+        ]
+
+    @property
+    def total_number_sold(self):
+        return self.variants.aggregate(total_number_sold=Sum(F("numbers_sold")))[
+            "total_number_sold"
         ]
 
 
