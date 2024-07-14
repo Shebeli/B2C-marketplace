@@ -9,16 +9,16 @@ import time
 
 
 class Command(BaseCommand):
-    help = "Generate test data for performance testing product's python aggregate method and in database aggregation method"
+    help = "Generate random data for the product and product variants model "
 
     def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument(
-            "--num_products", type=int, default=5, help="Number of products to create"
+            "--num_products", type=int, default=10, help="Number of products to create"
         )
         parser.add_argument(
             "--variants_per_product",
             type=int,
-            default=5,
+            default=2,
             help="Number of product variants per product to create",
         )
 
@@ -32,19 +32,17 @@ class Command(BaseCommand):
                 product = Product.objects.create(
                     name=f"Product {i}",
                     main_price=random.randint(100, 1000),
-                    user=user,
+                    owner=user,
                 )
                 for j in range(variants_per_product):
                     ProductVariant.objects.create(
                         product=product,
-                        variation=f"Variant {j}",
+                        name=f"Variant {j}",
                         stock=random.randint(0, 100),
                         price=random.randint(100, 1000),
                     )
         self.stdout.write(
             self.style.SUCCESS(
-                f"""A total of {num_products*variants_per_product} datarows has 
-                been created in the database in {time.time()-start_time} seconds.
-                """
+                f"A total of {num_products*variants_per_product} datarows has \n been created in the database in {time.time()-start_time} seconds."
             )
         )

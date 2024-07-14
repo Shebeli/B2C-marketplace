@@ -6,11 +6,30 @@ from ecom_core.validators import validate_rating
 from ecom_user.models import EcomUser
 
 
-class MainCategory(models.Model):
+# Overall visualization of different category models is shown in the following tree:
+# - MainCategory 1
+#   - Category 1
+#       - SubCategory 1
+#       - SubCategory 2
+#       - ...
+#       - SubCategory p
+#   - ...
+#   - Category m
+# - ...
+# - MainCategory n
+# An Example:
+# - Books and Stationery
+#   - Books and Magazines
+#       - Printed books
+#       - Foreign and domestic magazines
+# ....
+
+
+class MainCategory(models.Model):  # e.g Digital Product, Books and Stationery
     name = models.CharField(max_length=30, unique=True)
 
 
-class Category(models.Model):
+class Category(models.Model):  #
     name = models.CharField(max_length=30, unique=True)
     main_category = models.ForeignKey(
         MainCategory, on_delete=models.CASCADE, related_name="categories"
@@ -44,7 +63,7 @@ class Product(models.Model):
     description = models.CharField(max_length=500)
     main_image = models.ImageField(blank=True)
     main_price = models.PositiveIntegerField()
-    subcategory = models.ForeignKey(SubCategory, on_delete=models.SET_NULL)
+    subcategory = models.ForeignKey(SubCategory, on_delete=models.SET_NULL, null=True)
     tags = models.ManyToManyField(Tag, related_name="products")
     rating = models.DecimalField(
         default=0.0, max_digits=1, decimal_places=1, validators=[validate_rating]
@@ -68,12 +87,16 @@ class Product(models.Model):
             "total_number_sold"
         ]
 
+    @property
+    def tag_names(self):
+        return [tag.name for tag in self.tags]
+
 
 class ProductVariant(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="variants"
     )
-    variation = models.CharField(max_length=50)
+    name = models.CharField(max_length=50)
     price = models.PositiveIntegerField()
     stock = models.PositiveIntegerField()
     reserved_stock = models.PositiveIntegerField(default=0)
@@ -94,23 +117,13 @@ class ProductVariant(models.Model):
         return super().save(*args, **kwargs)
 
 
-class TechnicalDetailAttribute(models.Model):
-    name = models.CharField(
-        max_length=40, verbose_name="technical attribute", db_index=True
-    )
-
-
 class TechnicalDetail(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="technical_details"
     )
-    attribute = models.ForeignKey(
-        TechnicalDetailAttribute,
-        on_delete=models.CASCADE,
-        related_name="technical_details",
-    )
+    attribute = models.CharField(max_length=30)
     value = models.CharField(
-        max_length=50, verbose_name="technical attribute description"
+        max_length=80, verbose_name="technical attribute description"
     )
 
     class Meta:

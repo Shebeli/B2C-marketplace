@@ -9,7 +9,6 @@ from product.models import (
     Tag,
     Category,
     TechnicalDetail,
-    TechnicalDetailAttribute,
 )
 
 
@@ -22,7 +21,7 @@ class ProductTechnicalDetailSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         ret = OrderedDict()
-        attribute = instance.attribute.name
+        attribute = instance.attribute
         value = instance.value
         ret[attribute] = value
         return ret
@@ -46,17 +45,17 @@ class ProductVariantSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     """
-    Create and update methods for nested serializer fields
-    'technical_details' and 'variants' are not supported for this serializer,
-    as that would make the serializer more complicated to work with.
+    Create and update methods doesn't support nested serializer fields
+    'technical_details' and 'variants' on this serializer, as that would
+    make the serializer more complicated to work with.
     For providing tags, name of the tags should be provided rather than
     the ids of the tags.
     """
 
     technical_details = ProductTechnicalDetailSerializer(many=True, read_only=True)
     variants = ProductVariantSerializer(many=True, read_only=True)
-    tags = serializers.ListField(
-        child=serializers.CharField(max_length=30, unique=True)
+    tags = serializers.ListSerializer(
+        child=serializers.CharField(max_length=30), write_only=True
     )
 
     class Meta:
@@ -73,6 +72,12 @@ class ProductSerializer(serializers.ModelSerializer):
             "tags",
         ]
 
+    def to_representation(self, product):
+        ret = super().to_representation(product)
+        ret["subcategory"] = product.subcategory.name
+        ret["tags"] = [tag.name for tag in product.tags.all()]
+        return ret
+
     def validate_tags(self, tags):
         if 10 >= len(tags) >= 3:
             raise serializers.ValidationError(
@@ -82,25 +87,19 @@ class ProductSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Duplicate tag names are not allowed")
         return tags
 
-    def to_representation(self, instance):
-        ret = super().to_representation(instance)
-        ret["subcategory"] = instance.subcategory.name
-        ret["tags"] = [tag.name for tag in instance.tags.all()]
-        return ret
-
     def to_internal_value(self, data):
         tag_names = data.get("tags")
         tag_objs = []
         for tag_name in tag_names:
             tag_objs.append(Tag.objects.get_or_create(name=tag_name))
-        data['tags'] = tag_objs
+        data["tags"] = tag_objs
         return super().to_internal_value(data)
-
 
     def update(self, product_obj, validated_data):
         if not self.partial:  # replace the whole current tags
             product_obj.tags.clear()
-        product_obj.tags.add(validated_data.pop('tags')) # tags here are instances, not ids.
+        tag_objs = validated_data.pop("tags")
+        product_obj.tags.add(tag_objs)  # tags here are instances, not ids.
         return super().update(product_obj, validated_data)
 
 
