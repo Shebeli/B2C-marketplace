@@ -51,6 +51,14 @@ class Tag(models.Model):
 
 
 class Product(models.Model):
+    """
+    Since fields such as numbers sold and available stock on the product is calculated by aggregating
+    the product's variants related fields, for products with no variants, a single product variant is
+    created so the whole aggregation calculations for mentioned fields are as the same with products
+    with more than one variant, thus the aggregation calculations are consistent for all kind of
+    products with different number of product variants.
+    """
+
     owner = models.ForeignKey(
         EcomUser,
         on_delete=models.SET_NULL,
@@ -89,7 +97,7 @@ class Product(models.Model):
 
     @property
     def tag_names(self):
-        return [tag.name for tag in self.tags]
+        return [tag.name for tag in self.tags.all()]
 
 
 class ProductVariant(models.Model):

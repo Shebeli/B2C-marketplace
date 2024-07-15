@@ -44,19 +44,9 @@ class ProductVariantSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    """
-    Create and update methods doesn't support nested serializer fields
-    'technical_details' and 'variants' on this serializer, as that would
-    make the serializer more complicated to work with.
-    For providing tags, name of the tags should be provided rather than
-    the ids of the tags.
-    """
-
+    "Creating or updating TechnicalDetail and ProductVariant for a product is not supported in this serializer"
     technical_details = ProductTechnicalDetailSerializer(many=True, read_only=True)
     variants = ProductVariantSerializer(many=True, read_only=True)
-    tags = serializers.ListSerializer(
-        child=serializers.CharField(max_length=30), write_only=True
-    )
 
     class Meta:
         model = Product
@@ -72,35 +62,18 @@ class ProductSerializer(serializers.ModelSerializer):
             "tags",
         ]
 
-    def to_representation(self, product):
-        ret = super().to_representation(product)
-        ret["subcategory"] = product.subcategory.name
-        ret["tags"] = [tag.name for tag in product.tags.all()]
+    def to_representation(self, product_instance):
+        ret = super().to_representation(product_instance)
+        ret["subcategory"] = product_instance.subcategory.name
+        ret["tags"] = [tag.name for tag in product_instance.tags.all()]
         return ret
 
     def validate_tags(self, tags):
-        if 10 >= len(tags) >= 3:
+        if not (3 <= len(tags) <= 10):
             raise serializers.ValidationError(
                 "At least 3 tags should be provided and at most, 10 tags can be provided."
             )
-        if tags != set(tags):
-            raise serializers.ValidationError("Duplicate tag names are not allowed")
         return tags
-
-    def to_internal_value(self, data):
-        tag_names = data.get("tags")
-        tag_objs = []
-        for tag_name in tag_names:
-            tag_objs.append(Tag.objects.get_or_create(name=tag_name))
-        data["tags"] = tag_objs
-        return super().to_internal_value(data)
-
-    def update(self, product_obj, validated_data):
-        if not self.partial:  # replace the whole current tags
-            product_obj.tags.clear()
-        tag_objs = validated_data.pop("tags")
-        product_obj.tags.add(tag_objs)  # tags here are instances, not ids.
-        return super().update(product_obj, validated_data)
 
 
 class TagSerializer(serializers.ModelSerializer):
