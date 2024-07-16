@@ -18,7 +18,7 @@ class ProductFilter(filters.FilterSet):
 
     def filter_in_stock(self, queryset, name, value):
         if value:
-            return queryset.filter(variants__available_stock__gt=0)
+            return queryset.available()
         return queryset
 
     def filter_by_tag_names(self, queryset, name, value):

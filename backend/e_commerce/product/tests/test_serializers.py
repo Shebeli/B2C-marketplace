@@ -2,7 +2,7 @@ import pytest
 
 from django.db.models import QuerySet
 
-from product.serializers import ProductSerializer
+from product.serializers import ProductSerializerForAny
 from product.models import (
     Product,
     TechnicalDetail,
@@ -130,7 +130,7 @@ def sample_product_instance_factory(
 def test_product_serializer_representation(sample_product_instance_factory):
     # initialize the instance and the serializer
     sample_product_instance = sample_product_instance_factory()
-    serializer = ProductSerializer(instance=sample_product_instance)
+    serializer = ProductSerializerForAny(instance=sample_product_instance)
 
     # construct technical details representation of the product
     technical_details_repr = []
@@ -188,7 +188,7 @@ def test_product_serializer_create(
     sample_product_data["tags"] = [tag.id for tag in tag_objs]
 
     # initialize the validate the serializer
-    serializer = ProductSerializer(data=sample_product_data)
+    serializer = ProductSerializerForAny(data=sample_product_data)
     assert serializer.is_valid()
 
     created_product_instance = serializer.save()

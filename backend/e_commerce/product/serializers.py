@@ -12,7 +12,6 @@ from product.models import (
 )
 
 
-# Abstract, nest serializer
 class ProductTechnicalDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -27,40 +26,30 @@ class ProductTechnicalDetailSerializer(serializers.ModelSerializer):
         return ret
 
 
-# Abstract, nested serializer, read only
 class ProductVariantImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductVariantImage
         fields = ["image"]
 
 
-# Abstract, nested serializer, read only
-class ProductVariantSerializer(serializers.ModelSerializer):
+# Product serializers for any kind of user.
+
+
+class ProductVariantSerializerForAny(serializers.ModelSerializer):
     images = ProductVariantImageSerializer(many=True)
 
     class Meta:
         model = ProductVariant
-        exclude = ["id", "product"]
+        fields = ["id", "name", "price", "images"]
 
 
-class ProductSerializer(serializers.ModelSerializer):
-    "Creating or updating TechnicalDetail and ProductVariant for a product is not supported in this serializer"
+class ProductSerializerForAny(serializers.ModelSerializer):
     technical_details = ProductTechnicalDetailSerializer(many=True, read_only=True)
-    variants = ProductVariantSerializer(many=True, read_only=True)
+    variants = ProductVariantSerializerForAny(many=True, read_only=True)
 
     class Meta:
         model = Product
-        fields = [
-            "id",
-            "name",
-            "main_price",
-            "main_image",
-            "description",
-            "technical_details",
-            "variants",
-            "subcategory",
-            "tags",
-        ]
+        exclude = ["view_count"]
 
     def to_representation(self, product_instance):
         ret = super().to_representation(product_instance)
@@ -74,6 +63,52 @@ class ProductSerializer(serializers.ModelSerializer):
                 "At least 3 tags should be provided and at most, 10 tags can be provided."
             )
         return tags
+
+
+# Product serializers for owners.
+
+
+class ProductVariantSerializerForOwner(serializers.ModelSerializer):
+    images = ProductVariantImageSerializer(many=True)
+
+    class Meta:
+        model = ProductVariant
+        fields = "__all__"
+
+
+class ProductSerializerForOwner(ProductVariantSerializerForAny):
+    variants = ProductVariantSerializerForAny(many=True, read_only=True)
+    on_hand_stock = serializers.IntegerField(source="get_on_hand_stock")
+    reserved_stock = serializers.IntegerField(source="get_reserved_stock")
+    available_stock = serializers.IntegerField(source="get_available_stock")
+    numbers_sold = serializers.IntegerField(source="get_total_number_sold")
+
+    class Meta:
+        model = Product
+        fields = [
+            "id",
+            "name",
+            "created_at",
+            "description",
+            "main_image",
+            "main_price",
+            "subcategory",
+            "tags",
+            "rating",
+            "on_hand_stock",
+            "reserved_stock",
+            "available_stock",
+            "view_count",
+            "numbers_sold",
+            "variants",
+        ]
+        read_only_fields = [
+            "on_hand_stock",
+            "reserved_stock",
+            "available_stock",
+            "numbers_sold",
+            "view_count",
+        ]
 
 
 class TagSerializer(serializers.ModelSerializer):

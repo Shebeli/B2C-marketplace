@@ -17,7 +17,7 @@ from ipware import get_client_ip
 
 from product.models import Product, SubCategory, Tag
 from product.serializers import (
-    ProductSerializer,
+    ProductSerializerForAny,
     ProductListSerializer,
     CategorySerializer,
     TagSerializer,
@@ -62,13 +62,20 @@ class ProductList(ListCreateAPIView):
         return super().get_queryset()
 
     def perform_create(self, serializer):
-        return super().perform_create(owner=self.request.user)
+        serializer.save(owner=self.request.user)
 
 
 class ProductDetail(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOwner & IsSellerVerified]
     queryset = Product.objects.all()
-    serializer_class = ProductListSerializer
+    serializer_class = ProductSerializerForAny
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            product = self.get_object()
+            if self.request.user == product.owner:
+                return ProductSerializerForAny
+        return super().get_serializer_class()
 
     def get(self, request, *args, **kwargs):
         """
@@ -100,3 +107,4 @@ class ShopProductList(ListAPIView):
 
     def get_queryset(self):
         return super().get_queryset().filter(owner=self.request.user)
+

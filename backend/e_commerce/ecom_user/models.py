@@ -8,9 +8,16 @@ from ecom_core.validators import (
     validate_username,
     validate_national_code,
 )
-from ecom_user_profile.models import SellerProfile, CustomerProfile, City, State
 
 from .managers import EcomUserManager
+
+class State(models.Model):
+    name = models.CharField(max_length=30)
+
+
+class City(models.Model):
+    name = models.CharField(max_length=30)
+    state = models.ForeignKey(State, on_delete=models.CASCADE)
 
 
 class EcomUser(AbstractBaseUser):
@@ -65,14 +72,6 @@ class EcomUser(AbstractBaseUser):
 
     objects = EcomUserManager()
 
-    def save(self, *args, **kwargs):
-        with transaction.atomic():
-            super().save(*args, **kwargs)
-            if not SellerProfile.objects.filter(user=self).exists():
-                SellerProfile.objects.create(user=self)
-            if not CustomerProfile.objects.filter(user=self).exists():
-                CustomerProfile.objects.create(user=self)
-
     def has_reached_address_limit(self, limit=5):
         return self.customer_addresses.count() >= limit
 
@@ -89,3 +88,4 @@ class EcomUser(AbstractBaseUser):
 
     def __str__(self):
         return f"User: {self.username} , Phone number:{self.phone}"
+

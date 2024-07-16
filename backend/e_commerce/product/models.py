@@ -4,6 +4,7 @@ from django.db.models import F, Sum
 
 from ecom_core.validators import validate_rating
 from ecom_user.models import EcomUser
+from .managers import ProductManager
 
 
 # Overall visualization of different category models is shown in the following tree:
@@ -52,11 +53,11 @@ class Tag(models.Model):
 
 class Product(models.Model):
     """
-    Since fields such as numbers sold and available stock on the product is calculated by aggregating
-    the product's variants related fields, for products with no variants, a single product variant is
-    created so the whole aggregation calculations for mentioned fields are as the same with products
-    with more than one variant, thus the aggregation calculations are consistent for all kind of
-    products with different number of product variants.
+    Since the fields on_hand_stock, reserverd_stock, available_stock and total_number_sold for
+    a product is calculated by aggregating the product's variants related fields, for products
+    with no variants, a single product variant is created so the whole aggregation calculations for
+    mentioned fields are the same with products with more than one variant, thus the aggregation
+    calculations are consistent for all products with different number of product variants.
     """
 
     owner = models.ForeignKey(
@@ -78,19 +79,27 @@ class Product(models.Model):
     )
     view_count = models.PositiveIntegerField(default=0)
 
+    objects = ProductManager()
+
     def increase_view_count(self) -> None:
         self.view_count = F("view_count") + 1  # to avoid race condition
         self.save(update_fields=["view_count"])
         # self.refresh_from_db(fields=['view_count'])
 
-    @property
-    def available_stock(self):
+    def get_on_hand_stock(self):
+        return self.variants.aggregate(on_hand_stock=Sum(F("on_hand_stock")))
+
+    def get_reserved_stock(self):
+        return self.variants.aggregate(reserved_stock=Sum(F("reserved_stock")))[
+            "reserved_stock"
+        ]
+
+    def get_available_stock(self):
         return self.variants.aggregate(available_stock=Sum(F("available_stock")))[
             "available_stock"
         ]
 
-    @property
-    def total_number_sold(self):
+    def get_total_number_sold(self):
         return self.variants.aggregate(total_number_sold=Sum(F("numbers_sold")))[
             "total_number_sold"
         ]
@@ -106,10 +115,10 @@ class ProductVariant(models.Model):
     )
     name = models.CharField(max_length=50)
     price = models.PositiveIntegerField()
-    stock = models.PositiveIntegerField()
+    on_hand_stock = models.PositiveIntegerField()
     reserved_stock = models.PositiveIntegerField(default=0)
     available_stock = models.GeneratedField(
-        expression=F("stock") - F("reserved_stock"),
+        expression=F("on_hand_stock") - F("reserved_stock"),
         output_field=models.PositiveIntegerField(),
         db_persist=True,
     )
@@ -118,11 +127,15 @@ class ProductVariant(models.Model):
     )  # whenever a product is recieved by a customer and n days have passed since, this field should be incremented.
 
     def save(self, *args, **kwargs):
-        if self.reserved_stock > self.stock:
+        if self.reserved_stock > self.on_hand_stock:
             raise exceptions.ValidationError(
-                "Reserved stock cannot be larger than stock"
+                "Reserved stock cannot be larger than on-hand inventory"
             )
         return super().save(*args, **kwargs)
+
+    @property
+    def is_available(self):
+        return self.available_stock > 0
 
 
 class TechnicalDetail(models.Model):

@@ -38,11 +38,11 @@ class Command(BaseCommand):
                     ProductVariant.objects.create(
                         product=product,
                         name=f"Variant {j}",
-                        stock=random.randint(0, 100),
+                        on_hand_stock=random.randint(0, 100),
                         price=random.randint(100, 1000),
                     )
         self.stdout.write(
             self.style.SUCCESS(
-                f"A total of {num_products*variants_per_product} datarows has \n been created in the database in {time.time()-start_time} seconds."
+                f"A  of {num_products*variants_per_product} datarows has \n been created in the database in {time.time()-start_time} seconds."
             )
         )

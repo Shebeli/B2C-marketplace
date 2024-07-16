@@ -8,6 +8,8 @@ from ecom_user.models import EcomUser
 from ecom_user_profile.models import CustomerAddress
 from product.models import Product
 
+from .test_serializers import subcategory_obj, tag_objs
+
 # ---------------
 #    Fixtures
 # ---------------
@@ -106,9 +108,21 @@ def test_product_view_count_increases_on_view(
 
 
 @pytest.mark.django_db
-def test_product_can_be_created(api_client_with_seller_credentials):
+def test_product_can_be_created(
+    api_client_with_seller_credentials, tag_objs, subcategory_obj
+):
     url = reverse("product-list")
-    api_client_with_seller_credentials.post(url, data={"name": "meow", "main_price": 200, })
+    response = api_client_with_seller_credentials.post(
+        url,
+        data={
+            "name": "chair",
+            "main_price": 200,
+            "subcategory": subcategory_obj.id,
+            "tags": [tag.id for tag in tag_objs],
+        },
+    )
+    
+
 
 @pytest.mark.django_db
 def test_product_list_filter(api_client_with_customer_credentials):

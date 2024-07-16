@@ -4,7 +4,9 @@ import phonenumbers
 from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
+from django.db import transaction
 
+from ecom_user_profile.models import SellerProfile, CustomerProfile
 from .exceptions import CommandNotAllowedException
 
 
@@ -24,7 +26,12 @@ class EcomUserManager(BaseUserManager):
             username=username, phone=phone, email=email
         )  # either username or phone can be blank here
         user.set_password(password)
-        user.save(using=self._db)
+        with transaction.atomic():
+            user.save(using=self._db)
+            if not SellerProfile.objects.filter(user=self).exists():
+                SellerProfile.objects.create(user=self)
+            if not CustomerProfile.objects.filter(user=self).exists():
+                CustomerProfile.objects.create(user=self)
         return user
 
     def normalize_phone(self, phone) -> str:

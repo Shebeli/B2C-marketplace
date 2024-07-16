@@ -16,13 +16,6 @@ from ecom_core.validators import (
 )
 
 
-class State(models.Model):
-    name = models.CharField(max_length=30)
-
-
-class City(models.Model):
-    name = models.CharField(max_length=30)
-    state = models.ForeignKey(State, on_delete=models.CASCADE)
 
 
 # Instead of storing any extra information or preferences for the customer in
