@@ -164,10 +164,11 @@ SMS_SENDER_PHONE_NUMBER = os.environ.get("SMS_PHONE")
 REDIS_HOST = os.environ.get("REDIS_HOST")
 REDIS_PORT = os.environ.get("REDIS_PORT")
 
-if None in [REDIS_HOST, REDIS_PORT]:
-    raise ValueError("One or more of the redis variables should not be None.")
+if None in [REDIS_HOST, REDIS_PORT]: 
+    REDIS_HOST = "127.0.0.1"
+    REDIS_PORT = '6379' 
 
-
+ 
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",

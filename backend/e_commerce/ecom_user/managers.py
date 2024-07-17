@@ -26,12 +26,7 @@ class EcomUserManager(BaseUserManager):
             username=username, phone=phone, email=email
         )  # either username or phone can be blank here
         user.set_password(password)
-        with transaction.atomic():
-            user.save(using=self._db)
-            if not SellerProfile.objects.filter(user=self).exists():
-                SellerProfile.objects.create(user=self)
-            if not CustomerProfile.objects.filter(user=self).exists():
-                CustomerProfile.objects.create(user=self)
+        user.save(using=self._db)
         return user
 
     def normalize_phone(self, phone) -> str:

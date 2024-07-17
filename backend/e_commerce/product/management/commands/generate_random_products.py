@@ -43,6 +43,6 @@ class Command(BaseCommand):
                     )
         self.stdout.write(
             self.style.SUCCESS(
-                f"A  of {num_products*variants_per_product} datarows has \n been created in the database in {time.time()-start_time} seconds."
+                f"A total of {num_products*variants_per_product} datarows has been created in the database in {(time.time()-start_time)} seconds."
             )
         )

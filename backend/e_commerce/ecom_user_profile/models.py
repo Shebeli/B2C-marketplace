@@ -68,6 +68,7 @@ class CustomerAddress(models.Model):
         unique=True,
     )
 
+    
 
 class SellerProfile(models.Model):
     user = models.OneToOneField(

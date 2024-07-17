@@ -11,6 +11,7 @@ from ecom_core.validators import (
 
 from .managers import EcomUserManager
 
+
 class State(models.Model):
     name = models.CharField(max_length=30)
 
@@ -88,4 +89,3 @@ class EcomUser(AbstractBaseUser):
 
     def __str__(self):
         return f"User: {self.username} , Phone number:{self.phone}"
-
