@@ -44,25 +44,19 @@ class ProductVariantSerializerForAny(serializers.ModelSerializer):
 
 
 class ProductSerializerForAny(serializers.ModelSerializer):
+    "This serializer is only intenteded to be used for representing data."
     technical_details = ProductTechnicalDetailSerializer(many=True, read_only=True)
     variants = ProductVariantSerializerForAny(many=True, read_only=True)
 
     class Meta:
         model = Product
-        exclude = ["view_count"]
+        exclude = ["view_count", 'created_at']
 
     def to_representation(self, product_instance):
         ret = super().to_representation(product_instance)
         ret["subcategory"] = product_instance.subcategory.name
         ret["tags"] = [tag.name for tag in product_instance.tags.all()]
         return ret
-
-    def validate_tags(self, tags):
-        if not (3 <= len(tags) <= 10):
-            raise serializers.ValidationError(
-                "At least 3 tags should be provided and at most, 10 tags can be provided."
-            )
-        return tags
 
 
 # Product serializers for owners.
@@ -76,8 +70,9 @@ class ProductVariantSerializerForOwner(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class ProductSerializerForOwner(ProductVariantSerializerForAny):
-    variants = ProductVariantSerializerForAny(many=True, read_only=True)
+class ProductSerializerForOwner(serializers.ModelSerializer):
+    variants = ProductVariantSerializerForAny(many=True)
+    technical_details = ProductTechnicalDetailSerializer(many=True)
     on_hand_stock = serializers.IntegerField(source="get_on_hand_stock")
     reserved_stock = serializers.IntegerField(source="get_reserved_stock")
     available_stock = serializers.IntegerField(source="get_available_stock")
@@ -103,12 +98,21 @@ class ProductSerializerForOwner(ProductVariantSerializerForAny):
             "variants",
         ]
         read_only_fields = [
+            "variants",
+            "technical_detail",
             "on_hand_stock",
             "reserved_stock",
             "available_stock",
             "numbers_sold",
             "view_count",
         ]
+
+    def validate_tags(self, tags):
+        if not (3 <= len(tags) <= 10):
+            raise serializers.ValidationError(
+                "At least 3 tags should be provided and at most, 10 tags can be provided."
+            )
+        return tags
 
 
 class TagSerializer(serializers.ModelSerializer):

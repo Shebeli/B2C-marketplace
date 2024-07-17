@@ -17,8 +17,8 @@ from product.models import (
 @pytest.fixture
 def sample_variants_data():
     return [
-        {"name": "blue", "price": 195, "stock": 15},
-        {"name": "white", "price": 200, "stock": 50},
+        {"name": "blue", "price": 195, "on_hand_stock": 15},
+        {"name": "white", "price": 200, "on_hand_stock": 50},
     ]
 
 
@@ -77,7 +77,7 @@ def sample_category_instance_factory():
 
 @pytest.fixture
 def subcategory_obj(sample_category_instance_factory):
-    return sample_category_instance_factory()["subcategory"]
+    return sample_category_instance_factory()["subcategory_obj"]
 
 
 @pytest.fixture
@@ -105,17 +105,20 @@ def sample_product_instance_factory(
     sample_category_instance_factory,
     sample_tags_instances_factory,
 ):
-    # create the product and the subcategory
     def create_product_instance():
         full_product_data = full_product_data_factory()
+
+        # create the subcategory and the product
         category_objs = sample_category_instance_factory()
         product_obj = Product.objects.create(
             subcategory=category_objs["subcategory_obj"], **full_product_data["product"]
         )
+
         # create the Tag objects and set the relations
         tag_objs = sample_tags_instances_factory()
         for tag_obj in tag_objs:
             product_obj.tags.add(tag_obj)
+
         # create variants and TechnicalDetail objects
         for variant in full_product_data["variants"]:
             ProductVariant.objects.create(product=product_obj, **variant)
@@ -127,7 +130,7 @@ def sample_product_instance_factory(
 
 
 @pytest.mark.django_db
-def test_product_serializer_representation(sample_product_instance_factory):
+def test_product_serializer_for_any_representation(sample_product_instance_factory):
     # initialize the instance and the serializer
     sample_product_instance = sample_product_instance_factory()
     serializer = ProductSerializerForAny(instance=sample_product_instance)
@@ -144,26 +147,26 @@ def test_product_serializer_representation(sample_product_instance_factory):
     for variant in sample_product_instance.variants.all():
         variants_repr.append(
             {
+                "id": variant.id,
                 "name": variant.name,
-                "stock": variant.stock,
-                "reserved_stock": variant.reserved_stock,
-                "available_stock": variant.available_stock,
                 "images": (
                     []
                     if not variant.images
                     else [variant_image.image for variant_image in variant.images.all()]
                 ),
-                "numbers_sold": variant.numbers_sold,
                 "price": variant.price,
             }
         )
-    # assertion
     assert serializer.data == {
         "id": 1,
+        "owner": (
+            sample_product_instance.owner.id if sample_product_instance.owner else None
+        ),
         "technical_details": technical_details_repr,
         "variants": variants_repr,
         "tags": sample_product_instance.tag_names,
         "name": sample_product_instance.name,
+        "rating": str(sample_product_instance.rating),
         "main_price": sample_product_instance.main_price,
         "main_image": (
             None
@@ -184,13 +187,13 @@ def test_product_serializer_create(
     "Note that technical detail and variant creation/update is not handled in this serializer"
     # create sample data, assign subcategory and tags to it.
     sample_product_data = sample_product_data_factory()
-    sample_product_data["subcategory"] = subcategory_obj
+    sample_product_data["subcategory"] = subcategory_obj.id
     sample_product_data["tags"] = [tag.id for tag in tag_objs]
 
     # initialize the validate the serializer
     serializer = ProductSerializerForAny(data=sample_product_data)
-    assert serializer.is_valid()
-
+    serializer.is_valid()
+    assert not serializer.errors
     created_product_instance = serializer.save()
     assert list(created_product_instance.tags.all()) == tag_objs
     assert created_product_instance.subcategory == subcategory_obj
