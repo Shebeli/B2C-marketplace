@@ -50,7 +50,7 @@ class ProductSerializerForAny(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        exclude = ["view_count", 'created_at']
+        exclude = ["view_count", "created_at"]
 
     def to_representation(self, product_instance):
         ret = super().to_representation(product_instance)
@@ -71,12 +71,18 @@ class ProductVariantSerializerForOwner(serializers.ModelSerializer):
 
 
 class ProductSerializerForOwner(serializers.ModelSerializer):
-    variants = ProductVariantSerializerForAny(many=True)
-    technical_details = ProductTechnicalDetailSerializer(many=True)
-    on_hand_stock = serializers.IntegerField(source="get_on_hand_stock")
-    reserved_stock = serializers.IntegerField(source="get_reserved_stock")
-    available_stock = serializers.IntegerField(source="get_available_stock")
-    numbers_sold = serializers.IntegerField(source="get_total_number_sold")
+    variants = ProductVariantSerializerForAny(many=True, read_only=True)
+    technical_details = ProductTechnicalDetailSerializer(many=True, read_only=True)
+    on_hand_stock = serializers.IntegerField(source="get_on_hand_stock", read_only=True)
+    reserved_stock = serializers.IntegerField(
+        source="get_reserved_stock", read_only=True
+    )
+    available_stock = serializers.IntegerField(
+        source="get_available_stock", read_only=True
+    )
+    numbers_sold = serializers.IntegerField(
+        source="get_total_number_sold", read_only=True
+    )
 
     class Meta:
         model = Product
@@ -87,24 +93,16 @@ class ProductSerializerForOwner(serializers.ModelSerializer):
             "description",
             "main_image",
             "main_price",
+            "technical_details",
             "subcategory",
             "tags",
+            "variants",
             "rating",
             "on_hand_stock",
             "reserved_stock",
             "available_stock",
             "view_count",
             "numbers_sold",
-            "variants",
-        ]
-        read_only_fields = [
-            "variants",
-            "technical_detail",
-            "on_hand_stock",
-            "reserved_stock",
-            "available_stock",
-            "numbers_sold",
-            "view_count",
         ]
 
     def validate_tags(self, tags):

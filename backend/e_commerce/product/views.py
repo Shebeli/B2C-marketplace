@@ -64,7 +64,7 @@ class ProductList(ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
-ٍ
+
 
 class ProductDetail(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOwner & IsSellerVerified]

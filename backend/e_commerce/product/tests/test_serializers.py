@@ -2,7 +2,7 @@ import pytest
 
 from django.db.models import QuerySet
 
-from product.serializers import ProductSerializerForAny
+from product.serializers import ProductSerializerForAny, ProductSerializerForOwner
 from product.models import (
     Product,
     TechnicalDetail,
@@ -190,8 +190,8 @@ def test_product_serializer_create(
     sample_product_data["subcategory"] = subcategory_obj.id
     sample_product_data["tags"] = [tag.id for tag in tag_objs]
 
-    # initialize the validate the serializer
-    serializer = ProductSerializerForAny(data=sample_product_data)
+    # initialize and validate the serializer
+    serializer = ProductSerializerForOwner(data=sample_product_data)
     serializer.is_valid()
     assert not serializer.errors
     created_product_instance = serializer.save()
