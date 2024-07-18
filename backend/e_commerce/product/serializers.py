@@ -44,7 +44,7 @@ class ProductVariantSerializerForAny(serializers.ModelSerializer):
 
 
 class ProductSerializerForAny(serializers.ModelSerializer):
-    "This serializer is only intenteded to be used for representing data."
+    "This serializer is only intenteded to be used for representing data"
     technical_details = ProductTechnicalDetailSerializer(many=True, read_only=True)
     variants = ProductVariantSerializerForAny(many=True, read_only=True)
 

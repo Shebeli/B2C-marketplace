@@ -121,8 +121,12 @@ def test_product_can_be_created(
             "tags": [tag.id for tag in tag_objs],
         },
     )
-    
+    assert response.status_code == 200
+    assert Product.objects.get(id=response['id'])
 
+@pytest.mark.django_db
+def test_product_has_extra_details_for_owner():
+    pass
 
 @pytest.mark.django_db
 def test_product_list_filter(api_client_with_customer_credentials):
