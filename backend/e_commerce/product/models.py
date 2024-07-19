@@ -84,10 +84,12 @@ class Product(models.Model):
     def increase_view_count(self) -> None:
         self.view_count = F("view_count") + 1  # to avoid race condition
         self.save(update_fields=["view_count"])
-        # self.refresh_from_db(fields=['view_count'])
+        self.refresh_from_db(fields=["view_count"])
 
     def get_on_hand_stock(self):
-        return self.variants.aggregate(on_hand_stock=Sum(F("on_hand_stock")))
+        return self.variants.aggregate(on_hand_stock=Sum(F("on_hand_stock")))[
+            "on_hand_stock"
+        ]
 
     def get_reserved_stock(self):
         return self.variants.aggregate(reserved_stock=Sum(F("reserved_stock")))[

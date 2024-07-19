@@ -84,6 +84,7 @@ class ProductSerializerForOwner(serializers.ModelSerializer):
         source="get_total_number_sold", read_only=True
     )
 
+
     class Meta:
         model = Product
         fields = [
@@ -104,6 +105,9 @@ class ProductSerializerForOwner(serializers.ModelSerializer):
             "view_count",
             "numbers_sold",
         ]
+        extra_kwargs = {
+            "subcategory": {"required": True}
+        }
 
     def validate_tags(self, tags):
         if not (3 <= len(tags) <= 10):

@@ -11,11 +11,10 @@ from ecom_user.exceptions import CommandNotAllowedException
 # ---------------
 
 
-
-
 # ---------------
 #   Test Cases
 # ---------------
+
 
 @pytest.mark.django_db
 def test_createsuperuser_raises_exception():

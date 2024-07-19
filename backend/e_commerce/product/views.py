@@ -6,6 +6,7 @@ from rest_framework.generics import (
     ListAPIView,
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
+    get_object_or_404,
 )
 from rest_framework import status
 from rest_framework.decorators import action
@@ -27,7 +28,6 @@ from product.serializers import (
 from product.permissions import IsAdminOrReadOnly, IsSellerVerified, IsOwner
 from product.filters import ProductFilter
 from product.permissions import IsSellerVerified
-from ecom_core.permissions import IsOwner
 
 
 class ProductList(ListCreateAPIView):
@@ -69,14 +69,19 @@ class ProductList(ListCreateAPIView):
 class ProductDetail(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOwner & IsSellerVerified]
     queryset = Product.objects.all()
+    _cached_object = None
+
+    def get_object(self):
+        if not self._cached_object:
+            self._cached_object = super().get_object()
+        return self._cached_object
 
     def get_serializer_class(self):
-        if self.request.method == "GET":
-            product = self.get_object()
-            if self.request.user == product.owner:
-                return ProductSerializerForOwner
-            else:
-                return ProductSerializerForAny
+        product = self.get_object()
+        if self.request.user == product.owner:
+            return ProductSerializerForOwner
+        else:
+            return ProductSerializerForAny
 
     def get(self, request, *args, **kwargs):
         """

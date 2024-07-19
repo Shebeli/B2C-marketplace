@@ -158,7 +158,7 @@ def test_product_serializer_for_any_representation(sample_product_instance_facto
             }
         )
     assert serializer.data == {
-        "id": 1,
+        "id": sample_product_instance.id,
         "owner": (
             sample_product_instance.owner.id if sample_product_instance.owner else None
         ),

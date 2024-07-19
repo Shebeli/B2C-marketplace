@@ -6,6 +6,7 @@ from rest_framework.test import APIClient
 from ecom_user.models import EcomUser
 from ecom_user_profile.models import CustomerAddress
 
+
 # ---------------
 #    Fixtures
 # ---------------
@@ -92,6 +93,7 @@ def test_user_can_create_list_customer_addresses(api_client_with_credentials):
     response_2 = api_client_with_credentials.post(url, data=address_2)
     assert response_1.status_code == 201
     assert response_2.status_code == 201
+
     # see if the new addresses are listed
     get_response = api_client_with_credentials.get(url)
     assert dict(get_response.data["results"][0])["address"] == address_1["address"]
@@ -104,15 +106,23 @@ def test_user_can_destroy_update_retrieve_customer_addresses(
 ):
     urls = []
     for i in range(1, 4):
-        CustomerAddress.objects.create(user=user_instance, address=f"address_{i}"),
-        urls.append(  # ith index of the list 'urls' is mapped to CustomerAddress object id i+1
-            reverse("customer-addresses-detail", args=[i]),
+        address_obj = CustomerAddress.objects.create(
+            user=user_instance, address=f"address_{i}"
         )
+        urls.append(  # ith index of the array 'urls' is mapped to current iteration of CustomerAddress object id
+            reverse("customer-addresses-detail", args=[address_obj.id]),
+        )
+
+    # deletion
     delete_response = api_client_with_credentials.delete(urls[0])
     assert delete_response.status_code == 204
+
+    # update
     update_response = api_client_with_credentials.patch(
         urls[1], data={"address": "new address"}
     )
     assert update_response.data["address"] == "new address"
+
+    # retrieve
     get_response = api_client_with_credentials.get(urls[2])
     assert get_response.data["address"] == "address_3"
