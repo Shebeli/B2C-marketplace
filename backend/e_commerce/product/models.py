@@ -124,9 +124,8 @@ class ProductVariant(models.Model):
         output_field=models.PositiveIntegerField(),
         db_persist=True,
     )
-    numbers_sold = models.PositiveIntegerField(
-        default=0
-    )  # whenever a product is recieved by a customer and n days have passed since, this field should be incremented.
+    numbers_sold = models.PositiveIntegerField(default=0)
+
     def save(self, *args, **kwargs):
         if self.reserved_stock > self.on_hand_stock:
             raise exceptions.ValidationError(

@@ -15,7 +15,7 @@ from product.models import (
 class ProductTechnicalDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = TechnicalDetail
-        exclude = ["id", "product"]
+        exclude = ["product"]
 
     def to_representation(self, instance):
         ret = OrderedDict()
@@ -71,7 +71,7 @@ class ProductVariantSerializerForOwner(serializers.ModelSerializer):
 
 
 class ProductSerializerForOwner(serializers.ModelSerializer):
-    variants = ProductVariantSerializerForAny(many=True, read_only=True)
+    variants = ProductVariantSerializerForOwner(many=True, read_only=True)
     technical_details = ProductTechnicalDetailSerializer(many=True, read_only=True)
     on_hand_stock = serializers.IntegerField(source="get_on_hand_stock", read_only=True)
     reserved_stock = serializers.IntegerField(
@@ -80,9 +80,7 @@ class ProductSerializerForOwner(serializers.ModelSerializer):
     available_stock = serializers.IntegerField(
         source="get_available_stock", read_only=True
     )
-    number_sold = serializers.IntegerField(
-        source="get_number_sold", read_only=True
-    )
+    number_sold = serializers.IntegerField(source="get_number_sold", read_only=True)
 
     class Meta:
         model = Product

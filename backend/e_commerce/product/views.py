@@ -1,33 +1,25 @@
-from rest_framework.mixins import ListModelMixin
-from rest_framework.permissions import AllowAny, IsAdminUser
-from rest_framework.viewsets import GenericViewSet, ModelViewSet
-from rest_framework.response import Response
+from django.core.cache import cache
+from django_filters import rest_framework as filters
+from ipware import get_client_ip
+from rest_framework.exceptions import ValidationError
+from rest_framework.filters import OrderingFilter
 from rest_framework.generics import (
     ListAPIView,
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
-    get_object_or_404,
 )
-from rest_framework import status
-from rest_framework.decorators import action
-from rest_framework.filters import OrderingFilter
-from rest_framework.exceptions import NotFound, ValidationError
-from django.core.cache import cache
-from django_filters import rest_framework as filters
-from ipware import get_client_ip
+from rest_framework.response import Response
 
-from product.models import Product, SubCategory, Tag
+from product.filters import ProductFilter
+from product.models import Product, SubCategory, ProductVariant, TechnicalDetail
+from product.permissions import IsOwner, IsSellerVerified
 from product.serializers import (
+    ProductListSerializer,
     ProductSerializerForAny,
     ProductSerializerForOwner,
-    ProductListSerializer,
-    CategorySerializer,
-    TagSerializer,
-    TechnicalDetailSerializer,
+    ProductVariantSerializerForOwner,
+    ProductTechnicalDetailSerializer,
 )
-from product.permissions import IsAdminOrReadOnly, IsSellerVerified, IsOwner
-from product.filters import ProductFilter
-from product.permissions import IsSellerVerified
 
 
 class ProductList(ListCreateAPIView):
@@ -105,8 +97,43 @@ class ProductDetail(RetrieveUpdateDestroyAPIView):
             redis_client.setex(redis_key, cooldown_period, 1)  # 1 is a dummy value
 
 
+class ProductVariantDetail(RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsOwner & IsSellerVerified]
+    queryset = ProductVariant.objects.all()
+    serializer_class = ProductVariantSerializerForOwner
+    lookup_field = "variant_pk"
+
+
+class ProductVariantList(ListCreateAPIView):
+    permission_classes = [IsSellerVerified]
+    queryset = ProductVariant.objects.all()
+    serializer_class = ProductVariantSerializerForOwner
+
+    def get_queryset(self):
+        product_pk = self.kwargs.get("product_pk")
+        return super().get_queryset().filter(product=product_pk)
+
+
+class ProductTechnicalInfoDetail(RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsSellerVerified]
+    queryset = TechnicalDetail.objects.all()
+    serializer_class = ProductTechnicalDetailSerializer
+    lookup_field = "technical_pk"
+
+
+class ProductTechnicalInfoList(ListCreateAPIView):
+    permission_classes = [IsSellerVerified]
+    queryset = TechnicalDetail.objects.all()
+    serializer_class = ProductTechnicalDetailSerializer
+
+    def get_queryset(self):
+        product_pk = self.kwargs.get("product_pk")
+        return super().get_queryset().filter(product=product_pk)
+
+
 class ShopProductList(ListAPIView):
     "Lists all products belonging to current authenticated seller"
+
     permission_classes = [IsSellerVerified]
     queryset = Product.objects.all()
     serializer_class = ProductListSerializer

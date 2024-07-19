@@ -14,7 +14,8 @@ class IsAdminOrReadOnly(BasePermission):
 
 
 class IsOwner(BasePermission):
-    message = 'User is not the owner of this object'
+    message = "User is not the owner of this object"
+
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:
             return True
@@ -23,6 +24,7 @@ class IsOwner(BasePermission):
 
 class IsSellerVerified(BasePermission):
     message = "User's seller profile isn't verified"
+
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
             return True
