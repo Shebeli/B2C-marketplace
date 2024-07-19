@@ -13,7 +13,6 @@ from product.models import (
 
 
 class ProductTechnicalDetailSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = TechnicalDetail
         exclude = ["id", "product"]
@@ -45,6 +44,7 @@ class ProductVariantSerializerForAny(serializers.ModelSerializer):
 
 class ProductSerializerForAny(serializers.ModelSerializer):
     "This serializer is only intenteded to be used for representing data"
+
     technical_details = ProductTechnicalDetailSerializer(many=True, read_only=True)
     variants = ProductVariantSerializerForAny(many=True, read_only=True)
 
@@ -80,10 +80,9 @@ class ProductSerializerForOwner(serializers.ModelSerializer):
     available_stock = serializers.IntegerField(
         source="get_available_stock", read_only=True
     )
-    numbers_sold = serializers.IntegerField(
-        source="get_total_number_sold", read_only=True
+    number_sold = serializers.IntegerField(
+        source="get_number_sold", read_only=True
     )
-
 
     class Meta:
         model = Product
@@ -103,11 +102,9 @@ class ProductSerializerForOwner(serializers.ModelSerializer):
             "reserved_stock",
             "available_stock",
             "view_count",
-            "numbers_sold",
+            "number_sold",
         ]
-        extra_kwargs = {
-            "subcategory": {"required": True}
-        }
+        extra_kwargs = {"subcategory": {"required": True}}
 
     def validate_tags(self, tags):
         if not (3 <= len(tags) <= 10):
@@ -137,12 +134,6 @@ class ProductListSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = "__all__"
-
-
-class TagSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Tag
         fields = "__all__"
 
 

@@ -1,25 +1,22 @@
 import pytest
-
-from django.urls import reverse
 from django.core.cache import cache
+from django.urls import reverse
+from ecom_user.models import EcomUser
 from rest_framework.test import APIClient
 
-from ecom_user.models import EcomUser
-from ecom_user_profile.models import CustomerAddress
 from product.models import Product
 
 from .test_serializers import (
-    sample_product_instance_factory,
-    subcategory_obj,
-    tag_objs,
-    sample_category_instance_factory,
-    sample_product_data_factory,
-    sample_tags_instances_factory,
     full_product_data_factory,
+    sample_product_data_factory,
+    sample_category_instance_factory,
+    sample_product_instance_factory,
+    sample_tags_instances_factory,
     sample_technical_data,
     sample_variants_data,
+    tag_objs,
+    subcategory_obj,
 )
-
 
 # ---------------
 #    Fixtures
@@ -57,7 +54,7 @@ def seller_instance(db, seller_credentials):
 
 
 @pytest.fixture
-def product_instance(sample_product_instance_factory, seller_instance):
+def product_instance_factory(sample_product_instance_factory, seller_instance):
     def create_product():
         product = sample_product_instance_factory()
         product.owner = seller_instance
@@ -98,9 +95,9 @@ def test_seller_can_create_product(
 
 @pytest.mark.django_db
 def test_seller_can_delete_owned_product(
-    api_client_with_seller_credentials, product_instance
+    api_client_with_seller_credentials, product_instance_factory
 ):
-    product = product_instance()
+    product = product_instance_factory()
     url = reverse("product-detail", args=[product.id])
     response = api_client_with_seller_credentials.delete(url, data={"id": product.id})
     assert response.status_code == 204
@@ -108,9 +105,9 @@ def test_seller_can_delete_owned_product(
 
 @pytest.mark.django_db
 def test_seller_can_update_owned_product(
-    api_client_with_seller_credentials, product_instance
+    api_client_with_seller_credentials, product_instance_factory
 ):
-    product = product_instance()
+    product = product_instance_factory()
     url = reverse("product-detail", args=[product.id])
     response = api_client_with_seller_credentials.patch(url, data={"name": "new name"})
     assert response.status_code == 200
@@ -119,11 +116,11 @@ def test_seller_can_update_owned_product(
 
 @pytest.mark.django_db
 def test_product_view_count_increases_on_view(
-    api_client_with_seller_credentials, product_instance
+    api_client_with_seller_credentials, product_instance_factory
 ):
     client_ip = "127.0.0.1"  # default ip used by APIClient
     redis_client = cache.client.get_client()
-    product = product_instance()
+    product = product_instance_factory()
     url = reverse("product-detail", args=[product.id])
     response = api_client_with_seller_credentials.get(url)
     assert response.status_code == 200
@@ -154,12 +151,14 @@ def test_product_can_be_created(
     assert response.status_code == 201
     assert Product.objects.get(id=response.data["id"])
 
-
 @pytest.mark.django_db
-def test_product_has_extra_details_for_owner():
-    pass
-
-
-@pytest.mark.django_db
-def test_product_list_filter(api_client_with_customer_credentials):
-    pass
+def test_product_has_extra_details_for_owner(
+    api_client_with_seller_credentials, product_instance_factory
+):
+    product = product_instance_factory()
+    url = reverse("product-detail", args=[product.id])
+    response = api_client_with_seller_credentials.get(url)
+    product.refresh_from_db(fields=["view_count"])
+    assert response.data.get("view_count") == product.view_count
+    assert response.data.get("number_sold") == product.get_number_sold()
+    assert response.data.get("available_stock") == product.get_available_stock()

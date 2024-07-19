@@ -101,9 +101,9 @@ class Product(models.Model):
             "available_stock"
         ]
 
-    def get_total_number_sold(self):
-        return self.variants.aggregate(total_number_sold=Sum(F("numbers_sold")))[
-            "total_number_sold"
+    def get_number_sold(self):
+        return self.variants.aggregate(number_sold=Sum(F("numbers_sold")))[
+            "number_sold"
         ]
 
     @property
@@ -127,7 +127,6 @@ class ProductVariant(models.Model):
     numbers_sold = models.PositiveIntegerField(
         default=0
     )  # whenever a product is recieved by a customer and n days have passed since, this field should be incremented.
-
     def save(self, *args, **kwargs):
         if self.reserved_stock > self.on_hand_stock:
             raise exceptions.ValidationError(
