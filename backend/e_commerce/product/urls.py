@@ -8,14 +8,14 @@ urlpatterns = [
     path("<int:pk>/", views.ProductDetail.as_view(), name="product-detail"),
     path("", views.ProductList.as_view(), name="product-list"),
     path(
-        "<int:product_pk>/variants",
-        views.ProductVariantDetail.as_view(),
+        "<int:product_pk>/variants/",
+        views.ProductVariantList.as_view(),
         name="variant-list",
     ),
     path(
-        "<int:product_pk>/variants/<int:variant_pk>",
-        views.ProductVariantList.as_view(),
-        name="variants-detail",
+        "<int:product_pk>/variants/<int:variant_pk>/",
+        views.ProductVariantDetail.as_view(),
+        name="variant-detail",
     ),
     path(
         "<int:product_pk>/technical-infos/",
@@ -23,7 +23,7 @@ urlpatterns = [
         name="technical-info-list",
     ),
     path(
-        "<int:product_pk>/technical-infos/<int:technical_pk>",
+        "<int:product_pk>/technical-infos/<int:technical_pk>/",
         views.ProductTechnicalInfoDetail.as_view(),
         name="technical-info-detail",
     ),

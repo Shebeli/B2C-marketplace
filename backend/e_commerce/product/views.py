@@ -7,6 +7,7 @@ from rest_framework.generics import (
     ListAPIView,
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
+    get_object_or_404,
 )
 from rest_framework.response import Response
 
@@ -101,7 +102,7 @@ class ProductVariantDetail(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOwner & IsSellerVerified]
     queryset = ProductVariant.objects.all()
     serializer_class = ProductVariantSerializerForOwner
-    lookup_field = "variant_pk"
+    lookup_url_kwarg = "variant_pk"
 
 
 class ProductVariantList(ListCreateAPIView):
@@ -118,7 +119,7 @@ class ProductTechnicalInfoDetail(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsSellerVerified]
     queryset = TechnicalDetail.objects.all()
     serializer_class = ProductTechnicalDetailSerializer
-    lookup_field = "technical_pk"
+    lookup_url_kwarg = "technical_pk"
 
 
 class ProductTechnicalInfoList(ListCreateAPIView):
@@ -128,7 +129,8 @@ class ProductTechnicalInfoList(ListCreateAPIView):
 
     def get_queryset(self):
         product_pk = self.kwargs.get("product_pk")
-        return super().get_queryset().filter(product=product_pk)
+        product_obj = get_object_or_404(Product, id=product_pk)
+        return super().get_queryset().filter(product=product_obj)
 
 
 class ShopProductList(ListAPIView):

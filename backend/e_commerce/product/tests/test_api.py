@@ -4,7 +4,7 @@ from django.urls import reverse
 from ecom_user.models import EcomUser
 from rest_framework.test import APIClient
 
-from product.models import Product
+from product.models import Product, ProductVariant, TechnicalDetail
 
 from .test_serializers import (
     full_product_data_factory,
@@ -151,6 +151,7 @@ def test_product_can_be_created(
     assert response.status_code == 201
     assert Product.objects.get(id=response.data["id"])
 
+
 @pytest.mark.django_db
 def test_product_has_extra_details_for_owner(
     api_client_with_seller_credentials, product_instance_factory
@@ -162,3 +163,35 @@ def test_product_has_extra_details_for_owner(
     assert response.data.get("view_count") == product.view_count
     assert response.data.get("number_sold") == product.get_number_sold()
     assert response.data.get("available_stock") == product.get_available_stock()
+
+
+@pytest.mark.django_db
+def test_product_variant_retrieve_update_destroy(
+    api_client_with_seller_credentials, product_instance_factory
+):
+    product = product_instance_factory()
+    variant = ProductVariant.objects.create(
+        product=product, name="some variant", price=200, on_hand_stock=20
+    )
+    url = reverse(
+        "variant-detail",
+        args=[product.id, variant.id],
+    )
+
+    # retrieve
+    get_response = api_client_with_seller_credentials.get(url)
+    assert get_response.status_code == 200
+    assert get_response.data["id"] == variant.id
+    assert get_response.data["name"] == variant.name
+    assert get_response.data["on_hand_stock"] == variant.on_hand_stock
+
+    # update
+    update_data = {"name": "new variant name", "price": 205}
+    put_response = api_client_with_seller_credentials.patch(url, data=update_data)
+    assert put_response.status_code == 200
+    assert put_response.data["name"] == update_data["name"]
+    assert put_response.data["price"] == update_data["price"]
+
+    # destroy
+    delete_response = api_client_with_seller_credentials.delete(url)
+    assert delete_response.status_code == 204

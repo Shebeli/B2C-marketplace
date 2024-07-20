@@ -137,6 +137,10 @@ class ProductVariant(models.Model):
     def is_available(self):
         return self.available_stock > 0
 
+    @property
+    def owner(self):
+        return self.product.owner
+
 
 class TechnicalDetail(models.Model):
     product = models.ForeignKey(
@@ -149,6 +153,10 @@ class TechnicalDetail(models.Model):
 
     class Meta:
         unique_together = ("product", "attribute")
+
+    @property
+    def owner(self):
+        return self.product.owner
 
 
 class ProductVariantImage(models.Model):
