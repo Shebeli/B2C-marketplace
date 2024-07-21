@@ -142,6 +142,13 @@ class ProductVariant(models.Model):
         return self.product.owner
 
 
+class ProductVariantImage(models.Model):
+    product_variant = models.ForeignKey(
+        ProductVariant, on_delete=models.CASCADE, related_name="images"
+    )
+    image = models.ImageField()
+
+
 class TechnicalDetail(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="technical_details"
@@ -157,10 +164,3 @@ class TechnicalDetail(models.Model):
     @property
     def owner(self):
         return self.product.owner
-
-
-class ProductVariantImage(models.Model):
-    product_variant = models.ForeignKey(
-        ProductVariant, on_delete=models.CASCADE, related_name="images"
-    )
-    image = models.ImageField()

@@ -195,3 +195,36 @@ def test_product_variant_retrieve_update_destroy(
     # destroy
     delete_response = api_client_with_seller_credentials.delete(url)
     assert delete_response.status_code == 204
+
+
+@pytest.mark.django_db
+def test_product_variant_list_create(
+    api_client_with_seller_credentials, product_instance_factory
+):
+    product_instance = product_instance_factory()
+    url = reverse("variant-list", args=[product_instance.id])
+    variants = []
+    for i in range(3):
+        variant = ProductVariant.objects.create(
+            product=product_instance,
+            name=f"Product variant {i}",
+            price=100 * i,
+            on_hand_stock=20,
+        )
+        variants.append(variant)
+
+    # create
+    post_data = {"name": "New variant", "price": 250, "on_hand_stock": 50}
+    post_response = api_client_with_seller_credentials.post(url, data=post_data)
+    assert post_response.status_code == 201
+    assert post_response.data["name"] == post_data["name"]
+    assert post_response.data["price"] == post_data["price"]
+
+    # list
+    get_response = api_client_with_seller_credentials.get(url)
+    variants = ProductVariant.objects.filter(product=product_instance)
+    assert get_response.status_code == 200
+    for i in range(len(variants)):  # len(variants) = len(get_response.data)
+        assert variants[i].id == get_response.data['results'][i]["id"]
+        assert variants[i].name == get_response.data['results'][i]["name"]
+        assert variants[i].price == get_response.data['results'][i]["price"]

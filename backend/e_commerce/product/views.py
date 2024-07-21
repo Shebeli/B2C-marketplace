@@ -110,9 +110,17 @@ class ProductVariantList(ListCreateAPIView):
     queryset = ProductVariant.objects.all()
     serializer_class = ProductVariantSerializerForOwner
 
-    def get_queryset(self):
+    def get_product(self):
         product_pk = self.kwargs.get("product_pk")
-        return super().get_queryset().filter(product=product_pk)
+        return get_object_or_404(Product, id=product_pk)
+
+    def get_queryset(self):
+        product_obj = self.get_product()
+        return super().get_queryset().filter(product=product_obj).order_by("id")
+
+    def perform_create(self, serializer):
+        product_obj = self.get_product()
+        serializer.save(product=product_obj)
 
 
 class ProductTechnicalInfoDetail(RetrieveUpdateDestroyAPIView):
@@ -127,10 +135,17 @@ class ProductTechnicalInfoList(ListCreateAPIView):
     queryset = TechnicalDetail.objects.all()
     serializer_class = ProductTechnicalDetailSerializer
 
-    def get_queryset(self):
+    def get_product(self):
         product_pk = self.kwargs.get("product_pk")
-        product_obj = get_object_or_404(Product, id=product_pk)
-        return super().get_queryset().filter(product=product_obj)
+        return get_object_or_404(Product, id=product_pk)
+
+    def get_queryset(self):
+        product_obj = self.get_product()
+        return super().get_queryset().filter(product=product_obj).order_by("id")
+
+    def perform_create(self, serializer):
+        product_obj = self.get_product()
+        serializer.save(product=product_obj)
 
 
 class ShopProductList(ListAPIView):

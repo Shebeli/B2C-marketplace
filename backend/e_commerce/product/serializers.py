@@ -63,11 +63,18 @@ class ProductSerializerForAny(serializers.ModelSerializer):
 
 
 class ProductVariantSerializerForOwner(serializers.ModelSerializer):
-    images = ProductVariantImageSerializer(many=True)
+    images = ProductVariantImageSerializer(many=True, required=False)
 
     class Meta:
         model = ProductVariant
-        fields = "__all__"
+        exclude = ["product"]
+
+    def create(self, validated_data):
+        if not validated_data.get("product"):
+            raise serializers.ValidationError(
+                "Product instance should be passed as keyword argument with serializer.save()"
+            )
+        return super().create(validated_data)
 
 
 class ProductSerializerForOwner(serializers.ModelSerializer):
@@ -138,4 +145,11 @@ class CategorySerializer(serializers.ModelSerializer):
 class TechnicalDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = TechnicalDetail
-        fields = "__all__"
+        exclude = ["product"]
+
+    def create(self, validated_data):
+        if not validated_data.get("product"):
+            raise serializers.ValidationError(
+                "Product instance should be passed as keyword argument with serializer.save()"
+            )
+        return super().create(validated_data)
