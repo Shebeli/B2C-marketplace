@@ -225,6 +225,84 @@ def test_product_variant_list_create(
     variants = ProductVariant.objects.filter(product=product_instance)
     assert get_response.status_code == 200
     for i in range(len(variants)):  # len(variants) = len(get_response.data)
-        assert variants[i].id == get_response.data['results'][i]["id"]
-        assert variants[i].name == get_response.data['results'][i]["name"]
-        assert variants[i].price == get_response.data['results'][i]["price"]
+        assert variants[i].id == get_response.data["results"][i]["id"]
+        assert variants[i].name == get_response.data["results"][i]["name"]
+        assert variants[i].price == get_response.data["results"][i]["price"]
+
+
+@pytest.mark.django_db
+def test_product_technical_retrieve_update_destroy(
+    api_client_with_seller_credentials, product_instance_factory
+):
+    product = product_instance_factory()
+    technical_detail = TechnicalDetail.objects.create(
+        product=product, attribute="some attribute", value="some value"
+    )
+    url = reverse(
+        "technical-info-detail",
+        args=[product.id, technical_detail.id],
+    )
+
+    # retrieve
+    get_response = api_client_with_seller_credentials.get(url)
+    assert get_response.status_code == 200
+    assert {get_response.data["attribute"]: get_response.data["value"]} == {
+        technical_detail.attribute: technical_detail.value
+    }
+
+    # update
+    update_data = {"attribute": "new attribute", "value": "new value"}
+    put_response = api_client_with_seller_credentials.patch(url, data=update_data)
+    assert put_response.status_code == 200
+    assert {put_response.data["attribute"]: put_response.data["value"]} == {
+        update_data["attribute"]: update_data["value"]
+    }
+
+    # destroy
+    delete_response = api_client_with_seller_credentials.delete(url)
+    assert delete_response.status_code == 204
+
+
+def test_technical_list_create(
+    api_client_with_seller_credentials, product_instance_factory
+):
+    # initialize the product and sample technical details
+    product_instance = product_instance_factory()
+    url = reverse("technical-info-list", args=[product_instance.id])
+    technicals = []
+    for i in range(1, 4):
+        technical = TechnicalDetail.objects.create(
+            product=product_instance, attribute=f"attribute {i}", value=f"value {i}"
+        )
+        technicals.append(technical)
+
+    # single object creation
+    post_data = {"attribute": "material", "value": "plastic"}
+    post_response = api_client_with_seller_credentials.post(url, data=post_data)
+    assert post_response.status_code == 201
+    assert post_response.data["attribute"] == post_data["attribute"]
+    assert post_response.data["value"] == post_data["value"]
+
+    # bulk object creation
+    bulk_post_data = [
+        {"attribute": "eewraqweq", "value": "250gr"},
+        {"attribute": "size", "value": "25cmx50cmx90cm"},
+    ]
+    bulk_post_response = api_client_with_seller_credentials.post(
+        url, data=bulk_post_data, format="json"
+    )
+    assert bulk_post_response.status_code == 201
+    assert {
+        bulk_post_response.data[0]["attribute"]: bulk_post_response.data[0]["value"]
+    } == {bulk_post_data[0]["attribute"]: bulk_post_data[0]["value"]}
+
+    # list
+    get_response = api_client_with_seller_credentials.get(url)
+    techincal_details = TechnicalDetail.objects.filter(product=product_instance)
+    assert get_response.status_code == 200
+    for i in range(len(techincal_details)):  # len(variants) = len(get_response.data)
+        response_attribute = get_response.data["results"][i]["attribute"]
+        response_value = get_response.data["results"][i]["value"]
+        obj_attribute = techincal_details[i].attribute
+        obj_value = techincal_details[i].value
+        assert {obj_attribute: obj_value} == {response_attribute: response_value}

@@ -10,6 +10,7 @@ from rest_framework.generics import (
     get_object_or_404,
 )
 from rest_framework.response import Response
+from rest_framework import status
 
 from product.filters import ProductFilter
 from product.models import Product, SubCategory, ProductVariant, TechnicalDetail
@@ -146,6 +147,18 @@ class ProductTechnicalInfoList(ListCreateAPIView):
     def perform_create(self, serializer):
         product_obj = self.get_product()
         serializer.save(product=product_obj)
+
+    def post(self, request, *args, **kwargs):
+        if isinstance(request.data, list):  # bulk
+            serializer = self.get_serializer(data=request.data, many=True)
+        else: 
+            serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(
+                data=serializer.data, status=status.HTTP_201_CREATED, headers=headers
+            )
 
 
 class ShopProductList(ListAPIView):

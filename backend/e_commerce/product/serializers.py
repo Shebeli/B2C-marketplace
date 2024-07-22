@@ -15,14 +15,7 @@ from product.models import (
 class ProductTechnicalDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = TechnicalDetail
-        exclude = ["product"]
-
-    def to_representation(self, instance):
-        ret = OrderedDict()
-        attribute = instance.attribute
-        value = instance.value
-        ret[attribute] = value
-        return ret
+        exclude = ['product']
 
 
 class ProductVariantImageSerializer(serializers.ModelSerializer):
