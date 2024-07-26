@@ -143,11 +143,11 @@ def test_product_can_be_created(
         url,
         data={
             "name": "chair",
-            "main_price": 200,
             "subcategory": subcategory_obj.id,
             "tags": [tag.id for tag in tag_objs],
         },
     )
+    print(response.data)
     assert response.status_code == 201
     assert Product.objects.get(id=response.data["id"])
 

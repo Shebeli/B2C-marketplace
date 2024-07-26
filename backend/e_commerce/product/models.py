@@ -107,40 +107,27 @@ class Product(models.Model):
         self.save(update_fields=["view_count"])
         self.refresh_from_db(fields=["view_count"])
 
-    def get_on_hand_stock(self, use_db: bool = True):
+    def _get_stock_field(self, field: str, use_db: bool = True):
         if use_db:
-            return self.variants.aggregate(on_hand_stock=Sum(F("on_hand_stock")))[
-                "on_hand_stock"
-            ]
-        return sum([variant.on_hand_stock for variant in self.variants.all()])
+            results = self.variants.aggregate(stock=Sum(F(field)))
+            return results["stock"]
+        return sum(getattr(variant, field) for variant in self.variants.all())
+
+    def get_on_hand_stock(self, use_db: bool = True):
+        return self._get_stock_field("on_hand_stock", use_db)
 
     def get_reserved_stock(self, use_db: bool = True):
-        if use_db:
-            return self.variants.aggregate(reserved_stock=Sum(F("reserved_stock")))[
-                "reserved_stock"
-            ]
-        return sum([variant.reserved_stock for variant in self.variants.all()])
+        return self._get_stock_field("reserved_stock", use_db)
 
     def get_available_stock(self, use_db: bool = True):
-        if use_db:
-            return self.variants.aggregate(available_stock=Sum(F("available_stock")))[
-                "available_stock"
-            ]
-        return sum([variant.available_stock for variant in self.variants.all()])
+        return self._get_stock_field("available_stock", use_db)
 
     def get_number_sold(self, use_db: bool = True):
-        if use_db:
-            return self.variants.aggregate(number_sold=Sum(F("numbers_sold")))[
-                "number_sold"
-            ]
-        return sum([variant.number_sold for variant in self.variants.all()])
+        return self._get_stock_field("number_sold", use_db)
 
     @property
     def tag_names(self):
         return [tag.name for tag in self.tags.all()]
-
-    def save(self, *args, **kwargs):
-        return super().save(*args, **kwargs)
 
 
 class ProductVariant(models.Model):
@@ -164,7 +151,7 @@ class ProductVariant(models.Model):
         db_persist=True,
         db_index=True,
     )
-    numbers_sold = models.PositiveIntegerField(default=0)
+    number_sold = models.PositiveIntegerField(default=0)
 
     def save(self, *args, **kwargs):
         if self.reserved_stock > self.on_hand_stock:

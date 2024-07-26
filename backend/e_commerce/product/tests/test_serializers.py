@@ -35,7 +35,6 @@ def sample_product_data_factory():
     def create_data():
         return {
             "name": "EO Plastic Chair 2-RS",
-            "main_price": 200,
             "description": "A furniture for sitting",
         }
 
@@ -139,7 +138,11 @@ def test_product_serializer_for_any_representation(sample_product_instance_facto
     technical_details_repr = []
     for technical_detail in sample_product_instance.technical_details.all():
         technical_details_repr.append(
-            {technical_detail.attribute: technical_detail.value}
+            {
+                "id": technical_detail.id,
+                "attribute": technical_detail.attribute,
+                "value": technical_detail.value,
+            }
         )
 
     # construct product variant representation of the product
@@ -167,12 +170,7 @@ def test_product_serializer_for_any_representation(sample_product_instance_facto
         "tags": sample_product_instance.tag_names,
         "name": sample_product_instance.name,
         "rating": str(sample_product_instance.rating),
-        "main_price": sample_product_instance.main_price,
-        "main_image": (
-            None
-            if not (sample_product_instance.main_image)
-            else sample_product_instance.main_image
-        ),
+        "is_valid": sample_product_instance.is_valid,
         "description": sample_product_instance.description,
         "subcategory": sample_product_instance.subcategory.name,
     }

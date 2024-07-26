@@ -42,7 +42,7 @@ class ProductSerializerForAny(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        exclude = ["view_count", "created_at"]
+        exclude = ["view_count", "created_at", "main_variant"]
 
     def to_representation(self, product_instance):
         ret = super().to_representation(product_instance)
@@ -80,6 +80,8 @@ class ProductSerializerForOwner(serializers.ModelSerializer):
         source="get_available_stock", read_only=True
     )
     number_sold = serializers.IntegerField(source="get_number_sold", read_only=True)
+    main_price = serializers.IntegerField(source="main_variant.price", read_only=True)
+    main_image = serializers.ImageField(source="main_variant.image", read_only=True)
 
     class Meta:
         model = Product
@@ -89,6 +91,8 @@ class ProductSerializerForOwner(serializers.ModelSerializer):
             "created_at",
             "description",
             "main_variant",
+            "main_price",
+            "main_image",
             "technical_details",
             "subcategory",
             "tags",
@@ -140,8 +144,8 @@ class ProductTagSerializer(serializers.ModelSerializer):
 
 
 class ProductListSerializer(serializers.ModelSerializer):
-    main_price = serializers.IntegerField(source="main_variant.price")
-    main_image = serializers.ImageField(source="main_variant.image")
+    main_price = serializers.IntegerField(source="main_variant.price", read_only=True)
+    main_image = serializers.ImageField(source="main_variant.image", read_only=True)
 
     class Meta:
         model = Product
