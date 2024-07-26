@@ -9,6 +9,13 @@ class ProductQuerySet(models.QuerySet):
     def with_total_number_sold(self):
         return self.annotate(total_number_sold=Sum("variants__numbers_sold"))
 
+    def with_main_variant(self):
+        if self.main_variant:
+            return self.annotate(
+                main_price=self.main_variant.price,
+                main_image=self.main_variant.image,
+            )
+
 
 class ProductManager(models.Manager):
     def get_queryset(self):

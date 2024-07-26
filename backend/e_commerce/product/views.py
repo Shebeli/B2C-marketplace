@@ -39,7 +39,7 @@ class ProductList(ListCreateAPIView):
     """
 
     permission_classes = [IsSellerVerified]
-    queryset = Product.objects.all()
+    queryset = Product.objects.filter(is_valid=True)
     serializer_class = ProductListSerializer
     filter_backends = [OrderingFilter, filters.DjangoFilterBackend]
     filterset_class = ProductFilter
@@ -151,14 +151,14 @@ class ProductTechnicalInfoList(ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         if isinstance(request.data, list):  # bulk
             serializer = self.get_serializer(data=request.data, many=True)
-        else: 
+        else:
             serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            self.perform_create(serializer)
-            headers = self.get_success_headers(serializer.data)
-            return Response(
-                data=serializer.data, status=status.HTTP_201_CREATED, headers=headers
-            )
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            data=serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
 
 
 class ShopProductList(ListAPIView):

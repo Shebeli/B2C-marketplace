@@ -1,13 +1,12 @@
-from collections import OrderedDict
-
-from django.db.models import QuerySet
 from rest_framework import serializers
+from django.core.exceptions import ObjectDoesNotExist
+
 from product.models import (
-    Product,
-    ProductVariantImage,
-    ProductVariant,
-    Tag,
     Category,
+    Product,
+    ProductVariant,
+    ProductVariantImage,
+    Tag,
     TechnicalDetail,
 )
 
@@ -15,7 +14,7 @@ from product.models import (
 class ProductTechnicalDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = TechnicalDetail
-        exclude = ['product']
+        exclude = ["product"]
 
 
 class ProductVariantImageSerializer(serializers.ModelSerializer):
@@ -36,7 +35,7 @@ class ProductVariantSerializerForAny(serializers.ModelSerializer):
 
 
 class ProductSerializerForAny(serializers.ModelSerializer):
-    "This serializer is only intenteded to be used for representing data"
+    "Intended only for read operations"
 
     technical_details = ProductTechnicalDetailSerializer(many=True, read_only=True)
     variants = ProductVariantSerializerForAny(many=True, read_only=True)
@@ -65,7 +64,7 @@ class ProductVariantSerializerForOwner(serializers.ModelSerializer):
     def create(self, validated_data):
         if not validated_data.get("product"):
             raise serializers.ValidationError(
-                "Product instance should be passed as keyword argument with serializer.save()"
+                "Product instance should be passed as keyword argument when calling serializer.save()"
             )
         return super().create(validated_data)
 
@@ -89,8 +88,7 @@ class ProductSerializerForOwner(serializers.ModelSerializer):
             "name",
             "created_at",
             "description",
-            "main_image",
-            "main_price",
+            "main_variant",
             "technical_details",
             "subcategory",
             "tags",
@@ -103,6 +101,24 @@ class ProductSerializerForOwner(serializers.ModelSerializer):
             "number_sold",
         ]
         extra_kwargs = {"subcategory": {"required": True}}
+
+    def validate_main_variant(self, pk):
+        if self.instance:  # update method
+            try:
+                variant = ProductVariant.objects.get(id=pk)
+            except ObjectDoesNotExist:
+                raise serializers.ValidationError(
+                    "The referenced ProductVariant object via id does not exist"
+                )
+            if variant.product != self.instance:
+                raise serializers.ValidationError(
+                    "The referenced ProductVariant object via id doesn't belong to this product"
+                )
+        else:  # create method
+            raise serializers.ValidationError(
+                "main_variant field shouldn't be provided for a create operation"
+            )
+        return pk
 
     def validate_tags(self, tags):
         if not (3 <= len(tags) <= 10):
@@ -124,6 +140,9 @@ class ProductTagSerializer(serializers.ModelSerializer):
 
 
 class ProductListSerializer(serializers.ModelSerializer):
+    main_price = serializers.IntegerField(source="main_variant.price")
+    main_image = serializers.ImageField(source="main_variant.image")
+
     class Meta:
         model = Product
         fields = ["id", "name", "main_price", "main_image"]

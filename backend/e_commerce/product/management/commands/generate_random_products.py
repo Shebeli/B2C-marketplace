@@ -31,7 +31,6 @@ class Command(BaseCommand):
             for i in tqdm(range(num_products), desc="Creating random products"):
                 product = Product.objects.create(
                     name=f"Product {i}",
-                    main_price=random.randint(100, 1000),
                     owner=user,
                 )
                 for j in range(variants_per_product):
@@ -41,6 +40,10 @@ class Command(BaseCommand):
                         on_hand_stock=random.randint(0, 100),
                         price=random.randint(100, 1000),
                     )
+                product.main_variant = ProductVariant.objects.filter(
+                    product=product
+                ).first()
+                product.save()
         self.stdout.write(
             self.style.SUCCESS(
                 f"A total of {num_products*variants_per_product} datarows has been created in the database in {(time.time()-start_time)} seconds."
