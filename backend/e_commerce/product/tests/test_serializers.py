@@ -56,7 +56,7 @@ def full_product_data_factory(
 
 
 @pytest.fixture
-def sample_category_instance_factory():
+def sample_category_instance_factory(db):
     def create_categories():
         maincategory_obj = MainCategory.objects.create(name="Home and Kitchen")
         category_obj = Category.objects.create(

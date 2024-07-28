@@ -54,6 +54,45 @@ class Tag(models.Model):
         return self.name
 
 
+class ProductVariant(models.Model):
+    """
+    At least one ProductVariant instance should exist for every Product,
+    even for products with no variants (i.e. products with single variant or no
+    variants both have one ProductVariant instance)
+    """
+
+    product = models.ForeignKey(
+        "Product", on_delete=models.CASCADE, related_name="variants", db_index=True
+    )
+    name = models.CharField(max_length=50)
+    price = models.PositiveIntegerField()
+    image = models.ImageField(null=True, blank=True)
+    on_hand_stock = models.PositiveIntegerField()
+    reserved_stock = models.PositiveIntegerField(default=0)
+    available_stock = models.GeneratedField(
+        expression=F("on_hand_stock") - F("reserved_stock"),
+        output_field=models.PositiveIntegerField(),
+        db_persist=True,
+        db_index=True,
+    )
+    number_sold = models.PositiveIntegerField(default=0)
+
+    def save(self, *args, **kwargs):
+        if self.reserved_stock > self.on_hand_stock:
+            raise exceptions.ValidationError(
+                "Reserved stock cannot be larger than on-hand inventory"
+            )
+        return super().save(*args, **kwargs)
+
+    @property
+    def is_available(self):
+        return self.available_stock > 0
+
+    @property
+    def owner(self):
+        return self.product.owner
+
+
 class Product(models.Model):
     """
     The main_variant field is the representative of the product, so fields such as price,
@@ -67,17 +106,15 @@ class Product(models.Model):
         EcomUser,
         on_delete=models.SET_NULL,
         null=True,
-        verbose_name="owner",
         blank=False,
-        db_index=True,
+        verbose_name="owner",
     )
     main_variant = models.OneToOneField(
-        "ProductVariant",
-        on_delete=models.SET_NULL,
+        ProductVariant,
+        on_delete=models.DO_NOTHING,  # handled by signals
         blank=True,
         null=True,
         related_name="main_variant_of",
-        db_index=True,
     )
     name = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -92,8 +129,9 @@ class Product(models.Model):
     view_count = models.PositiveIntegerField(default=0, db_index=True)
     is_valid = models.GeneratedField(
         expression=Case(
-            When(main_variant__isnull=False, then=Value(True)),
-            default=Value(False),
+            When(main_variant__isnull=True, then=Value(False)),
+            When(owner__isnull=True, then=Value(False)),
+            default=Value(True),
         ),
         output_field=models.BooleanField(),
         db_persist=True,
@@ -128,45 +166,6 @@ class Product(models.Model):
     @property
     def tag_names(self):
         return [tag.name for tag in self.tags.all()]
-
-
-class ProductVariant(models.Model):
-    """
-    At least one ProductVariant instance should exist for every Product,
-    even for products with no variants (i.e. products with single variant or no
-    variants both have one ProductVariant instance)
-    """
-
-    product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, related_name="variants", db_index=True
-    )
-    name = models.CharField(max_length=50)
-    price = models.PositiveIntegerField()
-    image = models.ImageField(null=True, blank=True)
-    on_hand_stock = models.PositiveIntegerField()
-    reserved_stock = models.PositiveIntegerField(default=0)
-    available_stock = models.GeneratedField(
-        expression=F("on_hand_stock") - F("reserved_stock"),
-        output_field=models.PositiveIntegerField(),
-        db_persist=True,
-        db_index=True,
-    )
-    number_sold = models.PositiveIntegerField(default=0)
-
-    def save(self, *args, **kwargs):
-        if self.reserved_stock > self.on_hand_stock:
-            raise exceptions.ValidationError(
-                "Reserved stock cannot be larger than on-hand inventory"
-            )
-        return super().save(*args, **kwargs)
-
-    @property
-    def is_available(self):
-        return self.available_stock > 0
-
-    @property
-    def owner(self):
-        return self.product.owner
 
 
 class ProductVariantImage(models.Model):
