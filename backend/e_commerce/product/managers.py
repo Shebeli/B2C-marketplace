@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Sum, Case, When
 
 
 class ProductQuerySet(models.QuerySet):
@@ -16,6 +16,14 @@ class ProductQuerySet(models.QuerySet):
                 main_image=self.main_variant.image,
             )
 
+    def with_in_stock(self):
+        expression = Case(
+            When(variants__available_stock__gt=0, then=True),
+            default=False,
+            output_field=models.BooleanField(),
+        )
+        return self.annotate(in_stock=expression)
+
 
 class ProductManager(models.Manager):
     def get_queryset(self):
@@ -23,3 +31,6 @@ class ProductManager(models.Manager):
 
     def available(self):
         return self.get_queryset().with_available_stock().filter(available_stock__gt=0)
+
+    def unavailable(self):
+        return self.get_queryset().with_available_stock().filter(available_stock=0)
