@@ -26,27 +26,27 @@ from product.serializers import (
 
 class ProductList(ListCreateAPIView):
     """
-    List:
+    GET method:
     Providing a subcategory via query parameter in the URL is required.
     ordering field options: main_price, rating, created_at, view_count.
     if you want the ordering to be descending, use - in front of the field.
     example: ?ordering=-view_count
     tags provided by the query parameter should be seperated by comma.
     example: ?tags=tag1,tag2
-    Create:
+    POST method:
     Only for authenticated users and admins. users also should have their
     seller profile verified, otherwise, they will get a 403 error.
     """
 
     permission_classes = [IsSellerVerified]
-    queryset = Product.objects.filter(is_valid=True)
+    queryset = Product.objects.filter(is_valid=True).with_in_stock()
     serializer_class = ProductListSerializer
     filter_backends = [OrderingFilter, filters.DjangoFilterBackend]
     filterset_class = ProductFilter
-    ordering_fields = ["main_price", "rating", "created_at", "view_count"]
-    ordering = ["-created_at"]
+    ordering_fields = ["main_price", "rating", "created_at", "view_count", "in_stock"]
+    ordering = ["-created_at", "in_stock"]
 
-    def get_queryset(self):
+    def _validate_subcategory(self) -> None:
         subcategory_name = self.request.query_params.get("subcategory")
         if not subcategory_name:
             raise ValidationError(
@@ -54,6 +54,9 @@ class ProductList(ListCreateAPIView):
             )
         if not SubCategory.objects.filter(name__iexact=subcategory_name).exists():
             raise ValidationError("subcategory does not exist", "subcategory_not_found")
+
+    def get_queryset(self):
+        self._validate_subcategory()
         return super().get_queryset()
 
     def perform_create(self, serializer):
