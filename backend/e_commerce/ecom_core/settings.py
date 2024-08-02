@@ -147,6 +147,7 @@ REST_FRAMEWORK = {
         "ecom_user.authentication.EcomUserJWTAuthentication",
         "ecom_admin.authentication.EcomAdminJWTAuthentication",
     ),
+    "DEFAULT_FILTER_BACKEND": ["django_filters.rest_framework.DjangoFilterBackend"],
     "TOKEN_OBTAIN_SERIALIZER": "ecom_user.jwt.serializers.EcomUserTokenObtainPairSerializer",
     "TOKEN_REFRESH_SERIALIZER": "ecom_user.jwt.serializers.EcomUserTokenRefreshSerializer",
     "TOKEN_VERIFY_SERIALIZER": "ecom_user.jwt.serializers.EcomUserTokenVerifySerializer",
@@ -164,11 +165,11 @@ SMS_SENDER_PHONE_NUMBER = os.environ.get("SMS_PHONE")
 REDIS_HOST = os.environ.get("REDIS_HOST")
 REDIS_PORT = os.environ.get("REDIS_PORT")
 
-if None in [REDIS_HOST, REDIS_PORT]: 
+if None in [REDIS_HOST, REDIS_PORT]:
     REDIS_HOST = "127.0.0.1"
-    REDIS_PORT = '6379' 
+    REDIS_PORT = "6379"
 
- 
+
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -195,6 +196,6 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": """
     A backend web service acting as an intermediary service between sellers and customers where the sellers can create their own shops with their products in it, and the customers can purchase products from an individual shop or using the web service's product listing feature similar to an e-commerce application.
     """,
-    'VERSION': '0.1.0',
-    'SERVE_INCLUDE_SCHEMA': False,
+    "VERSION": "0.1.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }

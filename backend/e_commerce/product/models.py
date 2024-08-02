@@ -92,6 +92,9 @@ class ProductVariant(models.Model):
     def owner(self):
         return self.product.owner
 
+    class Meta:
+        order_with_respect_to = "product"
+
 
 class Product(models.Model):
     """
