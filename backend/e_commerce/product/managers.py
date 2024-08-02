@@ -1,5 +1,6 @@
 from django.db import models
-from django.db.models import Sum, Case, When
+from django.db.models import Sum, F, OuterRef, Exists
+from django.apps import apps
 
 
 class ProductQuerySet(models.QuerySet):
@@ -7,22 +8,20 @@ class ProductQuerySet(models.QuerySet):
         return self.annotate(available_stock=Sum("variants__available_stock"))
 
     def with_total_number_sold(self):
-        return self.annotate(total_number_sold=Sum("variants__numbers_sold"))
+        return self.annotate(total_number_sold=Sum("variants__number_sold"))
 
-    def with_main_variant(self):
-        if self.main_variant:
-            return self.annotate(
-                main_price=self.main_variant.price,
-                main_image=self.main_variant.image,
-            )
+    def with_main_variant_info(self):
+        return self.annotate(
+            main_price=F("main_variant__price"),
+            main_image=F("main_variant__image"),
+        )
 
     def with_in_stock(self):
-        expression = Case(
-            When(variants__available_stock__gt=0, then=True),
-            default=False,
-            output_field=models.BooleanField(),
+        ProductVariant = apps.get_model("product", "ProductVariant")
+        in_stock_subquery = ProductVariant.objects.filter(
+            product=OuterRef("pk"), available_stock__gt=0
         )
-        return self.annotate(in_stock=expression)
+        return self.annotate(in_stock=Exists(in_stock_subquery))
 
 
 class ProductManager(models.Manager):
