@@ -6,18 +6,6 @@ from rest_framework.test import APIClient
 
 from product.models import Product, ProductVariant, TechnicalDetail
 
-from .test_serializers import (
-    full_product_data_factory,
-    sample_product_data_factory,
-    sample_category_instance_factory,
-    sample_product_instance_factory,
-    sample_tags_instances_factory,
-    sample_technical_data,
-    sample_variants_data,
-    tag_objs,
-    subcategory_obj,
-)
-
 # ---------------
 #    Fixtures
 # ---------------
