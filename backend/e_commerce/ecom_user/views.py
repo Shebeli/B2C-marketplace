@@ -16,9 +16,8 @@ from ecom_user.serializers import (
     OTPAuthVerificationSerializer,
     ChangeCurrentPasswordSerializer,
     UserPhoneVerificationSerializer,
-    UserPhoneVerificationSerializer,
 )
-from ecom_user.utils import (
+from ecom_user.sms_service import (
     create_sms_cooldown_cache_key,
     create_phone_verify_cache_key,
     process_phone_verification,
