@@ -3,7 +3,7 @@ import pytest
 from django.urls import reverse
 from rest_framework.test import APIClient
 
-from ecom_user.utils import create_phone_verify_cache_key
+from ecom_user.sms_service import create_phone_verify_cache_key
 
 
 # ---------------
