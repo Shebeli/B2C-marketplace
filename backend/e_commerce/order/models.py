@@ -1,11 +1,10 @@
+from typing import Union
+
 from django.db import models
 from django.db.models import F, Sum
 from ecom_user.models import EcomUser
 from ecom_user_profile.models import CustomerAddress
 from product.models import ProductVariant
-
-
-from typing import Union
 
 
 class Cart(models.Model):
