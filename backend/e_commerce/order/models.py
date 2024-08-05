@@ -11,7 +11,7 @@ class Cart(models.Model):
     user = models.ForeignKey(
         EcomUser, on_delete=models.SET_NULL, null=True, blank=False
     )
-    created_on = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def get_total_price(self) -> Union[int, float]:
@@ -52,9 +52,9 @@ class Order(models.Model):
     customer_address = models.ForeignKey(
         CustomerAddress, on_delete=models.SET_NULL, blank=False, null=True
     )
-    created_on = models.DateTimeField(auto_now_add=True)
-    updated_on = models.DateTimeField(auto_now=True)
-    notes = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    notes = models.CharField(max_length=200, blank=True)
 
     def get_total_price(self) -> Union[int, float]:
         return self.items.aggregate(
