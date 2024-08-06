@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "ecom_user_profile",
     "ecom_admin",
     "product",
+    "order",
     # 3rd party apps
     "rest_framework",
     "rest_framework_simplejwt",
