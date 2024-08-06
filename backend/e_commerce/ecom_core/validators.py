@@ -46,7 +46,7 @@ def validate_national_code(value: str) -> None:
 def validate_postal_code(value: str) -> None:
     postal_code_regex = r"^(?!(\d)\1{3})[13-9]{4}[1346-9][013-9]{5}$"
     if not re.search(postal_code_regex, value):
-        raise ValidationError(_(f"Entered postal code is not a valid postal code."))
+        raise ValidationError(_("Entered postal code is not a valid postal code."))
 
 
 def validate_verification_code(code: str) -> None:
@@ -75,24 +75,51 @@ def validate_bank_card_number(card_number: str) -> None:
     if not sum(r) % 10 == 0:
         raise ValidationError("Provided bank card number is not valid")
 
-def validate_iban(iban: str) -> None: #IR062960000000100324200001
+
+def validate_iban(iban: str) -> None:  # IR062960000000100324200001
     if len(iban) != 26:
         raise ValidationError("Provided IBAN length should be 26")
     character_map = {
-        'A': 10, 'B': 11, 'C': 12, 'D': 13, 'E': 14, 'F': 15, 'G': 16, 'H': 17, 'I': 18, 'J': 19,
-        'K': 20, 'L': 21, 'M': 22, 'N': 23, 'O': 24, 'P': 25, 'Q': 26, 'R': 27, 'S': 28, 'T': 29,
-        'U': 30, 'V': 31, 'W': 32, 'X': 33, 'Y': 34, 'Z': 35,
+        "A": 10,
+        "B": 11,
+        "C": 12,
+        "D": 13,
+        "E": 14,
+        "F": 15,
+        "G": 16,
+        "H": 17,
+        "I": 18,
+        "J": 19,
+        "K": 20,
+        "L": 21,
+        "M": 22,
+        "N": 23,
+        "O": 24,
+        "P": 25,
+        "Q": 26,
+        "R": 27,
+        "S": 28,
+        "T": 29,
+        "U": 30,
+        "V": 31,
+        "W": 32,
+        "X": 33,
+        "Y": 34,
+        "Z": 35,
     }
     iban_letters = list(iban)[4:]
     for letter in iban[:4]:
         if letter in character_map.keys():
-            first_digit, second_digit = list(str(character_map[letter])) # e.g. 12 -> ['1','2']
+            first_digit, second_digit = list(
+                str(character_map[letter])
+            )  # e.g. 12 -> ['1','2']
             iban_letters.append(first_digit)
             iban_letters.append(second_digit)
         else:
             iban_letters.append(letter)
-    if not int(''.join(iban_letters)) % 97 == 1:
+    if not int("".join(iban_letters)) % 97 == 1:
         raise ValidationError("Provided IBAN isn't valid")
+
 
 def validate_rating(rating: float) -> None:
     if not 1 <= rating <= 5:
