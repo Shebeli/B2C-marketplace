@@ -1,8 +1,8 @@
 from typing import Union
 
 from rest_framework import serializers
-from order.models import Order, CartItem, Cart, CartItem
-from ecom_user_profile.models import CustomerAddress, SellerProfile
+from order.models import Order, CartItem, Cart, OrderItem
+from ecom_user_profile.models import CustomerAddress
 from product.models import ProductVariant
 
 
@@ -83,7 +83,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(source="product_variant.image", read_only=True)
 
     class Meta:
-        model = CartItem
+        model = OrderItem
         fields = [
             "id",
             "order",

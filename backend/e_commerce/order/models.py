@@ -86,7 +86,7 @@ class Order(models.Model):
         )["total_price"]
 
 
-class CartItem(models.Model):
+class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
     product_variant = models.ForeignKey(
         ProductVariant, on_delete=models.SET_NULL, null=True, blank=False
