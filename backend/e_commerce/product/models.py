@@ -1,13 +1,10 @@
-from django.db import models
 from django.core import exceptions
-from django.db.models import F, Sum, When, Value, Case
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _
-
+from django.db import models
+from django.db.models import Case, F, Sum, Value, When
 from ecom_core.validators import validate_rating
 from ecom_user.models import EcomUser
-from .managers import ProductManager
 
+from .managers import ProductManager
 
 # Overall visualization of different category models is shown in the following tree:
 # - MainCategory 1

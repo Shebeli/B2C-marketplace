@@ -1,7 +1,8 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from ecom_user.models import EcomUser
-from .models import SellerProfile, CustomerProfile
+
+from .models import CustomerProfile, SellerProfile
 
 
 @receiver(post_save, sender=EcomUser)

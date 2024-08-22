@@ -2,7 +2,6 @@ import pytest
 
 from product.serializers import ProductSerializerForAny, ProductSerializerForOwner
 
-
 # ---------------
 #   Test cases
 # ---------------

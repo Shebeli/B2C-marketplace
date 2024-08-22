@@ -2,10 +2,10 @@ import pytest
 
 from product.models import (
     Category,
-    SubCategory,
     MainCategory,
     Product,
     ProductVariant,
+    SubCategory,
     Tag,
     TechnicalDetail,
 )

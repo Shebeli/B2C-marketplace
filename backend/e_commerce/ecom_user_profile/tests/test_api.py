@@ -1,11 +1,9 @@
 import pytest
-
 from django.urls import reverse
+from ecom_user.models import EcomUser
 from rest_framework.test import APIClient
 
-from ecom_user.models import EcomUser
 from ecom_user_profile.models import CustomerAddress
-
 
 # ---------------
 #    Fixtures

@@ -1,11 +1,10 @@
-from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.password_validation import validate_password
-from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError
-from rest_framework.validators import UniqueValidator
-from rest_framework import serializers
-
+from django.utils.translation import gettext_lazy as _
 from ecom_core.validators import validate_phone, validate_verification_code
+from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
+
 from .models import EcomUser
 
 

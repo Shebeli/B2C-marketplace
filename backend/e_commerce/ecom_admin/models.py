@@ -1,10 +1,11 @@
 from django.contrib.auth.models import AbstractBaseUser
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+from ecom_core.validators import validate_username
 
 from .managers import EcomAdminManager
-from ecom_core.validators import validate_username
+
 
 class EcomAdmin(AbstractBaseUser):
     ORDERMANAGER = 'OM'

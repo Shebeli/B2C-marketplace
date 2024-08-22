@@ -1,30 +1,28 @@
+from ecom_core.permissions import IsOwner
+from ecom_user.authentication import EcomUserJWTAuthentication
+from rest_framework import mixins, status
 from rest_framework.generics import (
     GenericAPIView,
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
-from rest_framework import status
-from rest_framework import mixins
-
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ecom_core.permissions import IsOwner
 from ecom_user_profile.models import (
-    CustomerProfile,
     CustomerAddress,
+    CustomerProfile,
     SellerBankAccount,
     SellerBusinessLicense,
     SellerProfile,
 )
 from ecom_user_profile.serializers import (
-    CustomerProfileSerializer,
     CustomerAddressSerializer,
+    CustomerProfileSerializer,
     SellerBankAccountSerializer,
-    SellerProfileSerializer,
     SellerBusinessLicenseSerializer,
+    SellerProfileSerializer,
 )
-from ecom_user.authentication import EcomUserJWTAuthentication
 
 
 class CustomerProfileAPIView(

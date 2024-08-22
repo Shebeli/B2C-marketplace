@@ -1,12 +1,9 @@
-from typing import Any
 
 import phonenumbers
-from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import BaseUserManager
 from django.utils.translation import gettext_lazy as _
-from django.db import transaction
 
-from ecom_user_profile.models import SellerProfile, CustomerProfile
 from .exceptions import CommandNotAllowedException
 
 

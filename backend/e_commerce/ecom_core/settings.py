@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from pathlib import Path
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 from rest_framework.serializers import Serializer
 
@@ -202,5 +203,16 @@ SPECTACULAR_SETTINGS = {
 }
 
 # Celery
-CELERY_BROKER_URL = 'redis://localhost:6379'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_BROKER_URL = "redis://localhost:6379"
+CELERY_RESULT_BACKEND = "redis://localhost:6379"
+
+
+if not DEBUG:
+    PAYMENT_CALLBACK_URL = os.environ.get("PAYMENT_CALLBACK_URL", None)
+else:
+    PAYMENT_CALLBACK_URL = "http://localhost:8000/"
+
+if not PAYMENT_CALLBACK_URL:
+    raise ImproperlyConfigured(
+        "Enviroment variable PAYMENT_CALLBACK_URL should be provided"
+    )

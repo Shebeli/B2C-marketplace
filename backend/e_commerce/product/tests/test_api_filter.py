@@ -1,21 +1,18 @@
 import random
 
 import pytest
-
-
 from django.urls import reverse
+from ecom_user.models import EcomUser
 from rest_framework.test import APIClient
 
-from ecom_user.models import EcomUser
 from product.models import (
-    SubCategory,
     Category,
     MainCategory,
     Product,
     ProductVariant,
+    SubCategory,
     Tag,
 )
-
 
 # Generate different and considerable numbers of categories for various product
 # filter & sort testing.

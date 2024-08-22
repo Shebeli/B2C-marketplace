@@ -1,5 +1,7 @@
-from ecom_admin.models import EcomAdmin
 from django.contrib.auth.management.commands import createsuperuser
+
+from ecom_admin.models import EcomAdmin
+
 
 class Command(createsuperuser.Command):
     help = "Create an admin with superadmin role"

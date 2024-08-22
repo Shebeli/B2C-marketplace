@@ -1,11 +1,11 @@
 from rest_framework import serializers
 
 from ecom_user_profile.models import (
-    SellerProfile,
+    CustomerAddress,
+    CustomerProfile,
     SellerBankAccount,
     SellerBusinessLicense,
-    CustomerProfile,
-    CustomerAddress,
+    SellerProfile,
 )
 
 

@@ -1,11 +1,12 @@
 from typing import Tuple
-from django.db.models import Q
-from django.contrib.auth.backends import ModelBackend
+
 from django.contrib.auth import get_user_model
+from django.contrib.auth.backends import ModelBackend
+from django.db.models import Q
 from rest_framework.request import Request
-from rest_framework_simplejwt.authentication import JWTAuthentication, AuthUser
-from rest_framework_simplejwt.tokens import Token
+from rest_framework_simplejwt.authentication import AuthUser, JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken
+from rest_framework_simplejwt.tokens import Token
 
 
 class EcomUserBackend(ModelBackend):

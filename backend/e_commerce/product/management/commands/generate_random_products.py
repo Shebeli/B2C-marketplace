@@ -1,11 +1,12 @@
+import random
+import time
+
 from django.core.management.base import BaseCommand, CommandParser
 from django.db import transaction
-from product.models import Product, ProductVariant
 from ecom_user.models import EcomUser
 from tqdm import tqdm
 
-import random
-import time
+from product.models import Product, ProductVariant
 
 
 class Command(BaseCommand):

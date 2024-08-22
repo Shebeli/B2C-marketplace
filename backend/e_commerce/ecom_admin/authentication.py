@@ -1,10 +1,11 @@
 from typing import Tuple
-from django.db.models import Q
+
 from django.contrib.auth.backends import ModelBackend
+from django.db.models import Q
 from rest_framework.request import Request
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework_simplejwt.tokens import Token
 from rest_framework_simplejwt.exceptions import InvalidToken
+from rest_framework_simplejwt.tokens import Token
 
 from ecom_admin.models import EcomAdmin
 

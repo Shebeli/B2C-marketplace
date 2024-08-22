@@ -1,6 +1,7 @@
 from django.core.cache import cache
 from django_filters import rest_framework as filters
 from ipware import get_client_ip
+from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.generics import (
@@ -10,17 +11,16 @@ from rest_framework.generics import (
     get_object_or_404,
 )
 from rest_framework.response import Response
-from rest_framework import status
 
 from product.filters import ProductFilter
-from product.models import Product, SubCategory, ProductVariant, TechnicalDetail
+from product.models import Product, ProductVariant, SubCategory, TechnicalDetail
 from product.permissions import IsOwner, IsSellerVerified
 from product.serializers import (
     ProductListSerializer,
     ProductSerializerForAny,
     ProductSerializerForOwner,
-    ProductVariantSerializerForOwner,
     ProductTechnicalDetailSerializer,
+    ProductVariantSerializerForOwner,
 )
 
 

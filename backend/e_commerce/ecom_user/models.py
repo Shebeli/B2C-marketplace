@@ -1,12 +1,11 @@
-from django.db import models, transaction
-from django.contrib.auth.models import AbstractBaseUser, AbstractUser
+from django.contrib.auth.models import AbstractBaseUser
+from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-
 from ecom_core.validators import (
+    validate_national_code,
     validate_phone,
     validate_username,
-    validate_national_code,
 )
 
 from .managers import EcomUserManager

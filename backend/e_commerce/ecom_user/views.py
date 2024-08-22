@@ -1,29 +1,29 @@
 from django.core.cache import cache
 from rest_framework import status
-from rest_framework.viewsets import ViewSet
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.viewsets import ViewSet
+from rest_framework_simplejwt.tokens import RefreshToken
 
-from ecom_user.throttle import SMSAnonRateThrottle, CodeSubmitAnonRateThrottle
+from ecom_user.authentication import EcomUserJWTAuthentication
 from ecom_user.models import EcomUser
+from ecom_user.permissions import IsAnonymous
 from ecom_user.serializers import (
-    UserAccountSerializer,
-    UserPhoneSerializer,
+    ChangeCurrentPasswordSerializer,
     OTPAuthSerializer,
     OTPAuthVerificationSerializer,
-    ChangeCurrentPasswordSerializer,
+    UserAccountSerializer,
+    UserPhoneSerializer,
     UserPhoneVerificationSerializer,
 )
 from ecom_user.sms_service import (
-    create_sms_cooldown_cache_key,
     create_phone_verify_cache_key,
+    create_sms_cooldown_cache_key,
     process_phone_verification,
 )
-from ecom_user.authentication import EcomUserJWTAuthentication
-from ecom_user.permissions import IsAnonymous
+from ecom_user.throttle import CodeSubmitAnonRateThrottle, SMSAnonRateThrottle
 
 
 class UserSignupViewSet(ViewSet):

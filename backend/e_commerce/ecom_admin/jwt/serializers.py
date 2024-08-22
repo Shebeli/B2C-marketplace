@@ -1,15 +1,14 @@
 from typing import Any, Dict
 
+from ecom_core.validators import validate_token_type
 from rest_framework_simplejwt.serializers import (
     TokenObtainPairSerializer,
-    TokenVerifySerializer,
     TokenRefreshSerializer,
+    TokenVerifySerializer,
 )
-from rest_framework_simplejwt.tokens import Token, RefreshToken, UntypedToken
-from rest_framework_simplejwt.exceptions import InvalidToken
+from rest_framework_simplejwt.tokens import RefreshToken, Token, UntypedToken
 
 from ecom_admin.models import EcomAdmin
-from ecom_core.validators import validate_token_type
 
 
 class AdminTokenObtainPairSerializer(TokenObtainPairSerializer):

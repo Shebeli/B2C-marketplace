@@ -1,10 +1,15 @@
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenVerifyView, TokenRefreshView
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenVerifyView,
+)
 
 from .serializers import (
-    AdminTokenVerifySerializer,
     AdminTokenObtainPairSerializer,
     AdminTokenRefreshSerializer,
+    AdminTokenVerifySerializer,
 )
+
 
 class AdminTokenObtainPairView(TokenObtainPairView):
     serializer_class = AdminTokenObtainPairSerializer

@@ -1,7 +1,5 @@
 import pytest
-
 from ecom_user.models import EcomUser
-from ecom_user_profile.models import SellerProfile, CustomerProfile
 
 
 @pytest.mark.django_db

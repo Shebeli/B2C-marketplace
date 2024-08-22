@@ -1,6 +1,5 @@
-from rest_framework.urlpatterns import format_suffix_patterns
-from rest_framework.routers import SimpleRouter
 from django.urls import path
+from rest_framework.urlpatterns import format_suffix_patterns
 
 from ecom_user_profile import views
 

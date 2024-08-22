@@ -1,6 +1,7 @@
 import pytest
 
-from product.models import Product, ProductVariant, MainCategory, Category, SubCategory
+from product.models import Category, MainCategory, Product, ProductVariant, SubCategory
+
 from .test_api import EcomUser
 
 
