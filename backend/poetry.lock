@@ -1486,13 +1486,13 @@ files = [
 
 [[package]]
 name = "zibal-client"
-version = "0.2.1"
+version = "0.3.0"
 description = "Client for interacting with Zibal's IPG API endpoints."
 optional = false
 python-versions = "<4.0,>=3.9"
 files = [
-    {file = "zibal_client-0.2.1-py3-none-any.whl", hash = "sha256:cb44b7583b4a7ea4c8b21a755a0c058ce96843a94f30967c5caae17395eda375"},
-    {file = "zibal_client-0.2.1.tar.gz", hash = "sha256:e29833058038201a671bbff0c851574acd800158c6babdf1aaa0920b44a09e81"},
+    {file = "zibal_client-0.3.0-py3-none-any.whl", hash = "sha256:9af90ac7a063e09f2b0855ef8b484b4d0ef1b2302e6f924d63cd5bfc7f57c269"},
+    {file = "zibal_client-0.3.0.tar.gz", hash = "sha256:1239c636d875433757c0fa2d566299553436a349aa585142c2f75908a2cd6446"},
 ]
 
 [package.dependencies]
@@ -1502,4 +1502,4 @@ requests = ">=2.32.3,<3.0.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "f883640f14a0e0805af7496438381ab924f53f2e3114cfbf85d177c317794286"
+content-hash = "421db5ab33cc51715ac5aed60b3e4212f14a45a42a007ae28023587eb0779c3d"
