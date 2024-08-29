@@ -216,3 +216,4 @@ if not PAYMENT_CALLBACK_URL:
     raise ImproperlyConfigured(
         "Enviroment variable PAYMENT_CALLBACK_URL should be provided"
     )
+

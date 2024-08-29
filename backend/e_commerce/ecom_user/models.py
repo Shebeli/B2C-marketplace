@@ -22,6 +22,7 @@ class City(models.Model):
 
 class EcomUser(AbstractBaseUser):
     "This model does not contain any superuser or staff attributes as its handled in a seperate model named 'EcomAdmin'"
+
     first_name = models.CharField(_("First Name"), max_length=50, blank=True)
     last_name = models.CharField(_("Last Name"), max_length=50, blank=True)
     username = models.CharField(

@@ -5,7 +5,7 @@ from typing import List
 from django.conf import settings
 from django.core import exceptions
 from django.core.cache import cache
-from django.db import models
+from django.db import models, transaction
 from django.utils.translation import gettext_lazy as _
 from ecom_core.validators import (
     validate_bank_card_number,
@@ -13,6 +13,7 @@ from ecom_core.validators import (
     validate_postal_code,
     validate_rating,
 )
+from order.models import Order
 
 # Instead of storing any extra information or preferences for the customer in
 # a table field or column, a more flexible way to store them is to instead
@@ -165,14 +166,75 @@ class SellerBusinessLicense(models.Model):
     license_picture = models.ImageField(upload_to="business_licenses/")
 
 
-class SellerBankAccount(models.Model):
+class BankCard(models.Model):
     user = models.ForeignKey(
         "ecom_user.EcomUser",
         on_delete=models.CASCADE,
-        related_name="seller_bank_accounts",
+        related_name="bank_cards",
     )
     card_number = models.CharField(
         max_length=16, validators=[validate_bank_card_number]
     )
-    card_owner_fullname = models.CharField(max_length=50)
     iban = models.CharField(max_length=28, validators=[validate_iban])
+
+
+class WalletTransaction(models.Model):
+    wallet = models.ForeignKey(
+        "Wallet", on_delete=models.DO_NOTHING, related_name="transactions"
+    )
+    amount = models.BigIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    description = models.CharField(max_length=500)
+    order = models.ForeignKey(
+        Order, on_delete=models.DO_NOTHING, null=True, blank=True
+    )  # if the type is order related
+    payment_track_id = models.IntegerField(
+        blank=True, null=True
+    )  # if the type is deposit
+    commission_rate = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True
+    ) # if the type is order revenue
+    ORDER_REVENUE = "OR"  # user selling items via an order
+    ORDER_PAYMENT = "OP"  # user buying items via an order
+    WITHDRAWAL = "WD"  # user demanding money into their bank account
+    DEPOSIT = "PM"  # user depositing money to their wallet via payment
+    TRANSACTION_TYPES = {
+        DEPOSIT: "Deposit",
+        WITHDRAWAL: "Withdrawal",
+        ORDER_REVENUE: "Order Revenue",
+        ORDER_PAYMENT: "Order Payment",
+    }
+    type = models.CharField(choices=TRANSACTION_TYPES)
+
+    class Meta:
+        order_by = ["created_at"]
+
+
+class Wallet(models.Model):
+    user = models.OneToOneField(
+        "ecom_user.EcomUser", on_delete=models.DO_NOTHING, related_name="wallet"
+    )
+    balance = models.PositiveBigIntegerField(default=0)
+
+
+class WithdrawalRequest(models.Model):
+    PAID = "AP"
+    REFUSED = "RF"
+    PENDING = "PD"
+    REQUEST_STATUSES = {PAID: "PAID", REFUSED: "Refused", PENDING: "Pending"}
+    status = models.CharField(max_length=2, choices=REQUEST_STATUSES, default=PENDING)
+    bank_card = models.ForeignKey(
+        BankCard,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="withdrawal_requests",
+    )
+    amount = models.PositiveBigIntegerField()
+    refuse_reason = models.CharField(max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def requester(self):
+        return self.bank_card.user
