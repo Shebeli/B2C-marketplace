@@ -5,14 +5,14 @@ from rest_framework import serializers
 from zibal.client import ZibalIPGClient
 
 from ecom_user.models import EcomUser
-from ecom_user_profile.models import CustomerAddress, WalletTransaction
+from ecom_user_profile.models import CustomerAddress, Transaction
 from product.models import ProductVariant
 from order.models import Cart, CartItem, Order, OrderItem
-from order.tasks import cancel_unpaid_order, verify_pending_transaction
+from order.tasks import cancel_unpaid_order, process_payment
 
 from order.services import (
-    initiate_order_transaction,
-    validate_and_proceed_cart_items,
+    initiate_order_payment,
+    create_order,
     validate_cart_not_empty,
     validate_no_on_going_orders,
 )
@@ -27,13 +27,22 @@ class CartItemSerializer(serializers.ModelSerializer):
     .save().
     """
 
-    price = serializers.IntegerField(source="product_variant.price", read_only=True)
-    name = serializers.IntegerField(source="product_variant.name", read_only=True)
-    image = serializers.ImageField(source="product_variant.image", read_only=True)
+    price = serializers.IntegerField(
+        source="product_variant.price", read_only=True
+    )
+    name = serializers.IntegerField(
+        source="product_variant.name", read_only=True
+    )
+    image = serializers.ImageField(
+        source="product_variant.image", read_only=True
+    )
     available_stock = serializers.SerializerMethodField()
 
     def get_available_stock(self, cart_item_obj: CartItem):
-        return cart_item_obj.product_variant.available_stock - cart_item_obj.quantity
+        return (
+            cart_item_obj.product_variant.available_stock
+            - cart_item_obj.quantity
+        )
 
     class Meta:
         model = CartItem
@@ -64,7 +73,9 @@ class CartItemSerializer(serializers.ModelSerializer):
             )
         # validate selected product variant has the same seller as other items
         cart_item = CartItem.objects.filter(cart_id=attrs["cart"]).first()
-        referenced_variant = ProductVariant.objects.get(id=attrs["product_variant"])
+        referenced_variant = ProductVariant.objects.get(
+            id=attrs["product_variant"]
+        )
         if cart_item:
             if referenced_variant.owner != cart_item.product_variant.owner:
                 raise serializers.ValidationError(
@@ -120,8 +131,12 @@ class OrderItemSerializer(serializers.ModelSerializer):
     Since the price of the product can be changed in the future, so
     """
 
-    name = serializers.IntegerField(source="product_variant.name", read_only=True)
-    image = serializers.ImageField(source="product_variant.image", read_only=True)
+    name = serializers.IntegerField(
+        source="product_variant.name", read_only=True
+    )
+    image = serializers.ImageField(
+        source="product_variant.image", read_only=True
+    )
 
     class Meta:
         model = OrderItem
@@ -192,7 +207,9 @@ class OrderSerializerForCustomer(serializers.ModelSerializer):
                 "The user must be passed using 'user' kwarg when calling .save() method"
             )
         # assigned customer address should belong  to current user
-        customer_address_obj = CustomerAddress.objects.get(attrs["customer_address"])
+        customer_address_obj = CustomerAddress.objects.get(
+            attrs["customer_address"]
+        )
         if customer_address_obj.user != attrs["user"]:
             raise serializers.ValidationError(
                 "The given customer address does not belong to this user"
@@ -203,18 +220,12 @@ class OrderSerializerForCustomer(serializers.ModelSerializer):
         user = validated_data["user"]
         validate_cart_not_empty(user)
         validate_no_on_going_orders(user)
-        order = Order(
-            status=Order.UNPAID,
-            user=user,
-            customer_address=validated_data["customer_address"],
-            notes=validated_data["notes"],
-        )
-        validate_and_proceed_cart_items(order)
-        initiate_order_transaction(order)
-        # cancell the order if not paid after 1 hour
+        order = create_order(validated_data)
+        order = initiate_order_payment(order)
+        # cancel the order if not paid after 1 hour
         cancel_unpaid_order.apply_async(args=(order.id), countdown=60 * 60)
         # will check after 20 minutes
-        verify_pending_transaction.apply_async(
+        process_payment.apply_async(
             args=(order.payment_track_id, order.id), countdown=60 * 20
         )
         return order
@@ -224,12 +235,12 @@ class OrderSerializerForSeller(serializers.ModelSerializer):
     """
     Allows the following write operations for sellers:
 
-    - Updating the order's status with the following constraints (the backend app
-    should also execute the necessary changes to order such as product's stocks
-    when the order status gets changed):
+    - Updating the order's status with the following constraints: (the backend app
+    should also execute the necessary changes to the order such as updating the
+    product's stocks when the order status gets changed):
         - Seller Should input a tracking code when changing the status to SHIPPED.
         - Seller Should input a cancellation reason when changing the status to
-        CANCELLED.
+        CANCELLED. In result, the server will refund the money back to the customer.
     """
 
     items = OrderItemSerializer(many=True, read_only=True)
@@ -248,13 +259,21 @@ class OrderSerializerForSeller(serializers.ModelSerializer):
             "tracking_code",
             "cancel_reason",
         ]
-        extra_kwargs = {
-            "user": {"read_only": True},
-        }
+        read_only_fields = [
+            "user",
+            "created_at",
+            "customer_address",
+            "notes",
+            "paid_amount",
+        ]
 
     def update(self, order, validated_data):
         new_status = validated_data.get("status")
-        if new_status not in (Order.PROCESSING, Order.SHIPPED, Order.CANCELLED):
+        if new_status not in (
+            Order.PROCESSING,
+            Order.SHIPPED,
+            Order.CANCELLED,
+        ):
             raise serializers.ValidationError(
                 "The vendor can only change the status of an order to one of "
                 "the following states: Processing, Shipped or Cancelled"

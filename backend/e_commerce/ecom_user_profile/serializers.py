@@ -3,7 +3,7 @@ from rest_framework import serializers
 from ecom_user_profile.models import (
     CustomerAddress,
     CustomerProfile,
-    SellerBankAccount,
+    BankCard,
     SellerBusinessLicense,
     SellerProfile,
 )
@@ -60,12 +60,12 @@ class SellerBusinessLicenseSerializer(serializers.ModelSerializer):
 
 class SellerBankAccountSerializer(serializers.ModelSerializer):
     class Meta:
-        model = SellerBankAccount
+        model = BankCard
         exclude = ["user"]
 
     def create(self, validated_data):
         if not validated_data.get("user"):
-            raise serializers.ValidationError(
+            raise RuntimeError(
                 "An instance of user should be provided using the keyword 'user' when calling save()"
             )
-        return SellerBankAccount.objects.create(**validated_data)
+        return BankCard.objects.create(**validated_data)

@@ -3,7 +3,7 @@ from typing import Union
 from django.db import models
 from django.db.models import F, Sum
 from ecom_user.models import EcomUser
-from ecom_user_profile.models import CustomerAddress
+from ecom_user_profile.models import CustomerAddress, BankCard
 from product.models import ProductVariant
 
 # Since the business model is a B2C multi vendor platform and the
@@ -11,6 +11,15 @@ from product.models import ProductVariant
 # ordered products from different vendors, thus customers CANNOT add
 # items to their cart/orders from different shops, and necessary
 # validations should be in place for this matter.
+
+
+class Wallet(models.Model):
+    user = models.OneToOneField(
+        "ecom_user.EcomUser",
+        on_delete=models.DO_NOTHING,
+        related_name="wallet",
+    )
+    balance = models.PositiveBigIntegerField(default=0)
 
 
 class Order(models.Model):
@@ -82,12 +91,17 @@ class Order(models.Model):
 
     ONHOLD = "OH"  # incase the payment gateways are all down
     UNPAID = "UP"  # the customer hasn't paid the order amount
+    PAYING = "PG"  # customer is attempting to pay (in sync for 20 minutes)
     PAID = "PD"  # the order is paid, but the seller hasn't accepted the order yet
     PROCESSING = "PC"  # the seller has accepted the order and is preparing the product for shipment
-    SHIPPED = "SH"  # the seller has shipped the product to be delivered to customer
+    SHIPPED = (
+        "SH"  # the seller has shipped the product to be delivered to customer
+    )
     DELIVERED = "DL"  # the customer has recieved the product
     COMPLETED = "CP"  # no complaints have been recieved from the customer for 7 days after delivery
-    CANCELLED = "CC"  # the order is cancelled by customer, seller or the server
+    CANCELLED = (
+        "CC"  # the order is cancelled by customer, seller or the server
+    )
     REFUNDED = "RF"  # the customer has refunded the delivered product
     STATUS_CHOICES = {
         ONHOLD: "Onhold",
@@ -100,14 +114,23 @@ class Order(models.Model):
         CANCELLED: "Cancelled",
         REFUNDED: "Refunded",
     }
-    status = models.CharField(max_length=2, choices=STATUS_CHOICES, default=UNPAID)
+    status = models.CharField(
+        max_length=2, choices=STATUS_CHOICES, default=UNPAID
+    )
 
-    user = models.ForeignKey(
+    customer = models.ForeignKey(
         EcomUser,
         on_delete=models.SET_NULL,
         null=True,
         blank=False,
-        related_name="orders",
+        related_name="bought_orders",
+    )
+    seller = models.ForeignKey(
+        EcomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=False,
+        related_name="sold_orders",
     )
     customer_address = models.ForeignKey(
         CustomerAddress,
@@ -136,23 +159,65 @@ class Order(models.Model):
     cancel_reason = models.CharField(
         max_length=300, blank=True
     )  # set by customer, seller or system
-    refund_reason = models.CharField(max_length=300, blank=True)  # set by customer
-    tracking_code = models.CharField(blank=True, max_length=50)  # set by seller
+    refund_reason = models.CharField(
+        max_length=300, blank=True
+    )  # set by customer
+    tracking_code = models.CharField(
+        blank=True, max_length=50
+    )  # set by seller
 
-    paid_amount = models.PositiveBigIntegerField(null=True, blank=True)
-    payment_track_id = models.PositiveBigIntegerField()
-    ZIBAL = "ZB"
-    PAYMENT_SERVICES = {ZIBAL: "Zibal"}  # other service providers can be added later
-    payment_service = models.CharField(choices=PAYMENT_SERVICES)
+    total_price = models.GeneratedField(
+        expression=Sum(F("items__submitted_price") * F("items__quantity")),
+        output_field=models.PositiveBigIntegerField(),
+        db_persist=True,
+    )
 
-    def get_total_price(self) -> Union[int, float]:
-        return self.items.aggregate(
-            total_price=Sum(F("product_variant__price") * F("quantity"))
-        )["total_price"]
+
+class Payment(models.Model):
+    user = models.ForeignKey(
+        EcomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=False,
+        related_name="payments",
+    )
+    amount = models.PositiveBigIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    service_name = models.CharField(max_length=15)
+
+    order = models.OneToOneField(
+        Order,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="payment",
+    )
+    wallet = models.ForeignKey(
+        Wallet,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="payments",
+    )
+    CANCELLED = "CC"
+    UNPAID = "UP"
+    PAYING = "PY"
+    PAID = "PD"
+    PAYMENT_STATUSES = {
+        CANCELLED: "Cancelled",
+        UNPAID: "Unpaid",
+        PAYING: "Paying",
+        PAID: "Paid",
+    }
+    status = models.CharField(max_length=2, choices=PAYMENT_STATUSES)
 
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
+    order = models.ForeignKey(
+        Order, on_delete=models.CASCADE, related_name="items"
+    )
     product_variant = models.ForeignKey(
         ProductVariant, on_delete=models.SET_NULL, null=True, blank=False
     )
@@ -189,7 +254,9 @@ class Cart(models.Model):
 
 
 class CartItem(models.Model):
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
+    cart = models.ForeignKey(
+        Cart, on_delete=models.CASCADE, related_name="items"
+    )
     product_variant = models.ForeignKey(
         ProductVariant, on_delete=models.SET_NULL, null=True, blank=False
     )
@@ -211,3 +278,83 @@ class CartItem(models.Model):
     @property
     def owner(self) -> EcomUser:
         return self.product_variant.owner
+
+
+class Transaction(models.Model):
+    """
+    This model is intended to be used only by server for recording
+    all types of financial records, and thus its purpose is only
+    for read only operations on the client side.
+    """
+
+    wallet = models.ForeignKey(
+        "Wallet",
+        on_delete=models.DO_NOTHING,
+        related_name="transactions",
+        blank=True,
+        null=True,
+        help_text="If the wallet is involved in the transaction",
+    )
+    amount = models.BigIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    description = models.CharField(max_length=500)
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        help_text="If an order is involved in the transaction",
+    )
+    payment_track_id = models.IntegerField(
+        blank=True,
+        null=True,
+        help_text="If the transaction's type is deposit",
+    )
+    commission_rate = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="If the transaction's type is order revenue",
+    )
+    ORDER_REVENUE = "OR"  # user selling items via an order
+    ORDER_PAYMENT = "OP"  # user buying items via an order
+    WITHDRAWAL = "WD"  # user demanding money into their bank account
+    DEPOSIT = "PM"  # user depositing money to their wallet via payment
+    CANCELLATION = "CC"
+    TRANSACTION_TYPES = {
+        DEPOSIT: "Deposit",
+        WITHDRAWAL: "Withdrawal",
+        ORDER_REVENUE: "Order Revenue",
+        ORDER_PAYMENT: "Order Payment",
+        CANCELLATION: "Cancellation",
+    }
+    type = models.CharField(choices=TRANSACTION_TYPES)
+
+    class Meta:
+        ordering = ["created_at"]
+
+
+class WithdrawalRequest(models.Model):
+    PAID = "AP"
+    REFUSED = "RF"
+    PENDING = "PD"
+    REQUEST_STATUSES = {PAID: "PAID", REFUSED: "Refused", PENDING: "Pending"}
+    status = models.CharField(
+        max_length=2, choices=REQUEST_STATUSES, default=PENDING
+    )
+    bank_card = models.ForeignKey(
+        BankCard,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="withdrawal_requests",
+    )
+    amount = models.PositiveBigIntegerField()
+    refuse_reason = models.CharField(max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def requester(self):
+        return self.bank_card.user

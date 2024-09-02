@@ -5,7 +5,7 @@ from typing import List
 from django.conf import settings
 from django.core import exceptions
 from django.core.cache import cache
-from django.db import models, transaction
+from django.db import models
 from django.utils.translation import gettext_lazy as _
 from ecom_core.validators import (
     validate_bank_card_number,
@@ -13,7 +13,6 @@ from ecom_core.validators import (
     validate_postal_code,
     validate_rating,
 )
-from order.models import Order
 
 # Instead of storing any extra information or preferences for the customer in
 # a table field or column, a more flexible way to store them is to instead
@@ -37,7 +36,9 @@ CUSTOMER_PROFILE_DEFAULT_PREFERENCES = {
 
 class CustomerProfile(models.Model):
     user = models.OneToOneField(
-        "ecom_user.EcomUser", on_delete=models.CASCADE, related_name="customer_profile"
+        "ecom_user.EcomUser",
+        on_delete=models.CASCADE,
+        related_name="customer_profile",
     )
     profile_picture = models.ImageField(
         upload_to="profile_pictures/customers/", null=True, blank=True
@@ -68,7 +69,9 @@ class CustomerAddress(models.Model):
 
 class SellerProfile(models.Model):
     user = models.OneToOneField(
-        "ecom_user.EcomUser", on_delete=models.CASCADE, related_name="seller_profile"
+        "ecom_user.EcomUser",
+        on_delete=models.CASCADE,
+        related_name="seller_profile",
     )
     store_name = models.CharField(max_length=50, unique=True, null=True)
     store_address = models.CharField(max_length=250)
@@ -76,7 +79,10 @@ class SellerProfile(models.Model):
     is_verified = models.BooleanField(default=False)
     products_sold = models.PositiveIntegerField(default=0)
     rating = models.DecimalField(
-        default=0.0, max_digits=1, decimal_places=1, validators=[validate_rating]
+        default=0.0,
+        max_digits=1,
+        decimal_places=1,
+        validators=[validate_rating],
     )
     profile_picture = models.ImageField(
         upload_to="profile_pictures/sellers/", null=True, blank=True
@@ -129,10 +135,14 @@ class SellerProfile(models.Model):
             return settings.DEFAULT_REQUIRED_SELLER_FIELDS
         return [field.decode() for field in required_fields]
 
-    def _validate_seller_required_fields(self, required_fields: List[str]) -> None:
+    def _validate_seller_required_fields(
+        self, required_fields: List[str]
+    ) -> None:
         invalid_field_names = self._get_invalid_field_names(required_fields)
         valid_field_names = [
-            field for field in required_fields if field not in invalid_field_names
+            field
+            for field in required_fields
+            if field not in invalid_field_names
         ]
         empty_fields = self._get_empty_fields(valid_field_names)
         errors = {}
@@ -152,7 +162,9 @@ class SellerProfile(models.Model):
         return valid_field_names
 
     def _get_empty_fields(self, field_names: List[str]) -> List[str]:
-        empty_fields = [field for field in field_names if not getattr(self, field)]
+        empty_fields = [
+            field for field in field_names if not getattr(self, field)
+        ]
         return empty_fields
 
 
@@ -178,63 +190,3 @@ class BankCard(models.Model):
     iban = models.CharField(max_length=28, validators=[validate_iban])
 
 
-class WalletTransaction(models.Model):
-    wallet = models.ForeignKey(
-        "Wallet", on_delete=models.DO_NOTHING, related_name="transactions"
-    )
-    amount = models.BigIntegerField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    description = models.CharField(max_length=500)
-    order = models.ForeignKey(
-        Order, on_delete=models.DO_NOTHING, null=True, blank=True
-    )  # if the type is order related
-    payment_track_id = models.IntegerField(
-        blank=True, null=True
-    )  # if the type is deposit
-    commission_rate = models.DecimalField(
-        max_digits=5, decimal_places=2, null=True, blank=True
-    ) # if the type is order revenue
-    ORDER_REVENUE = "OR"  # user selling items via an order
-    ORDER_PAYMENT = "OP"  # user buying items via an order
-    WITHDRAWAL = "WD"  # user demanding money into their bank account
-    DEPOSIT = "PM"  # user depositing money to their wallet via payment
-    TRANSACTION_TYPES = {
-        DEPOSIT: "Deposit",
-        WITHDRAWAL: "Withdrawal",
-        ORDER_REVENUE: "Order Revenue",
-        ORDER_PAYMENT: "Order Payment",
-    }
-    type = models.CharField(choices=TRANSACTION_TYPES)
-
-    class Meta:
-        order_by = ["created_at"]
-
-
-class Wallet(models.Model):
-    user = models.OneToOneField(
-        "ecom_user.EcomUser", on_delete=models.DO_NOTHING, related_name="wallet"
-    )
-    balance = models.PositiveBigIntegerField(default=0)
-
-
-class WithdrawalRequest(models.Model):
-    PAID = "AP"
-    REFUSED = "RF"
-    PENDING = "PD"
-    REQUEST_STATUSES = {PAID: "PAID", REFUSED: "Refused", PENDING: "Pending"}
-    status = models.CharField(max_length=2, choices=REQUEST_STATUSES, default=PENDING)
-    bank_card = models.ForeignKey(
-        BankCard,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="withdrawal_requests",
-    )
-    amount = models.PositiveBigIntegerField()
-    refuse_reason = models.CharField(max_length=500)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    @property
-    def requester(self):
-        return self.bank_card.user

@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from ecom_user_profile.models import (
     CustomerAddress,
     CustomerProfile,
-    SellerBankAccount,
+    BankCard,
     SellerBusinessLicense,
     SellerProfile,
 )
@@ -133,7 +133,7 @@ class SellerBusinessLicenseDetail(RetrieveUpdateDestroyAPIView):
 class SellerBankAccountList(ListCreateAPIView):
     authentication_classes = [EcomUserJWTAuthentication]
     permission_classes = [IsAuthenticated, IsOwner]
-    queryset = SellerBankAccount.objects.all()
+    queryset = BankCard.objects.all()
     serializer_class = SellerBankAccountSerializer
 
     def get_queryset(self):
@@ -146,7 +146,7 @@ class SellerBankAccountList(ListCreateAPIView):
 class SellerBankAccountDetail(RetrieveUpdateDestroyAPIView):
     authentication_classes = [EcomUserJWTAuthentication]
     permission_classes = [IsAuthenticated, IsOwner]
-    queryset = SellerBankAccount.objects.all()
+    queryset = BankCard.objects.all()
     serializer_class = SellerBankAccountSerializer
 
     def get_queryset(self):

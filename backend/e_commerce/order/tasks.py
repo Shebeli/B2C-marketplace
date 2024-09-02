@@ -10,26 +10,32 @@ from zibal.exceptions import RequestError, ResultError
 from product.models import ProductVariant
 from order.models import Order
 
-# One task is set to run after 1 hour to check if the order is completed,
-# if not so, release the stocks occupied by that order.
-
 
 logger = logging.getLogger("order")
 
 
-@shared_task(bind=True, max_retries=10, default_retry_delay=45)
-def verify_pending_transaction(self, track_id: int, order_id: int) -> None:
+@shared_task(bind=True, max_retries=5, default_retry_delay=45)
+def process_payment(self, track_id: int, order_id: int) -> None:
     """
-    After initializing an IPG transaction after 15 minutes, it should be
-    checked that if the transaction has already been paid but its hasn't been
-    verified yet (transaction status code will be 2), it means somehow the
-    server didn't receive the callback request from the IPG to verify the
-    transaction. If the case is such so, then this task will attempt to
-    verify the transaction and update the order status.
+    After initializing an IPG payment transaction after 20 minutes, the
+    transaction status should be checked and the order should be put into
+    the appropriate state based on the response recieved from the IPG
     """
-    order = Order.objects.get(id=order_id)
-    if order.status != Order.UNPAID:
+    try:
+        order = Order.objects.get(id=order_id)
+    except Order.DoesNotExist:
+        logger.exception(
+            (
+                f"Failed to resolve given order object using order_id: {order_id} "
+                f"from the database in the following task: \n"
+                f"task ID: {self.task.id} | task name: {self.request.task}"
+            )
+        )
         return
+
+    if order.status not in (Order.UNPAID, Order.PAYING):
+        return
+
     client = ZibalIPGClient(
         settings.ZIBAL_MERCHANT, raise_on_invalid_result=True, logger=logger
     )
@@ -38,8 +44,13 @@ def verify_pending_transaction(self, track_id: int, order_id: int) -> None:
         if response_data.status == 2:  # paid but unverified
             verify_data = client.verify_transaction(track_id)
             order.paid_amount = verify_data.amount
-            order.status = Order.PENDING
-            order.save()
+            order.status = Order.PROCESSING
+        elif response_data.status == 1: # paid and verified
+            order.paid_amount = response_data.amount
+            order.status = Order.PAID
+        else:
+            order.status = Order.UNPAID
+        order.save()
     except RequestError as exc:
         raise self.retry(exc=exc)
     except ResultError as exc:
@@ -75,7 +86,8 @@ def cancel_unpaid_order(self, order_id):
             )
         )
         return
-
+    if order.status == Order.PAYING:
+        raise self.retry(countdown=60 * 20)
     if order.status == Order.UNPAID:
         # release the kraken!
         product_variants = []
@@ -84,9 +96,9 @@ def cancel_unpaid_order(self, order_id):
             product_variant.reserved_stock -= order_item.quantity
             product_variant.on_hand_stock += order_item.quantity
             product_variants.append(product_variant)
+        order.status = Order.CANCELLED
         with transaction.atomic():
             ProductVariant.objects.bulk_update(
                 product_variants, ["reserved_stock", "on_hand_stock"]
             )
-            order.status = Order.CANCELLED
             order.save()
