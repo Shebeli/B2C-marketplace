@@ -11,11 +11,10 @@ from ecom_user_profile.models import (
     BankCard,
     WithdrawalRequest,
 )
+from ecom_user
 from ecom_user.models import EcomUser
 
 from zibal.client import ZibalIPGClient
-
-
 
 
 def add_order_revenue_to_wallet(
@@ -43,9 +42,7 @@ def add_order_revenue_to_wallet(
     return wallet_transaction
 
 
-def request_withdrawal(
-    selected_bank_card: BankCard, amount: int
-) -> WithdrawalRequest:
+def request_withdrawal(selected_bank_card: BankCard, amount: int) -> WithdrawalRequest:
     """
     Submit a request for withdrawl from the wallet, which result in
     creating a WithdrawalRequest instance.
@@ -69,14 +66,10 @@ def request_withdrawal(
         raise serializers.ValidationError(
             "Not enough wallet currency for the requested action"
         )
-    return WithdrawalRequest.objects.create(
-        bank_card=selected_bank_card, amount=amount
-    )
+    return WithdrawalRequest.objects.create(bank_card=selected_bank_card, amount=amount)
 
 
-def update_withdrawal_request(
-    user: EcomUser, amount: int
-) -> WithdrawalRequest:
+def update_withdrawal_request(user: EcomUser, amount: int) -> WithdrawalRequest:
     wallet = user.wallet
     withdrawal = WithdrawalRequest.objects.filter(
         bank_card__in=user.bank_cards, status=WithdrawalRequest.PENDING

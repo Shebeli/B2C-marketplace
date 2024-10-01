@@ -10,7 +10,7 @@ from product.models import ProductVariant
 from order.models import Cart, CartItem, Order, OrderItem
 from order.tasks import cancel_unpaid_order, process_payment
 
-from order.services import (
+from backend.e_commerce.order.services import (
     initiate_order_payment,
     create_order,
     validate_cart_not_empty,
@@ -22,27 +22,16 @@ logger = logging.getLogger("order")
 
 class CartItemSerializer(serializers.ModelSerializer):
     """
-    Current authenticated user and cart should be passed as context to this
-    serializer with the kwargs 'user' and 'cart', respectively when calling
-    .save().
+    Intended for creating, updating and reading a cart item instance.
+
+    Current authenticated user should be passed as context to this
+    serializer with the kwarg 'user', when calling .save().
     """
 
-    price = serializers.IntegerField(
-        source="product_variant.price", read_only=True
-    )
-    name = serializers.IntegerField(
-        source="product_variant.name", read_only=True
-    )
-    image = serializers.ImageField(
-        source="product_variant.image", read_only=True
-    )
+    price = serializers.IntegerField(source="product_variant.price", read_only=True)
+    name = serializers.IntegerField(source="product_variant.name", read_only=True)
+    image = serializers.ImageField(source="product_variant.image", read_only=True)
     available_stock = serializers.SerializerMethodField()
-
-    def get_available_stock(self, cart_item_obj: CartItem):
-        return (
-            cart_item_obj.product_variant.available_stock
-            - cart_item_obj.quantity
-        )
 
     class Meta:
         model = CartItem
@@ -62,46 +51,63 @@ class CartItemSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, attrs):
-        # user and cart should be passed as kwargs when calling .save()
-        if not self.context.get("cart"):
-            raise RuntimeError(
-                "Cart must be provided using 'cart' kwarg when calling .save()"
-            )
-        if not self.context.get("user"):
+        current_user = self.context.get("user")
+        if not current_user:
             raise RuntimeError(
                 "User must be provided using 'user' kwarg when calling .save()"
             )
-        # validate selected product variant has the same seller as other items
+        self._run_cart_item_validations(attrs, current_user)
+        return attrs
+
+    def create(self, validated_data):
+        current_user = self.context.get("user")
+        cart = Cart.objects.get_or_create(user=current_user)
+        validated_data["cart"] = cart.id
+        return super().create(validated_data)
+
+    def _run_cart_item_validations(self, attrs: dict, current_user: EcomUser) -> None:
+        selected_variant = ProductVariant.objects.get(id=attrs["product_variant"])
+        self._validate_same_seller(selected_variant, attrs)
+        self._validate_availability(selected_variant)
+        self._validate_quantity(selected_variant, attrs)
+        self._validate_active_seller(selected_variant)
+        self._validate_seller_is_not_current_user(selected_variant, current_user)
+
+    def _validate_same_seller(
+        self, selected_variant: ProductVariant, attrs: dict
+    ) -> None:
         cart_item = CartItem.objects.filter(cart_id=attrs["cart"]).first()
-        referenced_variant = ProductVariant.objects.get(
-            id=attrs["product_variant"]
-        )
         if cart_item:
-            if referenced_variant.owner != cart_item.product_variant.owner:
+            if selected_variant.owner != cart_item.product_variant.owner:
                 raise serializers.ValidationError(
                     "Cart items should belong to only one seller"
                 )
-        # validate stock availability
-        if not referenced_variant.is_available:
+
+    def _validate_availability(self, selected_variant: ProductVariant) -> None:
+        if not selected_variant.is_available:
             raise serializers.ValidationError(
                 "The selected product doesn't have any available stocks"
             )
-        # validate product selected quantity
-        if attrs["quantity"] > referenced_variant.available_stock:
+
+    def _validate_quantity(self, selected_variant: ProductVariant, attrs: dict) -> None:
+        if attrs["quantity"] > selected_variant.available_stock:
             raise serializers.ValidationError(
                 "The quantity of selected product cannot be higher than the product's available stock"
             )
-        # check if the seller is verified
-        if not referenced_variant.owner.is_verified:
+
+    def _validate_active_seller(selected_variant: ProductVariant) -> None:
+        if not selected_variant.owner.is_verified:
             raise serializers.ValidationError(
                 "The selected product cannot be added to cart due to seller's account being inactive"
             )
-        # validate the owner of the product is not the same as current user
-        if referenced_variant.owner != self.context.get("user"):
+
+    def _validate_seller_is_not_current_user(
+        selected_variant: ProductVariant, current_user: EcomUser
+    ) -> None:
+        if selected_variant.owner != current_user:
             raise serializers.ValidationError(
-                "Cannot add an item which has the owner is the current authenticated user"
+                "Cannot add items from the user's own shop to the cart!"
             )
-        return attrs
 
 
 class CartSerializerForCustomer(serializers.ModelSerializer):
@@ -123,20 +129,16 @@ class CartSerializerForCustomer(serializers.ModelSerializer):
 
 class OrderItemSerializer(serializers.ModelSerializer):
     """
-    This serializer is only intended for representation or read only operations, since
-    the order items creation are handled by server by using the user's current cart
+    This serializer is only intended for read only operations.
+    Since the order items creation are handled by server by using the user's current cart
     items. It is assumed that the cart items have already been validated, though some
     other validations are processed in the OrderSerializer.
 
     Since the price of the product can be changed in the future, so
     """
 
-    name = serializers.IntegerField(
-        source="product_variant.name", read_only=True
-    )
-    image = serializers.ImageField(
-        source="product_variant.image", read_only=True
-    )
+    name = serializers.IntegerField(source="product_variant.name", read_only=True)
+    image = serializers.ImageField(source="product_variant.image", read_only=True)
 
     class Meta:
         model = OrderItem
@@ -207,9 +209,7 @@ class OrderSerializerForCustomer(serializers.ModelSerializer):
                 "The user must be passed using 'user' kwarg when calling .save() method"
             )
         # assigned customer address should belong  to current user
-        customer_address_obj = CustomerAddress.objects.get(
-            attrs["customer_address"]
-        )
+        customer_address_obj = CustomerAddress.objects.get(attrs["customer_address"])
         if customer_address_obj.user != attrs["user"]:
             raise serializers.ValidationError(
                 "The given customer address does not belong to this user"
