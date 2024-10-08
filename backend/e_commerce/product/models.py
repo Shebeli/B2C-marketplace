@@ -96,7 +96,7 @@ class ProductVariant(models.Model):
 class Product(models.Model):
     """
     The main_variant field is the representative of the product, so fields such as price,
-    image and ... are derived from the main variant instance when displaying the product
+    image and etc. are derived from the main variant instance when displaying the product
     information on a generic level.
     Also note that at least one product variant should be created for a Product,
     otherwise the product would not be valid to work with.

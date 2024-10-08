@@ -217,3 +217,4 @@ if not PAYMENT_CALLBACK_URL:
         "Enviroment variable PAYMENT_CALLBACK_URL should be provided"
     )
 
+COMMISSION_RATE = 0.975

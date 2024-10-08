@@ -9,7 +9,7 @@ from zibal.exceptions import RequestError, ResultError
 
 from product.models import ProductVariant
 from order.models import Order
-
+from wallet.models import Transaction
 
 logger = logging.getLogger("order")
 
@@ -33,9 +33,18 @@ def process_payment(self, track_id: int, order_id: int) -> None:
         )
         return
 
+    # order is paid most likely, so no need for inqurying
     if order.status not in (Order.UNPAID, Order.PAYING):
+        logger.info(
+            (
+                f"The order with id of {order_id} is no longer in UNPAID or PAYING status"
+                f" so no need for inqury from the IPG services."
+                f"Order's current status: {order.status}"
+            )
+        )
         return
 
+    # order is still unpaid, inqurying to make certain that the purchase is completed.
     client = ZibalIPGClient(
         settings.ZIBAL_MERCHANT, raise_on_invalid_result=True, logger=logger
     )
@@ -45,7 +54,7 @@ def process_payment(self, track_id: int, order_id: int) -> None:
             verify_data = client.verify_transaction(track_id)
             order.paid_amount = verify_data.amount
             order.status = Order.PROCESSING
-        elif response_data.status == 1: # paid and verified
+        elif response_data.status == 1:  # paid and verified
             order.paid_amount = response_data.amount
             order.status = Order.PAID
         else:
@@ -55,7 +64,7 @@ def process_payment(self, track_id: int, order_id: int) -> None:
         raise self.retry(exc=exc)
     except ResultError as exc:
         logger.error(
-            f"The received result response from IPG is unacceptable: {exc}"
+            f"Unexpected response received from the IPG webserver: {exc}"
             f"order_id: {order_id} | "
             f"task id: {self.task.id} | task name: {self.request.task}"
         )
@@ -69,7 +78,7 @@ def process_payment(self, track_id: int, order_id: int) -> None:
         )
 
 
-@shared_task(bind=True)
+@shared_task(bind=True, max_retries=5, default_retry_delay=75)
 def cancel_unpaid_order(self, order_id):
     """
     For cancelling orders which haven't been paid for about 1-2 hours,
@@ -89,7 +98,6 @@ def cancel_unpaid_order(self, order_id):
     if order.status == Order.PAYING:
         raise self.retry(countdown=60 * 20)
     if order.status == Order.UNPAID:
-        # release the kraken!
         product_variants = []
         for order_item in order.items.all():
             product_variant = order_item.product_variant
@@ -97,8 +105,47 @@ def cancel_unpaid_order(self, order_id):
             product_variant.on_hand_stock += order_item.quantity
             product_variants.append(product_variant)
         order.status = Order.CANCELLED
+        order.cancelled_by = order.SERVER
         with transaction.atomic():
             ProductVariant.objects.bulk_update(
                 product_variants, ["reserved_stock", "on_hand_stock"]
             )
             order.save()
+
+
+@shared_task(bind=True)
+def update_order_to_delivered(self, order_id: int):
+    """
+    After a period of 5 business days of shipment, if no complaints have been
+    recieved from the customer, the order's status is updated to DELIVERED.
+
+    However, if the order is not delivered and the customer
+    informs the server that the order hasn't been delivered,
+    customer support should intervene and check what has happened
+    with the order, and should follow up with approprite actions
+    inorder to resolve the issue.
+    """
+    try:
+        order = Order.objects.get(id=order_id)
+    except Order.DoesNotExist:
+        logger.error(
+            (
+                f"Failed to resolve given order object using order_id: {order_id} "
+                f"from the database in the following task: \n"
+                f"task ID: {self.task.id} | task name: {self.request.task}"
+            )
+        )
+        return
+    commission_rate = settings.COMMISSION_RATE
+    seller_wallet = order.seller.wallet
+    with transaction.atomic():
+        Transaction.objects.create(
+            type=Transaction.ORDER_REVENUE,
+            commission_rate=commission_rate,
+            order=order,
+            amount=order.total_price * commission_rate,
+        )
+        seller_wallet += order.total_price * commission_rate
+        seller_wallet.save()
+        order.status = Order.DELIVERED
+        order.save()

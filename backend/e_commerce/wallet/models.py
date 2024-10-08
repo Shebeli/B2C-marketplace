@@ -1,4 +1,10 @@
+from datetime import timedelta
+
+from django.utils.translation import gettext_lazy as _
+from django.conf import settings
 from django.db import models
+from django.utils import timezone
+
 
 from ecom_user_profile.models import BankCard
 from ecom_user.models import EcomUser
@@ -17,13 +23,15 @@ class Wallet(models.Model):
 class Transaction(models.Model):
     """
     This model is intended to be used only by server for recording
-    all types of financial records, and thus its purpose is only
-    for read only operations on the client side.
+    all types of financial records.
 
     Depending on the transaction type, only some fields are required
     to be provided (and so other unrequired fields should be null).
     """
 
+    amount = models.BigIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    description = models.CharField(max_length=500, blank=True)
     wallet = models.ForeignKey(
         "Wallet",
         on_delete=models.DO_NOTHING,
@@ -32,9 +40,6 @@ class Transaction(models.Model):
         null=True,
         help_text="If the wallet is involved in the transaction",
     )
-    amount = models.BigIntegerField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    description = models.CharField(max_length=500)
     order = models.ForeignKey(
         Order,
         on_delete=models.DO_NOTHING,
@@ -42,10 +47,11 @@ class Transaction(models.Model):
         blank=True,
         help_text="If an order is involved in the transaction",
     )
-    payment_track_id = models.IntegerField(
+    payment = models.ForeignKey(
+        "Payment",
         blank=True,
         null=True,
-        help_text="If the transaction's type is deposit",
+        help_text="If the transaction's type has a payment involved",
     )
     commission_rate = models.DecimalField(
         max_digits=5,
@@ -54,22 +60,89 @@ class Transaction(models.Model):
         blank=True,
         help_text="If the transaction's type is order revenue",
     )
-    ORDER_REVENUE = "OR"  # user selling items via an order
-    ORDER_PAYMENT = "OP"  # user buying items via an order
+    ORDER_REVENUE = "OR"  # seller's wallet balance increases after 7 days of delivery
+    DIRECT_PAYMENT = "OP"  # customer paying an order via direct payment method
+    WALLET_PAYMENT = "WP"  # customer paying an order via wallet payment method
     WITHDRAWAL = "WD"  # user requesting a withdrawal from their wallet
-    DEPOSIT = "PM"  # user depositing money to their wallet via payment
+    WALLET_REFUND = "RF"  # order getting refunded to user's wallet
+    DIRECT_REFUND = "DF"  # order getting refunded using card to card transfer
+    DEPOSIT = "PM"  # user increasing their wallet balance via payment
+    OTHER = "OT"  # other kind of transaction that doesn't fit to any other category
     CANCELLATION = "CC"
     TRANSACTION_TYPES = {
         DEPOSIT: "Deposit",
         WITHDRAWAL: "Withdrawal",
         ORDER_REVENUE: "Order Revenue",
-        ORDER_PAYMENT: "Order Payment",
+        DIRECT_PAYMENT: "Order Direct Payment",
+        WALLET_PAYMENT: "Order Wallet Payment",
         CANCELLATION: "Cancellation",
     }
     type = models.CharField(choices=TRANSACTION_TYPES)
 
     class Meta:
         ordering = ["-created_at"]
+
+
+class Payment(models.Model):
+    """
+    Depending on the payment type, only one of the fields `order` or `wallet`
+    should be provided.
+    """
+
+    user = models.ForeignKey(
+        EcomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=False,
+        related_name="payments",
+    )
+    amount = models.PositiveBigIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    service_name = models.CharField(max_length=15)
+    is_used = models.BooleanField(
+        default=False,
+        help_text=(
+            "This field indicates that whether this payment has been checked "
+            "to either update an order to PAID status, or to increase "
+            "the balance of a wallet."
+        ),
+    )
+    track_id = models.CharField(max_length=50)
+    track_id_time = models.DateTimeField(
+        help_text="When `track_id` field is provided/updated, this field should be set to its time"
+    )
+    order = models.OneToOneField(
+        Order,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="payment",
+    )
+    wallet = models.ForeignKey(
+        Wallet,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="payments",
+    )
+    CANCELLED = "CC"
+    UNPAID = "UP"
+    PAYING = "PY"
+    PAID = "PD"
+    PAYMENT_STATUSES = {
+        CANCELLED: "Cancelled",
+        UNPAID: "Unpaid",
+        PAYING: "Paying",
+        PAID: "Paid",
+    }
+    status = models.CharField(max_length=2, choices=PAYMENT_STATUSES)
+
+    def is_payment_link_expired(self) -> bool:
+        expire_time = settings.PAYMENT_LINK_EXPIRY_TIME
+        if self.track_id_time > timezone.now() - timedelta(minutes=expire_time):
+            return True
+        return False
 
 
 class WithdrawalRequest(models.Model):
@@ -101,54 +174,23 @@ class WithdrawalRequest(models.Model):
         return self.bank_card.user
 
 
-class Payment(models.Model):
-    """
-    Depending on the payment type, only one of the fields `order` or `wallet`
-    should be provided.
-    """
+class MoneyTransferRequest(models.Model):
+    """For refunds and other related money transfer requests."""
 
-    user = models.ForeignKey(
+    requested_by = models.ForeignKey(
         EcomUser,
+        verbose_name=_("Requesting user"),
         on_delete=models.SET_NULL,
         null=True,
         blank=False,
-        related_name="payments",
     )
-    amount = models.PositiveBigIntegerField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    service_name = models.CharField(max_length=15)
-
-    ORDER = "OD"
-    WALLET = "WL"
-    PAYMENT_TYPES = {
-        ORDER: "Order",
-        WALLET: "Wallet",
-    }
-    type = models.CharField(max_length=2, choices=PAYMENT_TYPES)
-    order = models.OneToOneField(
-        Order,
+    verified_by = models.ForeignKey(
+        "ecom_admin.EcomAdmin",
+        verbose_name=_("Verified by admin"),
         on_delete=models.SET_NULL,
         null=True,
-        blank=True,
-        related_name="payment",
+        blank=False,
     )
-    wallet = models.ForeignKey(
-        Wallet,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="payments",
-    )
-
-    CANCELLED = "CC"
-    UNPAID = "UP"
-    PAYING = "PY"
-    PAID = "PD"
-    PAYMENT_STATUSES = {
-        CANCELLED: "Cancelled",
-        UNPAID: "Unpaid",
-        PAYING: "Paying",
-        PAID: "Paid",
-    }
-    status = models.CharField(max_length=2, choices=PAYMENT_STATUSES)
+    amount = models.BigIntegerField()
+    is_verified = models.BooleanField(default=False)
+    is_paid = models.BooleanField()

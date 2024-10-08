@@ -5,16 +5,16 @@ from rest_framework import serializers
 from zibal.client import ZibalIPGClient
 
 from ecom_user.models import EcomUser
-from ecom_user_profile.models import CustomerAddress, Transaction
+from ecom_user_profile.models import CustomerAddress
 from product.models import ProductVariant
 from order.models import Cart, CartItem, Order, OrderItem
 from order.tasks import cancel_unpaid_order, process_payment
 
-from backend.e_commerce.order.services import (
+from order.services import (
     initiate_order_payment,
     create_order,
-    validate_cart_not_empty,
-    validate_no_on_going_orders,
+    update_order_to_cancelled,
+    update_order_to_shipped,
 )
 
 logger = logging.getLogger("order")
@@ -22,7 +22,8 @@ logger = logging.getLogger("order")
 
 class CartItemSerializer(serializers.ModelSerializer):
     """
-    Intended for creating, updating and reading a cart item instance.
+    Intended for creating, updating and reading a cart item instance by
+    a customer.
 
     Current authenticated user should be passed as context to this
     serializer with the kwarg 'user', when calling .save().
@@ -50,6 +51,16 @@ class CartItemSerializer(serializers.ModelSerializer):
             "product_variant": {"required": True},
         }
 
+    def to_internal_value(self, data):
+        current_user = self.context.get("user")
+        if not current_user:
+            raise RuntimeError(
+                "User must be provided using 'user' kwarg when calling .save()"
+            )
+        cart = Cart.objects.get_or_create(user=current_user)
+        data["cart"] = cart.id
+        return super().to_internal_value(data)
+
     def validate(self, attrs):
         current_user = self.context.get("user")
         if not current_user:
@@ -58,12 +69,6 @@ class CartItemSerializer(serializers.ModelSerializer):
             )
         self._run_cart_item_validations(attrs, current_user)
         return attrs
-
-    def create(self, validated_data):
-        current_user = self.context.get("user")
-        cart = Cart.objects.get_or_create(user=current_user)
-        validated_data["cart"] = cart.id
-        return super().create(validated_data)
 
     def _run_cart_item_validations(self, attrs: dict, current_user: EcomUser) -> None:
         selected_variant = ProductVariant.objects.get(id=attrs["product_variant"])
@@ -112,8 +117,8 @@ class CartItemSerializer(serializers.ModelSerializer):
 
 class CartSerializerForCustomer(serializers.ModelSerializer):
     """
-    This serializer is intended only for representation or read only operations,
-    so it shouldn't be used for create/update operations.
+    This serializer is intended only for representation, and to be read only
+    by the customer.
     """
 
     items = CartItemSerializer(many=True, read_only=True)
@@ -126,18 +131,27 @@ class CartSerializerForCustomer(serializers.ModelSerializer):
             "user": {"read_only": True},
         }
 
+    def get_seller(self, cart: Cart) -> Union[int, None]:
+        seller = cart.get_seller()
+        if not seller:
+            return None
+        return seller.id
+
 
 class OrderItemSerializer(serializers.ModelSerializer):
     """
-    This serializer is only intended for read only operations.
-    Since the order items creation are handled by server by using the user's current cart
-    items. It is assumed that the cart items have already been validated, though some
-    other validations are processed in the OrderSerializer.
+    This serializer is only intended for representation, accessed only by
+    its customer and the seller.
 
-    Since the price of the product can be changed in the future, so
+    When creating the order, the `OrderItem` instances creation are handled
+    by server by using the user's current cart items.
+
+    It is assumed that the cart items have already been validated
+    (such as item availiblity, proper quantity, and so on), though some
+    other related validations are processed in the `OrderSerializer`.
     """
 
-    name = serializers.IntegerField(source="product_variant.name", read_only=True)
+    name = serializers.CharField(source="product_variant.name", read_only=True)
     image = serializers.ImageField(source="product_variant.image", read_only=True)
 
     class Meta:
@@ -146,26 +160,36 @@ class OrderItemSerializer(serializers.ModelSerializer):
             "id",
             "order",
             "submitted_price",
+            "quantity",
             "name",
             "image",
             "product_variant",
-            "quantity",
         ]
-        extra_kwargs = {
-            "order": {"read_only": True},
-            "product_variant": {"required": True},
-        }
+
+
+class CustomerAddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerAddress
+        fields = ["id", "address"]
 
 
 class OrderSerializerForCustomer(serializers.ModelSerializer):
     """
-    Updating order by the customer is only permitted if the order is still
-    in UNPAID state.
+    Intended to be accessed and used by the customer of an order.
+
+    Updating order's fields such as customer notes by the customer is only
+    permitted if the order is still in `UNPAID` state.
+
+    Customer should proceed to pay the order either using direct payment
+    or using their wallet. If the chosen method is direct payment, then
+    an instance of `Payment` will be created and will keep track of the
+    customer's latest IPG payment attempt.
     """
 
     items = OrderItemSerializer(many=True, read_only=True)
     seller = serializers.SerializerMethodField()
     payment_link = serializers.SerializerMethodField()
+    selected_address = CustomerAddressSerializer()
 
     class Meta:
         model = Order
@@ -174,9 +198,8 @@ class OrderSerializerForCustomer(serializers.ModelSerializer):
             "user",
             "status",
             "items",
-            "customer_address",
+            "selected_address",
             "notes",
-            "payment_service",
             "seller",
             "payment_link",
         ]
@@ -192,9 +215,12 @@ class OrderSerializerForCustomer(serializers.ModelSerializer):
         return None
 
     def get_payment_link(self, order: Order) -> Union[str, None]:
-        if order.payment_track_id and not order.paid_amount:
-            return ZibalIPGClient.create_payment_link(order.payment_track_id)
-        return None
+        payment_obj = order.payment
+        if not payment_obj:
+            return None
+        if payment_obj.is_payment_link_expired:
+            return None
+        return ZibalIPGClient.create_payment_link(payment_obj.track_id)
 
     def validate(self, attrs):
         request_method = self.context["request"].method
@@ -208,34 +234,54 @@ class OrderSerializerForCustomer(serializers.ModelSerializer):
             raise RuntimeError(
                 "The user must be passed using 'user' kwarg when calling .save() method"
             )
-        # assigned customer address should belong  to current user
+        self._validate_address(attrs)
+        self._validate_cart_not_empty(user)
+        self._validate_no_on_going_orders(user)
+        return attrs
+
+    def create(self, validated_data):
+        order = create_order(validated_data)
+        # initiate_order_payment(order)
+        # cancel the order if it isn't paid after 1 hour
+        cancel_unpaid_order.apply_async(args=(order.id), countdown=60 * 60)
+        # Check the order's status and verify the payment on the IPG server if it is not so.
+        # process_payment.apply_async(
+        #     args=(order.payment_track_id, order.id), countdown=60 * 20
+        # )
+        return order
+
+    def _validate_address(attrs: dict) -> None:
         customer_address_obj = CustomerAddress.objects.get(attrs["customer_address"])
         if customer_address_obj.user != attrs["user"]:
             raise serializers.ValidationError(
                 "The given customer address does not belong to this user"
             )
-        return attrs
 
-    def create(self, validated_data):
-        user = validated_data["user"]
-        validate_cart_not_empty(user)
-        validate_no_on_going_orders(user)
-        order = create_order(validated_data)
-        order = initiate_order_payment(order)
-        # cancel the order if not paid after 1 hour
-        cancel_unpaid_order.apply_async(args=(order.id), countdown=60 * 60)
-        # will check after 20 minutes
-        process_payment.apply_async(
-            args=(order.payment_track_id, order.id), countdown=60 * 20
-        )
-        return order
+    def _validate_cart_not_empty(user: EcomUser) -> None:
+        """Cart shouldn't be empty when requesting a new order."""
+        if not user.cart.items.exists():
+            raise serializers.ValidationError("The cart doesn't contain any items")
+
+    def _validate_no_on_going_orders(user: EcomUser) -> None:
+        """
+        Validates no ongoing order should exist with the same seller when
+        requesting a new order.
+        """
+        on_going_order_statuses = (Order.PENDING, Order.PROCESSING, Order.SHIPPED)
+        seller = user.cart.items.first().owner
+        if user.orders.filter(
+            seller=seller, status__in=on_going_order_statuses
+        ).exists():
+            raise serializers.ValidationError(
+                "Cannot create a new order since an order is already on going with the same seller"
+            )
 
 
 class OrderSerializerForSeller(serializers.ModelSerializer):
     """
     Allows the following write operations for sellers:
 
-    - Updating the order's status with the following constraints: (the backend app
+    - Updating the order's status with the following constraints: (the server
     should also execute the necessary changes to the order such as updating the
     product's stocks when the order status gets changed):
         - Seller Should input a tracking code when changing the status to SHIPPED.
@@ -278,29 +324,8 @@ class OrderSerializerForSeller(serializers.ModelSerializer):
                 "The vendor can only change the status of an order to one of "
                 "the following states: Processing, Shipped or Cancelled"
             )
-
         if new_status == Order.SHIPPED:
-            if not validated_data.get("tracking_code") or order.tracking_code:
-                raise serializers.ValidationError(
-                    "A tracking code should be provided when updating the status to shipped"
-                )
-            order_items = []
-            for item in order.items.all():
-                item.product_variant.reserved_stock -= item.quantity
-                item.product_variant.on_hand_stock -= item.quantity
-                order_items.append(item)
-            OrderItem.objects.bulk_update(
-                order_items, ["reserved_stock", "on_hand_stock"]
-            )
+            update_order_to_shipped(order, validated_data)
         if new_status == Order.CANCELLED:
-            if not validated_data.get("cancel_reason"):
-                raise serializers.ValidationError(
-                    "A cancellation reason should be provided when changing the status to cancelled"
-                )
-            order_items = []
-            for item in order.items.all():
-                item.product_variant.reserved_stock -= item.quantity
-                order_items.append(item)
-            OrderItem.objects.bulk_update(order_items, ["reserved_stock"])
-
+            update_order_to_cancelled(order, validated_data)
         return super().update(order, validated_data)

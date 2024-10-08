@@ -81,7 +81,7 @@ class Order(models.Model):
         related factors, or using an external API service for retrieving the estimation).
     """
 
-    ONHOLD = "OH"  # incase the payment gateways are all down
+    ONHOLD = "OH"  # incase the payment gateways are all down, or the support deems so
     UNPAID = "UP"  # the customer hasn't paid the order amount
     PAYING = "PG"  # customer is attempting to pay (in sync for 20 minutes)
     PAID = "PD"  # the order is paid, but the seller hasn't accepted the order yet
@@ -131,11 +131,11 @@ class Order(models.Model):
 
     CUSTOMER = "CT"
     SELLER = "SL"
-    SYSTEM = "ST"
+    SERVER = "ST"
     CANCELLED_BY_CHOICES = {
         CUSTOMER: "Customer",
         SELLER: "Seller",
-        SYSTEM: "System",
+        SERVER: "Server",
     }
     cancelled_by = models.CharField(
         max_length=2,
@@ -190,6 +190,12 @@ class Cart(models.Model):
         return self.items.aggregate(
             total_price=Sum(F("product_variant__price") * F("quantity"))
         )["total_price"]
+
+    def get_seller(self) -> Union[EcomUser, None]:
+        first_item = self.items.first()
+        if not first_item.exists():
+            return None
+        return first_item.product_variant.owner
 
 
 class CartItem(models.Model):
