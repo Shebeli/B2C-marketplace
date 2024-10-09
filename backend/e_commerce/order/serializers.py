@@ -32,7 +32,9 @@ class CartItemSerializer(serializers.ModelSerializer):
     price = serializers.IntegerField(source="product_variant.price", read_only=True)
     name = serializers.IntegerField(source="product_variant.name", read_only=True)
     image = serializers.ImageField(source="product_variant.image", read_only=True)
-    available_stock = serializers.SerializerMethodField()
+    is_available = serializers.IntegerField(
+        source="product_variant.is_available", read_only=True
+    )
 
     class Meta:
         model = CartItem
@@ -211,7 +213,7 @@ class OrderSerializerForCustomer(serializers.ModelSerializer):
     def get_seller(self, order_obj: Order) -> Union[int, None]:
         order_item = order_obj.items.first()
         if order_item:
-            return order_item.owner
+            return order_item.seller
         return None
 
     def get_payment_link(self, order: Order) -> Union[str, None]:
@@ -268,7 +270,7 @@ class OrderSerializerForCustomer(serializers.ModelSerializer):
         requesting a new order.
         """
         on_going_order_statuses = (Order.PENDING, Order.PROCESSING, Order.SHIPPED)
-        seller = user.cart.items.first().owner
+        seller = user.cart.items.first().seller
         if user.orders.filter(
             seller=seller, status__in=on_going_order_statuses
         ).exists():
