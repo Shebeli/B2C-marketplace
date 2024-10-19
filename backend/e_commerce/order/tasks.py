@@ -1,5 +1,9 @@
 import logging
 
+import requests
+from requests.exceptions import RequestException
+from zibal.client import ZibalIPGClient
+from django.core.cache import cache
 from django.db import transaction
 from django.conf import settings
 from celery import shared_task
@@ -9,7 +13,7 @@ from zibal.exceptions import RequestError, ResultError
 
 from product.models import ProductVariant
 from order.models import Order
-from wallet.models import Transaction
+from financeops.models import Transaction, IPG
 
 logger = logging.getLogger("order")
 
@@ -17,8 +21,8 @@ logger = logging.getLogger("order")
 @shared_task(bind=True, max_retries=5, default_retry_delay=45)
 def process_payment(self, track_id: int, order_id: int) -> None:
     """
-    After initializing an IPG payment transaction after 20 minutes, the
-    transaction status should be checked and the order should be put into
+    After initializing an IPG payment after 20 minutes, the
+    payment status should be checked and the order should be put into
     the appropriate state based on the response recieved from the IPG
     """
     try:
@@ -149,3 +153,36 @@ def update_order_to_delivered(self, order_id: int):
         seller_wallet.save()
         order.status = Order.DELIVERED
         order.save()
+
+
+@shared_task
+def check_and_cache_ipg_status():
+    """
+    Cache the available ipgs with a get request to assert whether the IPG
+    service is running or not.
+    """
+    IPGs = IPG.objects.all()
+    if not IPGs:
+        logger.critical(
+            "One IPG instance should at least exist for IPG status scheduler checker."
+        )
+        return
+    available_ipgs = []
+    for ipg in IPG.objects.all():
+        try:
+            response = requests.get(ipg.status_check_url, timeout=5)
+            if response.status_code != 200:
+                logger.warning(
+                    f"Unexpected response status code on service check: {response.status_code} content: {response.content}"
+                    f"\n IPG service {ipg.service_name} is unavailable, disabling gateway."
+                )
+                return
+
+        except RequestException as err:
+            logger.warning(
+                f"A network request error has occured on IPG status check: {err}"
+                f"\n IPG service {ipg.service_name} is unavailable, disabling gateway."
+            )
+            return
+        available_ipgs.append(ipg.id)
+    cache.set("available_ipgs", available_ipgs)

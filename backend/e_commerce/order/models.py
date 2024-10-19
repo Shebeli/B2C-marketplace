@@ -225,3 +225,4 @@ class CartItem(models.Model):
     @property
     def seller(self) -> EcomUser:
         return self.product_variant.owner
+

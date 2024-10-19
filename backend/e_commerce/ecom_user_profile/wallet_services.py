@@ -6,15 +6,10 @@ from django.conf import settings
 from order.models import Order
 
 from ecom_user_profile.models import (
-    Wallet,
-    Transaction,
     BankCard,
-    WithdrawalRequest,
 )
-from ecom_user
 from ecom_user.models import EcomUser
-
-from zibal.client import ZibalIPGClient
+from financeops.models import Wallet, Transaction, WithdrawalRequest
 
 
 def add_order_revenue_to_wallet(

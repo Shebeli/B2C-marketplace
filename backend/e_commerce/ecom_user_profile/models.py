@@ -91,6 +91,7 @@ class SellerProfile(models.Model):
     established_date = models.DateField(
         null=True, blank=True
     )  # whenever profile is verified, this field will be inputted.
+    minimum_order_amount = models.BigIntegerField(null=True)
 
     # If the seller is trying to verify their eligibilty for the first time,
     # validate their eligibility, then their seller account status will be verified by updating
@@ -135,36 +136,30 @@ class SellerProfile(models.Model):
             return settings.DEFAULT_REQUIRED_SELLER_FIELDS
         return [field.decode() for field in required_fields]
 
-    def _validate_seller_required_fields(
-        self, required_fields: List[str]
-    ) -> None:
-        invalid_field_names = self._get_invalid_field_names(required_fields)
+    def _validate_seller_required_fields(self, required_fields: List[str]) -> None:
+        invalid_field_names = self._get_invalid_field_names()
         valid_field_names = [
-            field
-            for field in required_fields
-            if field not in invalid_field_names
+            field for field in required_fields if field not in invalid_field_names
         ]
         empty_fields = self._get_empty_fields(valid_field_names)
         errors = {}
         if invalid_field_names:
             errors["invalid_fields"] = (
-                f"The following field(s) doesn't exist on EcomUser: {", ".join(invalid_field_names)}"
+                f"The following field(s) don't exist on Ecomuser: {', '.join(invalid_field_names)}"
             )
         if empty_fields:
             errors["empty_fields"] = (
-                f"The following field(s) are empty or null: {", ".join(empty_fields)}"
+                f"The following field(s) are empty or null: {', '.join(empty_fields)}"
             )
         if errors:
             raise exceptions.ValidationError(errors)
 
-    def _get_invalid_field_names(self, field_names: List[str]) -> List[str]:
+    def _get_invalid_field_names(self) -> List[str]:
         valid_field_names = [field.name for field in self._meta.get_fields()]
         return valid_field_names
 
     def _get_empty_fields(self, field_names: List[str]) -> List[str]:
-        empty_fields = [
-            field for field in field_names if not getattr(self, field)
-        ]
+        empty_fields = [field for field in field_names if not getattr(self, field)]
         return empty_fields
 
 
@@ -188,5 +183,3 @@ class BankCard(models.Model):
         max_length=16, validators=[validate_bank_card_number]
     )
     iban = models.CharField(max_length=28, validators=[validate_iban])
-
-

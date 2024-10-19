@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from django.core.exceptions import ImproperlyConfigured
 
 from rest_framework.serializers import Serializer
+from ecom_core import ipg_codes
 
 load_dotenv()
 
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
     "ecom_admin",
     "product",
     "order",
+    "financeops",
     # 3rd party apps
     "rest_framework",
     "rest_framework_simplejwt",
@@ -218,3 +220,24 @@ if not PAYMENT_CALLBACK_URL:
     )
 
 COMMISSION_RATE = 0.975
+
+
+IPG_SERVICES = {
+    ipg_codes.ZIBAL: "Zibal",
+    ipg_codes.ASAN_PARDAKHT: "Asan Pardakht",
+}
+
+IPG_SERVICES_BASE_URL = {
+    ipg_codes.ZIBAL: "https://gateway.zibal.ir/start/",
+}
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Using Redis as the message broker
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_BEAT_SCHEDULE = {
+    'check-ipg-status-every-10-minutes': {
+        'task': 'financeops.tasks.check_and_cache_ipg_status',
+        'schedule': 600, 
+    },
+}

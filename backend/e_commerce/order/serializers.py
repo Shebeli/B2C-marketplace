@@ -1,6 +1,8 @@
 import logging
 from typing import Union
 
+from django.core.cache import cache
+from django.conf import settings
 from rest_framework import serializers
 from zibal.client import ZibalIPGClient
 
@@ -10,12 +12,22 @@ from product.models import ProductVariant
 from order.models import Cart, CartItem, Order, OrderItem
 from order.tasks import cancel_unpaid_order, process_payment
 
-from order.services import (
-    initiate_order_payment,
+
+from financeops.models import IPG, Payment, Transaction
+from order.services.order import (
+    pay_order_using_wallet,
     create_order,
     update_order_to_cancelled,
     update_order_to_shipped,
 )
+from order.services.payment import initiate_order_payment
+from order.variant_validators import (
+    is_quantity_valid,
+    is_available,
+    is_seller_active,
+    is_product_enabled,
+)
+
 
 logger = logging.getLogger("order")
 
@@ -125,6 +137,7 @@ class CartSerializerForCustomer(serializers.ModelSerializer):
 
     items = CartItemSerializer(many=True, read_only=True)
     seller = serializers.SerializerMethodField()
+    cart_errors = serializers.SerializerMethodField()
 
     class Meta:
         model = Cart
@@ -138,6 +151,25 @@ class CartSerializerForCustomer(serializers.ModelSerializer):
         if not seller:
             return None
         return seller.id
+
+    def get_cart_errors(self, cart: Cart) -> dict:
+        """
+        Validation factors that might change over time, such as product getting
+        unavailable, or the seller getting inactive.
+        """
+        errors = {}
+        for item in cart.items.all():
+            item_errors = []
+            if not is_available(item.variant):
+                item_errors.append("Item doesn't have available stocks.")
+            if not is_seller_active(item.variant):
+                item_errors.append("The seller is inactive.")
+            if not is_product_enabled(item.variant):
+                item_errors.append("The variant or the main product is disabled.")
+            if not is_quantity_valid(item.variant, item.quantity):
+                item_errors.append("The selected quantity is not valid.")
+            errors[item.variant.name] = item_errors
+        return errors
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -205,16 +237,7 @@ class OrderSerializerForCustomer(serializers.ModelSerializer):
             "seller",
             "payment_link",
         ]
-        extra_kwargs = {
-            "status": {"read_only": True},
-            "user": {"read_only": True},
-        }
-
-    def get_seller(self, order_obj: Order) -> Union[int, None]:
-        order_item = order_obj.items.first()
-        if order_item:
-            return order_item.seller
-        return None
+        read_only_fields = ["status", "user", "seller"]
 
     def get_payment_link(self, order: Order) -> Union[str, None]:
         payment_obj = order.payment
@@ -236,9 +259,10 @@ class OrderSerializerForCustomer(serializers.ModelSerializer):
             raise RuntimeError(
                 "The user must be passed using 'user' kwarg when calling .save() method"
             )
-        self._validate_address(attrs)
         self._validate_cart_not_empty(user)
+        self._validate_address(attrs)
         self._validate_no_on_going_orders(user)
+        self._validate_passes_seller_minimum(user)
         return attrs
 
     def create(self, validated_data):
@@ -278,6 +302,74 @@ class OrderSerializerForCustomer(serializers.ModelSerializer):
                 "Cannot create a new order since an order is already on going with the same seller"
             )
 
+    def _validate_passes_seller_minimum(user: EcomUser) -> None:
+        """Assuming that empty cart validation is run before this validation"""
+        seller = user.cart.items.first().seller
+        order_min = seller.seller_profile.minimum_order_amount
+        if not order_min:
+            order_min = settings.DEFAULT_ORDER_MINIMUM
+        if seller.seller_profile.minimum_order_amount > user.cart.get_total_price():
+            raise serializers.ValidationError(
+                "The order total price should be higher than seller's minimum order amount."
+            )
+
+
+class IPGStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IPG
+        fields = ["id", "service_name"]
+
+
+class OrderPaymentSerializer(serializers.Serializer):
+    """
+    Intended only for write operations used by the customer.
+    An `Order` instance should be passed to this serializer.
+
+    If the selected method is direct payment, the `ipg_id` field
+    should be provided (assuming the ipg service is available).
+    """
+
+    order = serializers.PrimaryKeyRelatedField(queryset=Order.objects.all())
+    # either one of these two fields should be provided
+    pay_with_wallet = serializers.BooleanField(allow_null=True)
+    ipg_id = serializers.IntegerField(allow_null=True)
+
+    def update(self, order: Order, validated_data: dict) -> Order:
+        if order.status not in (Order.UNPAID, Order.PAYING):
+            raise serializers.ValidationError(
+                "The given order should be in UNPAID or PAYING status"
+            )
+        if validated_data["pay_with_wallet"] and validated_data["ipg_choice"]:
+            raise serializers.ValidationError(
+                "Only one of the fields 'pay_with_wallet' and 'ipg_choice' should be provided."
+            )
+        if validated_data["pay_with_wallet"]:
+            transaction = pay_order_using_wallet(order.customer.wallet, order)
+            return transaction
+        elif validated_data["ipg_choice"]:
+            ipgs = cache.get("available_ipgs")
+            if validated_data["ipg_id"] not in ipgs:
+                raise serializers.ValidationError(
+                    "The selected IPG service is either not recognized or its disabled"
+                )
+            payment = initiate_order_payment(order, validated_data["ipg_id"])
+            return payment
+        raise serializers.ValidationError(
+            "One of the fields `pay_with_wallet` or `ipg_choice` should be provided."
+        )
+
+    def to_representation(self, instance: Union[Payment, Transaction]):
+        ret = {}
+        if isinstance(instance, Payment):
+            ret["payment_link"] = instance.get_payment_link()
+            ret["amount"] = instance.amount
+            ret["ipg_service"] = instance.ipg_service
+        elif isinstance(instance, Transaction):
+            ret["description"] = "Order was paid succesfully using wallet."
+            ret["amount"] = instance.amount
+            ret["paid_at"] = instance.created_at
+        return ret
+
 
 class OrderSerializerForSeller(serializers.ModelSerializer):
     """
@@ -303,7 +395,6 @@ class OrderSerializerForSeller(serializers.ModelSerializer):
             "items",
             "customer_address",
             "notes",
-            "paid_amount",
             "tracking_code",
             "cancel_reason",
         ]
@@ -312,7 +403,6 @@ class OrderSerializerForSeller(serializers.ModelSerializer):
             "created_at",
             "customer_address",
             "notes",
-            "paid_amount",
         ]
 
     def update(self, order, validated_data):
@@ -326,8 +416,12 @@ class OrderSerializerForSeller(serializers.ModelSerializer):
                 "The vendor can only change the status of an order to one of "
                 "the following states: Processing, Shipped or Cancelled"
             )
+
         if new_status == Order.SHIPPED:
             update_order_to_shipped(order, validated_data)
-        if new_status == Order.CANCELLED:
+        elif new_status == Order.CANCELLED:
             update_order_to_cancelled(order, validated_data)
-        return super().update(order, validated_data)
+        elif new_status == Order.PROCESSING:
+            order.status = Order.PROCESSING
+            order.save()
+        return order

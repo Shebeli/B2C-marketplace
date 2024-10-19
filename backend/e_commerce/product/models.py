@@ -73,6 +73,7 @@ class ProductVariant(models.Model):
         db_index=True,
     )
     number_sold = models.PositiveIntegerField(default=0)
+    is_enabled = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
         if self.reserved_stock > self.on_hand_stock:
@@ -137,6 +138,7 @@ class Product(models.Model):
         db_persist=True,
         db_index=True,
     )
+    is_enabled = models.BooleanField(default=True)
 
     objects = ProductManager()
 

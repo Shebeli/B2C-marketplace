@@ -49,6 +49,7 @@ class Transaction(models.Model):
     )
     payment = models.ForeignKey(
         "Payment",
+        on_delete=models.SET_NULL,
         blank=True,
         null=True,
         help_text="If the transaction's type has a payment involved",
@@ -86,7 +87,13 @@ class Transaction(models.Model):
 class Payment(models.Model):
     """
     Depending on the payment type, only one of the fields `order` or `wallet`
-    should be provided.
+    should be provided, i.e. a payment is either done using wallet balance,
+    or using the direct payment method via an IPG.
+    
+    Only one instance of payment should exist for each `Order` instance
+    or a single `Wallet` deposit operation, which means that any new
+    payment attempt info will be saved to already existing `Payment`
+    instance. 
     """
 
     user = models.ForeignKey(
@@ -99,7 +106,7 @@ class Payment(models.Model):
     amount = models.PositiveBigIntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    service_name = models.CharField(max_length=15)
+    ipg_service = models.IntegerField(max_length=15, blank=True, choices=settings.IPG_SERVICES)
     is_used = models.BooleanField(
         default=False,
         help_text=(
@@ -138,12 +145,18 @@ class Payment(models.Model):
     }
     status = models.CharField(max_length=2, choices=PAYMENT_STATUSES)
 
+    @property
     def is_payment_link_expired(self) -> bool:
         expire_time = settings.PAYMENT_LINK_EXPIRY_TIME
         if self.track_id_time > timezone.now() - timedelta(minutes=expire_time):
             return True
         return False
 
+    def get_payment_link(self) -> str | None:
+        if not self.is_payment_link_expired:
+            return None
+        base_url = settings.IPG_SERVICE_BASE_URL[self.service_name]
+        return base_url + self.track_id
 
 class WithdrawalRequest(models.Model):
     """For requesting withdrawal from the wallet"""
@@ -191,6 +204,16 @@ class MoneyTransferRequest(models.Model):
         null=True,
         blank=False,
     )
+    created_at = models.DateTimeField(auto_now_add=True)
     amount = models.BigIntegerField()
-    is_verified = models.BooleanField(default=False)
-    is_paid = models.BooleanField()
+    is_verified = models.BooleanField(default=False, help_text="Indicating whether the money transfer request is valid or not.")
+    is_paid = models.BooleanField(default=False)
+    tracking_code = models.IntegerField(blank=True)
+
+
+class IPG(models.Model):
+    service_name = models.CharField(max_length=50)
+    api_key = models.CharField(max_length=100)
+    api_endpoint = models.URLField()
+    status_check_url = models.URLField()
+    

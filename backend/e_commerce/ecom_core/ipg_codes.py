@@ -1,0 +1,2 @@
+ZIBAL = 1
+ASAN_PARDAKHT = 2
