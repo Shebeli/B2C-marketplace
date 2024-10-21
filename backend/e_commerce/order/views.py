@@ -92,7 +92,7 @@ class CustomerOrderList(ListCreateAPIView):
     creating an order.
     """
 
-    queryset = Order.object.all()
+    queryset = Order.objects.all()
     serializer_class = OrderSerializerForCustomer
     permission_classes = [IsAuthenticated]
 

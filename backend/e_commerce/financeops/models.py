@@ -106,7 +106,7 @@ class Payment(models.Model):
     amount = models.PositiveBigIntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    ipg_service = models.IntegerField(max_length=15, blank=True, choices=settings.IPG_SERVICES)
+    ipg_service = models.IntegerField(blank=True, choices=settings.IPG_SERVICES)
     is_used = models.BooleanField(
         default=False,
         help_text=(

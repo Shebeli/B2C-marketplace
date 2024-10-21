@@ -10,14 +10,37 @@ from product.models import (
     TechnicalDetail,
 )
 from ecom_user.models import EcomUser
+from ecom_user_profile.models import CustomerAddress
 
 
 @pytest.fixture
-def user_instance_factory(db):
+def seller_instance_factory(db):
     def create_user():
-        return EcomUser.objects.create_user(phone="09377964142", username="Meow")
+        user = EcomUser.objects.create_user(phone="09377964142", username="Seller")
+        return user
 
     return create_user
+
+
+@pytest.fixture
+def customer_instance_factory(db):
+    def create_user():
+        user = EcomUser.objects.create_user(phone="09377964143", username="Customer")
+        CustomerAddress.objects.create(
+            user=user,
+            address="Bikini bottom - Pineapple house",
+            postal_code=1653879533,
+        )
+        return user
+
+    return create_user
+
+
+@pytest.fixture
+def customer_and_seller(db, seller_instance_factory, customer_instance_factory):
+    customer = customer_instance_factory()
+    seller = seller_instance_factory()
+    return customer, seller
 
 
 @pytest.fixture
@@ -106,7 +129,7 @@ def tag_objs(sample_tags_instances_factory):
 @pytest.fixture
 def sample_product_instance_factory(
     db,
-    user_instance_factory,
+    seller_instance_factory,
     full_product_data_factory,
     sample_category_instance_factory,
     sample_tags_instances_factory,
@@ -116,7 +139,7 @@ def sample_product_instance_factory(
 
         # create the subcategory, user and the product
         category_objs = sample_category_instance_factory()
-        user = user_instance_factory()
+        user = seller_instance_factory()
         product_obj = Product.objects.create(
             owner=user,
             subcategory=category_objs["subcategory_obj"],
@@ -136,4 +159,3 @@ def sample_product_instance_factory(
         return product_obj
 
     return create_product_instance
-

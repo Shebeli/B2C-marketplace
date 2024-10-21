@@ -14,9 +14,9 @@ from order.tasks import cancel_unpaid_order, process_payment
 
 
 from financeops.models import IPG, Payment, Transaction
-from order.services.order import (
+from backend.e_commerce.order.services.management import (
     pay_order_using_wallet,
-    create_order,
+    process_order_creation,
     update_order_to_cancelled,
     update_order_to_shipped,
 )
@@ -266,7 +266,7 @@ class OrderSerializerForCustomer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        order = create_order(validated_data)
+        order = process_order_creation(validated_data)
         # initiate_order_payment(order)
         # cancel the order if it isn't paid after 1 hour
         cancel_unpaid_order.apply_async(args=(order.id), countdown=60 * 60)

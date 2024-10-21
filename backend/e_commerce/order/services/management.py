@@ -6,18 +6,24 @@ from financeops.models import Transaction, Wallet, MoneyTransferRequest
 from order.models import Order, OrderItem
 
 
-def create_order(validated_data: dict) -> Order:
+def process_order_creation(validated_data: dict) -> Order:
     """
-    When a new order needs to be created based on the user's current cart,
-    the following steps will be executed in order using this method:
-    1) Validate each cart item's stock availability and having a valid quantity.
-    2) For each cart item, create an order item.
-    3) For each cart item's product variant, update reserved stocks and available stocks.
-    4) Delete user's current cart items.
-    5) Save all the changes made above to the database using atomic transaction method.
+    When a new order needs to be created based off on user's current cart,
+    the following steps will be executed in order when calling this function:
 
-    The passed in argument `order` should be an instance of order which hasn't
-    been saved to the database, yet.
+    1) Create an unsaved instance of `Order`.
+    2) Using passed in user's current `Cart`, validate each `CartItem` instance having
+    a valid quantity.
+    3) For each `CartItem`, create an unsaved `OrderItem` instance using the `Order`
+    instance created in step 1.
+    4) For each `CartItem`, update its associated `ProductVariant` reserved stocks and
+    on hand stocks fields.
+    5) Delete user's current cart items.
+
+    The key `order` in passed in arg `validated should be an instance of order
+    which hasn't been saved to the database, yet.
+    Note that the DB operations will all be executed in a single block using
+    a transaction operation.
     """
     user = validated_data.get("user")
     order = Order(
@@ -67,17 +73,18 @@ def pay_order_using_wallet(wallet: Wallet, order: Order) -> Transaction:
     Pay an order using wallet's currency, update the order's related field
     and create a `Transaction` instance.
     """
-    if wallet.balance < order.total_price:
+    order_total_price = order.get_total_price()
+    if wallet.balance < order_total_price:
         raise serializers.ValidationError(
             "Wallet's balance is not sufficient for paying the order."
         )
     with transaction.atomic():
         order.status = Order.PAID
-        wallet.balance -= order.total_price
+        wallet.balance -= order_total_price
         transaction_obj = Transaction.objects.create(
             wallet=wallet,
             type=Transaction.WALLET_PAYMENT,
-            amount=order.get_total_price(),
+            amount=order.order_total_price,
             order=order,
         )
         order.save()
@@ -182,10 +189,11 @@ def update_order_to_cancelled(order: Order, validated_data: dict) -> Transaction
     with transaction.atomic():
         if trans_obj.type == Transaction.WALLET_PAYMENT:
             customer_wallet = order.customer.wallet
-            customer_wallet.balance += order.total_price
+            order_total_price = order.get_total_price()
+            customer_wallet.balance += order_total_price
             refund_tran_obj = Transaction.objects.create(
                 type=Transaction.WALLET_REFUND,
-                amount=order.total_price,
+                amount=order_total_price,
                 wallet=trans_obj.wallet,
                 order=trans_obj.order,
             )
@@ -196,7 +204,7 @@ def update_order_to_cancelled(order: Order, validated_data: dict) -> Transaction
             )
             refund_tran_obj = Transaction.objects.create(
                 type=Transaction.DIRECT_REFUND,
-                amount=order.total_price,
+                amount=order_total_price,
                 order=trans_obj.order,
             )
         OrderItem.objects.bulk_update(order_items, ["reserved_stock"])

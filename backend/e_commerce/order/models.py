@@ -7,6 +7,26 @@ from ecom_user_profile.models import CustomerAddress
 from product.models import ProductVariant
 
 
+class OrderItem(models.Model):
+    order = models.ForeignKey("Order", on_delete=models.CASCADE, related_name="items")
+    product_variant = models.ForeignKey(
+        ProductVariant, on_delete=models.SET_NULL, null=True, blank=False
+    )
+    submitted_price = models.BigIntegerField()
+    quantity = models.PositiveSmallIntegerField()
+    created_on = models.DateTimeField(auto_now_add=True)
+
+    def get_total_price(self) -> Union[int, float]:
+        return self.product_variant.price * self.quantity
+
+    @property
+    def owner(self) -> EcomUser:
+        return self.product_variant.owner
+
+    class Meta:
+        unique_together = ("order", "product_variant")
+
+
 # Since the business model is a B2C multi vendor platform and the
 # web service is not responsible for centralizing the different
 # ordered products from different vendors, thus customers CANNOT add
@@ -148,31 +168,11 @@ class Order(models.Model):
     refund_reason = models.CharField(max_length=300, blank=True)  # set by customer
     tracking_code = models.CharField(blank=True, max_length=50)  # set by seller
 
-    total_price = models.GeneratedField(
-        expression=Sum(F("items__submitted_price") * F("items__quantity")),
-        output_field=models.PositiveBigIntegerField(),
-        db_persist=True,
-    )
-
-
-class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
-    product_variant = models.ForeignKey(
-        ProductVariant, on_delete=models.SET_NULL, null=True, blank=False
-    )
-    submitted_price = models.BigIntegerField()
-    quantity = models.PositiveSmallIntegerField()
-    created_on = models.DateTimeField(auto_now_add=True)
-
-    def get_total_price(self) -> Union[int, float]:
-        return self.product_variant.price * self.quantity
-
-    @property
-    def owner(self) -> EcomUser:
-        return self.product_variant.owner
-
-    class Meta:
-        unique_together = ("order", "product_variant")
+    def get_total_price(self) -> int:
+        results = self.items.aggregate(
+            total=Sum(F("submitted_price") * F("quantity"))
+        )
+        return results["total"]
 
 
 class Cart(models.Model):
@@ -225,4 +225,3 @@ class CartItem(models.Model):
     @property
     def seller(self) -> EcomUser:
         return self.product_variant.owner
-
