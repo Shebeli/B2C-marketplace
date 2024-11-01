@@ -86,7 +86,7 @@ def pay_order_using_wallet(wallet: Wallet, order: Order) -> Transaction:
         transaction_obj = Transaction.objects.create(
             wallet=wallet,
             type=Transaction.WALLET_PAYMENT,
-            amount=order.order_total_price,
+            amount=order.get_total_price(),
             order=order,
         )
         order.save()
