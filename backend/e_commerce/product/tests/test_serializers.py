@@ -52,6 +52,7 @@ def test_product_serializer_for_any_representation(sample_product_instance_facto
         "is_valid": sample_product_instance.is_valid,
         "description": sample_product_instance.description,
         "subcategory": sample_product_instance.subcategory.name,
+        "is_enabled": sample_product_instance.is_enabled
     }
 
 
