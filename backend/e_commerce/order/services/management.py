@@ -28,38 +28,40 @@ def process_order_creation(validated_data: dict) -> Order:
     user = validated_data.get("user")
     order = Order(
         status=Order.UNPAID,
-        user=user,
+        customer=user,
         customer_address=validated_data["customer_address"],
-        notes=validated_data["notes"],
+        customer_notes=validated_data["notes"],
     )
 
     product_variants = []
     order_items = []
-    # validate each item stock availiblity and proper quantity
-    for item in user.cart.items.all():
-        if not item.product_variant.is_available:
-            raise serializers.ValidationError(
-                f"The product {item.product_variant.name} doesn't have any available stocks"
-            )
-        if item.quantity > item.product_variant.available_stock:
-            raise serializers.ValidationError(
-                f"The selected product {item.product_variant.name} quantity cannot be higher than product's available stock"
-            )
-
-        # create order python instances and update the stocks
-        order_item = OrderItem(
-            order=order,
-            product_variant=item.product_variant,
-            submitted_price=item.product_variant.price,
-            quantity=item.quantity,
-        )
-        product_variant = item.product_variant
-        product_variant.reserved_stock += item.quantity
-
-        order_items.append(order_item)
-        product_variants.append(product_variant)
 
     with transaction.atomic():
+        # validate each item stock availiblity and proper quantity
+        for item in user.cart.items.all():
+            if not item.product_variant.is_available:
+                raise serializers.ValidationError(
+                    f"The product {item.product_variant.name} doesn't have any available stocks"
+                )
+            if item.quantity > item.product_variant.available_stock:
+                raise serializers.ValidationError(
+                    f"The selected product {item.product_variant.name} quantity cannot be higher than product's available stock"
+                )
+
+            # create order python instances and update the stocks
+            order_item = OrderItem(
+                order=order,
+                product_variant=item.product_variant,
+                submitted_price=item.product_variant.price,
+                quantity=item.quantity,
+            )
+            product_variant = item.product_variant
+            product_variant.reserved_stock += item.quantity
+
+            order_items.append(order_item)
+            product_variants.append(product_variant)
+
+        # db operations
         order.save()
         ProductVariant.objects.bulk_update(product_variants, ["reserved_stock"])
         OrderItem.objects.bulk_create(order_items)
