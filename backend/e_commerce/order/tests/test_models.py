@@ -4,8 +4,8 @@ from order.models import Order, Cart, CartItem, OrderItem
 
 
 @pytest.mark.django_db
-def test_cart_model_on_user_creation(customer_and_seller_factory):
-    customer, _ = customer_and_seller_factory
+def test_cart_model_on_user_creation(customer_and_seller):
+    customer, _ = customer_and_seller
     cart = Cart.objects.get(user=customer)
     assert cart
 
@@ -29,10 +29,10 @@ def test_cart_item_model(sample_product_instance_factory):
 
 
 @pytest.mark.django_db
-def test_order_model(sample_product_instance_factory, customer_and_seller_factory):
+def test_order_model(sample_product_instance_factory, customer_and_seller):
     product = sample_product_instance_factory()
     # create order items and the order
-    customer, _ = customer_and_seller_factory
+    customer, _ = customer_and_seller
     order = Order.objects.create(customer=customer, seller=product.owner)
     order_total_price = 0
     for variant in product.variants.all():

@@ -37,7 +37,7 @@ from ecom_user_profile.models import CustomerAddress
 
 
 @pytest.fixture
-def customer_and_seller_factory(db):
+def customer_and_seller(db):
     seller = EcomUser.objects.create_user(phone="09377964142", username="Seller")
     customer = EcomUser.objects.create_user(phone="09377964143", username="Customer")
     CustomerAddress.objects.create(
@@ -45,6 +45,8 @@ def customer_and_seller_factory(db):
         address="Bikini bottom - Pineapple house",
         postal_code=1653879533,
     )
+    customer.wallet.balance += 999999999
+    customer.wallet.save()
     return customer, seller
 
 
@@ -134,7 +136,7 @@ def tag_objs(sample_tags_instances_factory):
 @pytest.fixture
 def sample_product_instance_factory(
     db,
-    customer_and_seller_factory,
+    customer_and_seller,
     full_product_data_factory,
     sample_category_instance_factory,
     sample_tags_instances_factory,
@@ -144,7 +146,7 @@ def sample_product_instance_factory(
 
         # create the subcategory, user and the product
         category_objs = sample_category_instance_factory()
-        _, seller = customer_and_seller_factory
+        _, seller = customer_and_seller
         product_obj = Product.objects.create(
             owner=seller,
             subcategory=category_objs["subcategory_obj"],
