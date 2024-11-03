@@ -123,29 +123,32 @@ def update_order_to_shipped(order: Order, validated_data: dict) -> Order:
         order.save()
         return order
 
-    # Update the order items and the orders
-    order_items = []
-    for item in order.items.all():
-        item.product_variant.reserved_stock -= item.quantity
-        item.product_variant.on_hand_stock -= item.quantity
-        order_items.append(item)
-    order.status = Order.SHIPPED
-    order.tracking_code = new_tracking_code
-
     with transaction.atomic():
-        OrderItem.objects.bulk_update(order_items, ["reserved_stock", "on_hand_stock"])
+        # Update the order item's product variant stocks and the order's fields.
+        product_variants = []
+        for item in order.items.all():
+            item.product_variant.reserved_stock -= item.quantity
+            item.product_variant.on_hand_stock -= item.quantity
+            product_variants.append(item.product_variant)
+        order.status = Order.SHIPPED
+        order.tracking_code = new_tracking_code
+        ProductVariant.objects.bulk_update(
+            product_variants, ["reserved_stock", "on_hand_stock"]
+        )
         order.save()
     return order
 
 
 def update_order_to_cancelled(order: Order, validated_data: dict) -> Transaction:
     """
+    Only usable for order instances where the status is PAID or
+    PROCESSING.
+
     When an order is going to be cancelled by the seller, a cancellation
     reason should be provided.
 
-    Both `on_hand_stock` and `reserved_stock` `Order` instance
-    fields which were modified by the order will be reset back
-    to their pre-order value.
+    `reserved_stock` field of the `Order` instance which was modified by the
+    order will be reset back to its pre-order value.
 
     The refund method is based on whether the order was paid using
     wallet or direct payment:
@@ -154,8 +157,6 @@ def update_order_to_cancelled(order: Order, validated_data: dict) -> Transaction
     refund using this instance.
     - If the payment method was wallet payment, then the wallet balance will
     be reverted back to pre-purchase amount.
-
-    In both cases, a `Transaction` instance will be created.
     """
     new_cancel_reason = validated_data.get("cancel_reason")
     if not new_cancel_reason:
@@ -171,11 +172,10 @@ def update_order_to_cancelled(order: Order, validated_data: dict) -> Transaction
         raise serializers.ValidationError(
             "Order cannot be cancelled if it is not in PAID or PROCESSING state."
         )
-    order_items = []
+    product_variant_items = []
     for item in order.items.all():
         item.product_variant.reserved_stock -= item.quantity
-        item.product_variant.on_hand_stock += item.quantity
-        order_items.append(item)
+        product_variant_items.append(item.product_variant)
     order.status = Order.CANCELLED
     order.cancel_reason = new_cancel_reason
     order.cancelled_by = Order.SELLER
@@ -209,7 +209,7 @@ def update_order_to_cancelled(order: Order, validated_data: dict) -> Transaction
                 amount=order_total_price,
                 order=trans_obj.order,
             )
-        OrderItem.objects.bulk_update(order_items, ["reserved_stock"])
+        ProductVariant.objects.bulk_update(product_variant_items, ["reserved_stock"])
         order.save()
         customer_wallet.save()
     return refund_tran_obj
