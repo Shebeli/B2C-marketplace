@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveAPIView,
@@ -11,8 +13,11 @@ from django.core.cache import cache
 from rest_framework.mixins import UpdateModelMixin, DestroyModelMixin
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework import status
+from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 
 from order.permissions import IsCartItemOwner
 from order.models import Order, Cart, CartItem
@@ -23,9 +28,15 @@ from order.serializers import (
     OrderSerializerForSeller,
     OrderPaymentSerializer,
     IPGStatusSerializer,
+    ZibalCallbackSerializer,
 )
+from financeops.models import Payment
 from product.permissions import IsSellerVerified
 from order.permissions import IsSellerOfOrder
+from zibal.utils import to_snake_case_dict
+
+logger = logging.getLogger("order")
+
 
 class IPGStatus(APIView):
     """
@@ -105,9 +116,9 @@ class CustomerOrderList(ListCreateAPIView):
 
 class CustomerOrderPayment(APIView):
     """
-    For selecting the payment method after an order is creatd.
+    For selecting the payment method after an order is created.
 
-    Note that a pending order should already exist.
+    Note that an UNPAID order should already exist.
 
     If an order is not attempted to be paid after 20 minutes of
     its creation, then its cancelled.
@@ -153,4 +164,56 @@ class SellerOrderDetail(RetrieveUpdateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializerForSeller
 
-    
+
+class ZibalCallbackView(APIView):
+    def get(self, request, *args, **kwargs):
+        ip_address = request.META.get("REMOTE_ADDR")
+        if ip_address not in settings.IPG_IPGS:
+            raise PermissionDenied("Unauthorized request.")
+        payment_data = to_snake_case_dict(self.request.query_params)
+        serializer = ZibalCallbackSerializer(payment_data)
+
+        # validate the data and try to retrieve the payment instance
+        if not serializer.is_valid():
+            logger.error(
+                "Data recieved from the Zibal IPG doesn't have the expected "
+                "data structure. "
+                f"Data validation errors: {serializer.errors}"
+                f"Recieved initial data: {payment_data}"
+            )
+            return Response(
+                {"error": "Unexpected data structure recieved from the IPG"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        try:
+            payment_obj = Payment.objects.get(track_id=serializer.data["track_id"])
+        except ObjectDoesNotExist:
+            logger.error(
+                f"The given track id {serializer.data['track_id']} from IPG's"
+                "callback request wasn't associated with any `Payment` objects."
+            )
+            return Response(
+                {"error": "No Payment instances were found with the given track_id"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        # update the payment instance
+        if serializer.data["success"] == 0:
+            payment_obj.status = Payment.CANCELLED
+            logger.warning(
+                f"The payment with track id of {serializer.data['track_id']} was unsuccesful."
+                f"Result code: {serializer.data['status']}"
+            )
+            return Response(
+                {"error": "The payment was unsuccesful"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        else:
+            payment_obj.status = Payment.PAID
+            logger.info(
+                f"The payment instance with id of {payment_obj.id} was updated"
+                "to PAID due to successful callback request from IPG."
+            )
+
+        payment_obj.save()
+        return Response({"status": "success"}, status=status.HTTP_200_OK)

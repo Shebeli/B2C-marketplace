@@ -1,10 +1,12 @@
-__pycache__
+.vscode
 
 *.env
 *.pytest_cache
-db.sqlite3
-.coverage
-htmlcov
-.vscode
+__pycache__
 
+
+logs/
+db.sqlite3
+htmlcov
 .idea
+.coverage

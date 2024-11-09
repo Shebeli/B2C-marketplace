@@ -86,14 +86,15 @@ class Transaction(models.Model):
 
 class Payment(models.Model):
     """
-    Depending on the payment type, only one of the fields `order` or `wallet`
-    should be provided, i.e. a payment is either done using wallet balance,
-    or using the direct payment method via an IPG.
-    
+    Used either for direct payment using IPGs. That is, whether paying an order
+    directly, or increasing the balance of the wallet.
+    Thus, depending on the payment type, only one of the fields `order` or `wallet`
+    should be provided.
+
     Only one instance of payment should exist for each `Order` instance
     or a single `Wallet` deposit operation, which means that any new
     payment attempt info will be saved to already existing `Payment`
-    instance. 
+    instance.
     """
 
     user = models.ForeignKey(
@@ -106,7 +107,7 @@ class Payment(models.Model):
     amount = models.PositiveBigIntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    ipg_service = models.IntegerField(blank=True, choices=settings.IPG_SERVICES)
+    ipg_service = models.IntegerField(blank=True)
     is_used = models.BooleanField(
         default=False,
         help_text=(
@@ -115,7 +116,7 @@ class Payment(models.Model):
             "the balance of a wallet."
         ),
     )
-    track_id = models.CharField(max_length=50)
+    track_id = models.CharField(max_length=50, unique=True)
     track_id_time = models.DateTimeField(
         help_text="When `track_id` field is provided/updated, this field should be set to its time"
     )
@@ -157,6 +158,7 @@ class Payment(models.Model):
             return None
         base_url = settings.IPG_SERVICE_BASE_URL[self.service_name]
         return base_url + self.track_id
+
 
 class WithdrawalRequest(models.Model):
     """For requesting withdrawal from the wallet"""
@@ -206,7 +208,10 @@ class MoneyTransferRequest(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     amount = models.BigIntegerField()
-    is_verified = models.BooleanField(default=False, help_text="Indicating whether the money transfer request is valid or not.")
+    is_verified = models.BooleanField(
+        default=False,
+        help_text="Indicating whether the money transfer request is valid or not.",
+    )
     is_paid = models.BooleanField(default=False)
     tracking_code = models.IntegerField(blank=True)
 
@@ -216,4 +221,3 @@ class IPG(models.Model):
     api_key = models.CharField(max_length=100)
     api_endpoint = models.URLField()
     status_check_url = models.URLField()
-    

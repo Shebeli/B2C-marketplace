@@ -17,4 +17,3 @@ urlpatterns = [
     path("seller-bank-accounts/<int:pk>/", views.SellerBankAccountDetail.as_view(), name='seller-bank-accounts-detail'),
 
 ]
-urlpatterns = format_suffix_patterns(urlpatterns)

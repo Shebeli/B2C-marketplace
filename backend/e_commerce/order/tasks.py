@@ -7,7 +7,6 @@ from django.core.cache import cache
 from django.db import transaction
 from django.conf import settings
 from celery import shared_task
-from zibal.client import ZibalIPGClient
 from zibal.exceptions import RequestError, ResultError
 
 

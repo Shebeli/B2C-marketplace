@@ -1,9 +1,9 @@
 import logging
 
 from django.conf import settings
+from ecom_core import ipgs
 from django.db import transaction
 from django.urls import reverse
-from ecom_core import ipg_codes
 from zibal.client import ZibalIPGClient
 from zibal.exceptions import RequestError, ResultError
 from zibal.models.schemas import TransactionRequireResponse
@@ -16,10 +16,10 @@ from order.models import Order
 logger = logging.getLogger("order")
 
 
-def initiate_ipg_payment(amount: int, ipg_service: int) -> dict:
-    if ipg_service == ipg_codes.ZIBAL:
-        _inititate_zibal_ipg(amount)
-    if ipg_service == ipg_codes.ASAN_PARDAKHT:
+def initiate_ipg_payment(amount: int, ipg_service: int, base_url: str) -> dict:
+    if ipg_service == ipgs.ZIBAL:
+        return _inititate_zibal_payment(amount, base_url)
+    elif ipg_service == ipgs.ASAN_PARDAKHT:
         raise NotImplementedError(
             "IPG gateway for AsanPardakht hasn't been implemented, yet."
         )
@@ -27,17 +27,18 @@ def initiate_ipg_payment(amount: int, ipg_service: int) -> dict:
         raise ValueError(
             "Improper value for argument ipg_service."
             " To see the available IPG choices, please refer to ipg_codes in ecom_core django app."
+            f"Available options: \n {settings.IPG_CHOICES}"
         )
 
 
-def _inititate_zibal_ipg(amount: int) -> TransactionRequireResponse:
+def _inititate_zibal_payment(amount: int, base_url: str) -> dict:
     client = ZibalIPGClient(
         settings.ZIBAL_MERCHANT, raise_on_invalid_result=True, logger=logger
     )
     try:
         request_data = client.request_transaction(
             amount=amount,
-            callback_url=reverse("payment-callback"),
+            callback_url=base_url + reverse("zibal-callback"),
         )
     except RequestError:
         # ZibalIPGClient uses logging to log network error
@@ -50,17 +51,19 @@ def _inititate_zibal_ipg(amount: int) -> TransactionRequireResponse:
         raise serializers.ValidationError(
             "An unexpected result was received from the payment gateway service."
         )
-    return request_data
+    return request_data.model_dump(exclude_none=True)
 
 
 def inititate_wallet_payment(
-    wallet: Wallet, amount: int, ipg_service: int
+    wallet: Wallet, amount: int, ipg_service: int, base_url: str
 ) -> Transaction:
     """
     Initialize an IPG payment, update the order's status to PAYING
-    and createa `Payment` instance.
+    and create a `Payment` instance.
     """
-    request_data = initiate_ipg_payment(amount=amount, ipg_service=ipg_service)
+    request_data = initiate_ipg_payment(
+        amount=amount, ipg_service=ipg_service, base_url=base_url
+    )
     payment = Payment.objects.get_or_create(
         wallet=wallet,
         amount=amount,
@@ -71,14 +74,16 @@ def inititate_wallet_payment(
     return payment
 
 
-def initiate_order_payment(order: Order, ipg_service: int) -> Payment:
+def initiate_order_payment(order: Order, ipg_service: int, base_url: str) -> Payment:
     """
     Assuming the passed in `order` arg is in UNPAID or PAYING status.
 
     Initialize an IPG payment, update the order's status to PAYING
     and create a `Payment` instance.
     """
-    request_data = initiate_ipg_payment(amount=order.amount, ipg_service=ipg_service)
+    request_data = initiate_ipg_payment(
+        amount=order.amount, ipg_service=ipg_service, base_url=base_url
+    )
     order.status = Order.PAYING
     with transaction.atomic():
         payment = Payment.objects.create(

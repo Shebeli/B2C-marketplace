@@ -6,16 +6,69 @@ from dotenv import load_dotenv
 from django.core.exceptions import ImproperlyConfigured
 
 from rest_framework.serializers import Serializer
-from ecom_core import ipg_codes
+from ecom_core import ipgs
 
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+LOG_DIR = os.path.join(BASE_DIR, "logs")
+os.makedirs(LOG_DIR, exist_ok=True)
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "standard": {"format": "[%(asctime)s] %(levelname)s %(name)s: %(message)s"},
+        "verbose": {
+            "format": "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s"
+        },
+        "simple": {"format": "%(levelname)s %(message)s"},
+    },
+    "handlers": {
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+        "file": {
+            "level": "INFO",
+            "class": "logging.FileHandler",
+            "filename": os.path.join(BASE_DIR, "logs", "app.log"),
+            "formatter": "standard",
+        },
+        "error_file": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "filename": os.path.join(BASE_DIR, "logs", "errors.log"),
+            "formatter": "verbose",
+        },
+        "django_file": {
+            "level": "INFO",
+            "class": "logging.FileHandler",
+            "filename": os.path.join(BASE_DIR, "logs", "django.log"),
+            "formatter": "standard",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["django_file", "console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["error_file"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "order": {
+            "handlers": ["file", "console"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+    },
+}
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-zwnn7c841o)_)gbatefjd*01*d54ypos7#ew*4o16w%v^(4and"
@@ -219,25 +272,38 @@ if not PAYMENT_CALLBACK_URL:
         "Enviroment variable PAYMENT_CALLBACK_URL should be provided"
     )
 
+# should be changed to manually rather than hard code
 COMMISSION_RATE = 0.975
 
-
-IPG_SERVICES = {
-    ipg_codes.ZIBAL: "Zibal",
-    ipg_codes.ASAN_PARDAKHT: "Asan Pardakht",
+# Celery
+CELERY_BROKER_URL = "redis://localhost:6379/0"  # Using Redis as the message broker
+CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_BEAT_SCHEDULE = {
+    "check-ipg-status-every-10-minutes": {
+        "task": "financeops.tasks.check_and_cache_ipg_status",
+        "schedule": 600,
+    },
 }
+
+
+# IPG related information
+if DEBUG:
+    ZIBAL_MERCHANT = "zibal"
+else:
+    ZIBAL_MERCHANT = os.environ.get("ZIBAL_MERCHANT")
+    if not ZIBAL_MERCHANT:
+        raise ImproperlyConfigured(
+            "ZIBAL_MERCHANT env variable needs to be provided with a value."
+        )
 
 IPG_SERVICES_BASE_URL = {
-    ipg_codes.ZIBAL: "https://gateway.zibal.ir/start/",
+    ipgs.ZIBAL: "https://gateway.zibal.ir/start/",
 }
-
-CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Using Redis as the message broker
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_BEAT_SCHEDULE = {
-    'check-ipg-status-every-10-minutes': {
-        'task': 'financeops.tasks.check_and_cache_ipg_status',
-        'schedule': 600, 
-    },
+ZIBAL_IPG_IP = ["185.143.233.79"]
+IPG_IPS = [ZIBAL_IPG_IP]
+IPG_CHOICES = {
+    ipgs.ZIBAL: "Zibal",
+    ipgs.ASAN_PARDAKHT: "Asan Pardakht",
 }

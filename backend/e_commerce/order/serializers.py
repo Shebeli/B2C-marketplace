@@ -5,6 +5,7 @@ from django.core.cache import cache
 from django.conf import settings
 from rest_framework import serializers
 from zibal.client import ZibalIPGClient
+from zibal.response_codes import STATUS_CODES
 
 from ecom_user.models import EcomUser
 from ecom_user_profile.models import CustomerAddress
@@ -14,7 +15,7 @@ from order.tasks import cancel_unpaid_order, process_payment
 
 
 from financeops.models import IPG, Payment, Transaction
-from backend.e_commerce.order.services.management import (
+from order.services.management import (
     pay_order_using_wallet,
     process_order_creation,
     update_order_to_cancelled,
@@ -323,7 +324,6 @@ class IPGStatusSerializer(serializers.ModelSerializer):
 class OrderPaymentSerializer(serializers.Serializer):
     """
     Intended only for write operations used by the customer.
-    An `Order` instance should be passed to this serializer.
 
     If the selected method is direct payment, the `ipg_id` field
     should be provided (assuming the ipg service is available).
@@ -352,7 +352,8 @@ class OrderPaymentSerializer(serializers.Serializer):
                 raise serializers.ValidationError(
                     "The selected IPG service is either not recognized or its disabled"
                 )
-            payment = initiate_order_payment(order, validated_data["ipg_id"])
+            base_url = self.context.get('request').build_absolute_uri()
+            payment = initiate_order_payment(order, validated_data["ipg_id"], base_url)
             return payment
         raise serializers.ValidationError(
             "One of the fields `pay_with_wallet` or `ipg_choice` should be provided."
@@ -425,3 +426,12 @@ class OrderSerializerForSeller(serializers.ModelSerializer):
             order.status = Order.PROCESSING
             order.save()
         return order
+
+class ZibalCallbackSerializer(serializers.Serializer):
+    """
+    Only a placeholder for data, maybe a datastructure like dataclass 
+    """
+    success = serializers.ChoiceField(choices=[0,1])
+    track_id = serializers.CharField()
+    order_id = serializers.CharField(required=False)
+    status = serializers.ChoiceField(choices=STATUS_CODES.keys()) 
