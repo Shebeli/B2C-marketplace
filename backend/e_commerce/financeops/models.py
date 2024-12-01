@@ -86,15 +86,17 @@ class Transaction(models.Model):
 
 class Payment(models.Model):
     """
-    Used either for direct payment using IPGs. That is, whether paying an order
-    directly, or increasing the balance of the wallet.
-    Thus, depending on the payment type, only one of the fields `order` or `wallet`
-    should be provided.
+    Used for direct IPG payments, depending on the payment type,
+    only one of the fields `order` or `wallet` should be provided.
 
-    Only one instance of payment should exist for each `Order` instance
-    or a single `Wallet` deposit operation, which means that any new
-    payment attempt info will be saved to already existing `Payment`
-    instance.
+    # Only one instance of payment should exist for each `Order` instance
+    # or a `Wallet` balance increase operation, which means if an instance
+    # of `Payment` already exists when a new payment attempt is made, the
+    # already existing instance will be updated instead.
+
+    Whenever an instance of this model is PAYING, a task should check in x minutes
+    to conduct whether the payment was paid or not and update the status to
+    CANCELLED if it was not paid.
     """
 
     user = models.ForeignKey(
@@ -117,8 +119,8 @@ class Payment(models.Model):
         ),
     )
     track_id = models.CharField(max_length=50, unique=True)
-    track_id_time = models.DateTimeField(
-        help_text="When `track_id` field is provided/updated, this field should be set to its time"
+    track_id_submitted_at = models.DateTimeField(
+        help_text="When `track_id` field is provided/updated, this field should updated with the current time"
     )
     order = models.OneToOneField(
         Order,
@@ -149,7 +151,7 @@ class Payment(models.Model):
     @property
     def is_payment_link_expired(self) -> bool:
         expire_time = settings.PAYMENT_LINK_EXPIRY_TIME
-        if self.track_id_time > timezone.now() - timedelta(minutes=expire_time):
+        if self.track_id_submitted_at > timezone.now() - timedelta(minutes=expire_time):
             return True
         return False
 

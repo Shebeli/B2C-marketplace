@@ -8,73 +8,75 @@ from django.db import transaction
 from django.conf import settings
 from celery import shared_task
 from zibal.exceptions import RequestError, ResultError
-
+from zibal.response_codes import STATUS_CODES
 
 from product.models import ProductVariant
 from order.models import Order
+from financeops.models import Payment
 from financeops.models import Transaction, IPG
 
 logger = logging.getLogger("order")
 
 
 @shared_task(bind=True, max_retries=5, default_retry_delay=45)
-def process_payment(self, track_id: int, order_id: int) -> None:
+def handle_payment(self, track_id: int, payment_id: int) -> None:
     """
-    After initializing an IPG payment after 20 minutes, the
-    payment status should be checked and the order should be put into
-    the appropriate state based on the response recieved from the IPG
+    After initializing an IPG for more than 20 minutes, the
+    payment status should be checked and the order/wallet status should
+    be updated according to the response recieved from the IPG.
     """
     try:
-        order = Order.objects.get(id=order_id)
+        payment = Payment.objects.get(id=payment_id)
     except Order.DoesNotExist:
-        logger.exception(
+        logger.error(
             (
-                f"Failed to resolve given order object using order_id: {order_id} "
+                f"Failed to resolve given payment object using order_id: {payment_id} "
                 f"from the database in the following task: \n"
                 f"task ID: {self.task.id} | task name: {self.request.task}"
             )
         )
         return
 
-    # order is paid most likely, so no need for inqurying
-    if order.status not in (Order.UNPAID, Order.PAYING):
+    # payment is paid most likely, so no need for inqurying
+    if payment.status not in (Payment.UNPAID, Payment.PAYING):
         logger.info(
             (
-                f"The order with id of {order_id} is no longer in UNPAID or PAYING status"
-                f" so no need for inqury from the IPG services."
-                f"Order's current status: {order.status}"
+                f"The order with id of {payment} is no longer in UNPAID or PAYING status"
+                f"Order's current status: {payment.status}"
             )
         )
         return
 
-    # order is still unpaid, inqurying to make certain that the purchase is completed.
+    # order is still unpaid, inqurying to make sure that the purchase is completed.
     client = ZibalIPGClient(
         settings.ZIBAL_MERCHANT, raise_on_invalid_result=True, logger=logger
     )
+    PAID_AND_VERIFIED = 1
+    PAID_AND_UNVERIFIED = 2
     try:
         response_data = client.inquiry_transaction(track_id=track_id)
-        if response_data.status == 2:  # paid but unverified
+        if response_data.status == PAID_AND_UNVERIFIED:
             verify_data = client.verify_transaction(track_id)
-            order.paid_amount = verify_data.amount
-            order.status = Order.PROCESSING
-        elif response_data.status == 1:  # paid and verified
-            order.paid_amount = response_data.amount
-            order.status = Order.PAID
+            payment.paid_amount = verify_data.amount
+            payment.status = Payment.PROCESSING
+        elif response_data.status == PAID_AND_VERIFIED:
+            payment.paid_amount = response_data.amount
+            payment.status = Order.PAID
         else:
-            order.status = Order.UNPAID
-        order.save()
+            payment.status = Order.UNPAID
+        payment.save()
     except RequestError as exc:
         raise self.retry(exc=exc)
     except ResultError as exc:
         logger.error(
             f"Unexpected response received from the IPG webserver: {exc}"
-            f"order_id: {order_id} | "
+            f"order_id: {payment_id} | "
             f"task id: {self.task.id} | task name: {self.request.task}"
         )
     except Order.DoesNotExist:
         logger.error(
             (
-                f"Failed to resolve given order object using order_id: {order_id} "
+                f"Failed to resolve given payment object using payment: {payment_id} "
                 f"from the database in the following task: \n"
                 f"task ID: {self.task.id} | task name: {self.request.task}"
             )

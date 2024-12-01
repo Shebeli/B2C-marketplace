@@ -8,7 +8,7 @@ from zibal.client import ZibalIPGClient
 from zibal.exceptions import RequestError, ResultError
 from zibal.models.schemas import TransactionRequireResponse
 from rest_framework import serializers
-
+from order.tasks import handle_payment
 
 from financeops.models import Payment, Transaction, Wallet
 from order.models import Order
@@ -54,22 +54,25 @@ def _inititate_zibal_payment(amount: int, base_url: str) -> dict:
     return request_data.model_dump(exclude_none=True)
 
 
-def inititate_wallet_payment(
+def initiate_wallet_payment(
     wallet: Wallet, amount: int, ipg_service: int, base_url: str
 ) -> Transaction:
     """
     Initialize an IPG payment, update the order's status to PAYING
-    and create a `Payment` instance.
+    and create a `Payment` model instance.
     """
     request_data = initiate_ipg_payment(
         amount=amount, ipg_service=ipg_service, base_url=base_url
     )
-    payment = Payment.objects.get_or_create(
+    payment = Payment.objects.create(
         wallet=wallet,
         amount=amount,
         ipg_service=ipg_service,
         status=Payment.PAYING,
         track_id=request_data.track_id,
+    )
+    handle_payment(request_data.track_id, payment.id).apply_async(
+        args=(request_data.track_id, payment.id), countdown=60 * 20
     )
     return payment
 
@@ -84,8 +87,8 @@ def initiate_order_payment(order: Order, ipg_service: int, base_url: str) -> Pay
     request_data = initiate_ipg_payment(
         amount=order.amount, ipg_service=ipg_service, base_url=base_url
     )
-    order.status = Order.PAYING
     with transaction.atomic():
+        order.status = Order.PAYING
         payment = Payment.objects.create(
             order=order,
             amount=order.total_price,
@@ -94,6 +97,9 @@ def initiate_order_payment(order: Order, ipg_service: int, base_url: str) -> Pay
             track_id=request_data.track_id,
         )
         order.save()
+    handle_payment(request_data.track_id, payment.id).apply_async(
+        args=(request_data.track_id, payment.id), countdown=60 * 20
+    )
     return payment
 
 

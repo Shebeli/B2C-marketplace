@@ -11,7 +11,7 @@ from ecom_user.models import EcomUser
 from ecom_user_profile.models import CustomerAddress
 from product.models import ProductVariant
 from order.models import Cart, CartItem, Order, OrderItem
-from order.tasks import cancel_unpaid_order, process_payment
+from order.tasks import cancel_unpaid_order, handle_payment
 
 
 from financeops.models import IPG, Payment, Transaction
