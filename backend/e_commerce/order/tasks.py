@@ -21,8 +21,10 @@ logger = logging.getLogger("order")
 @shared_task(bind=True, max_retries=5, default_retry_delay=45)
 def handle_payment(self, track_id: int, payment_id: int) -> None:
     """
-    After initializing an IPG for more than 20 minutes, the
-    payment status should be checked and the order/wallet status should
+    After a `Payment` instance is created, this task should be
+    executed after 20 minutes
+
+    The payment status will be checked and the order or wallet status will
     be updated according to the response recieved from the IPG.
     """
     try:
@@ -51,6 +53,7 @@ def handle_payment(self, track_id: int, payment_id: int) -> None:
     client = ZibalIPGClient(
         settings.ZIBAL_MERCHANT, raise_on_invalid_result=True, logger=logger
     )
+    # zibal IPG status code meanings
     PAID_AND_VERIFIED = 1
     PAID_AND_UNVERIFIED = 2
     try:
@@ -76,7 +79,7 @@ def handle_payment(self, track_id: int, payment_id: int) -> None:
     except Order.DoesNotExist:
         logger.error(
             (
-                f"Failed to resolve given payment object using payment: {payment_id} "
+                f"Failed to resolve given payment object using the following payment id: {payment_id} "
                 f"from the database in the following task: \n"
                 f"task ID: {self.task.id} | task name: {self.request.task}"
             )

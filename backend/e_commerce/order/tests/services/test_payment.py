@@ -44,7 +44,9 @@ def test_initiate_ipg_payment_zibal_success(mock_client):
     )
 
 
-# Error cases
+# -----------------
+#   Failure cases
+# -----------------
 
 
 def test_inititate_ipg_payment_zibal_not_implemented_error():
