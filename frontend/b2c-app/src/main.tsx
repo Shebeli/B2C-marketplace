@@ -2,7 +2,6 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import ProductPage from "./Product/ProductPage.tsx";
-import App from "./App.tsx";
 import ThemeController from "./ThemeController.tsx";
 
 createRoot(document.getElementById("root")!).render(
