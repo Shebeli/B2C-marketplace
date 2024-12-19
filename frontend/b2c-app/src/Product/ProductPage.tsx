@@ -76,7 +76,7 @@ function ProductPage() {
             <div className="card grid basis-3/6 place-items-center lg:ml-2 mb-2 ">
               <img
                 className="mask lg:w-9/12 w-3/6 rounded-2xl pb-4"
-                src="src/assets/sample_images/product-main-image.webp"
+                src="public/sample_images/product-main-image.webp"
                 alt="Laptop"
               />
               <div className="flex self-start pb-1 gap-3 scrollbar overflow-x-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-slate-700 scrollbar-track-slate-300">

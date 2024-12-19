@@ -35,11 +35,11 @@ const details = [
 ];
 
 const images = [
-  { source: "src/assets/sample_images/side-image-1.webp" },
-  { source: "src/assets/sample_images/side-image-2.webp" },
-  { source: "src/assets/sample_images/side-image-3.webp" },
-  { source: "src/assets/sample_images/side-image-4.webp" },
-  { source: "src/assets/sample_images/side-image-5.webp" },
+  { source: "public/sample_images/side-image-1.webp" },
+  { source: "public/sample_images/side-image-2.webp" },
+  { source: "public/sample_images/side-image-3.webp" },
+  { source: "public/sample_images/side-image-4.webp" },
+  { source: "public/sample_images/side-image-5.webp" },
 ];
 
-export {details, images, colors};
+export { details, images, colors };
