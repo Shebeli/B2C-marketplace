@@ -8,50 +8,16 @@ import {
   FaHeadset,
   FaCalendarCheck,
 } from "react-icons/fa6";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProductFeature from "./ProductFeature";
 import ProductImage from "./ProductImage";
 import ProductDetail from "./ProductDetail";
+import {images, details, colors} from "./sample_data";
 
 function ProductPage() {
   const [selectedColor, setSelectedColor] = useState("زرد");
   const [openedImage, setOpenedImage] = useState<string | null>(null);
-
-  const colors = [
-    { name: "قرمز", value: "red-600", price: "20,000,000" },
-    { name: "آبی", value: "blue-600", price: "20,200,000" },
-    { name: "زرد", value: "yellow-400", price: "20,400,000" },
-  ];
-  const details = [
-    { name: "نوع لپ تاپ و الترابوک", value: "نوت بوک (لپ تاپ)" },
-    { name: "کاستوم ( ارتقا یافته )", value: "خیر" },
-    { name: "وزن", value: "۲.۳ کیلوگرم" },
-    { name: "ابعاد", value: "۳۵۷x۲۵۵x۲۳ میلی‌متر" },
-    { name: "سازنده پردازنده", value: "AMD" },
-    { name: "نسل پردازنده", value: "نسل ۸ ای ام دی" },
-    { name: "سری پردازنده", value: "Ryzen ۵" },
-    { name: "مدل پردازنده", value: "۸۶۴۵HS" },
-    { name: "فرکانس پردازنده", value: "۴.۳ تا ۵ گیگاهرتز" },
-    { name: "حافظه Cache", value: "۱۶ مگابایت" },
-    { name: "سایر توضیحات پردازنده مرکزی (CPU)", value: "۶ هسته / ۱۲ رشته" },
-    { name: "ظرفیت حافظه RAM", value: "۱۶ گیگابایت" },
-    { name: "نوع حافظه RAM", value: "DDR۵" },
-    { name: "فرکانس حافظه رم", value: "۵۶۰۰ مگاهرتز" },
-    { name: "سایر توضیحات حافظه RAM", value: "قابلیت ارتقا دارد" },
-    { name: "ظرفیت حافظه داخلی", value: "یک ترابایت" },
-    { name: "نوع حافظه داخلی", value: "SSD" },
-    { name: "مشخصات حافظه داخلی", value: "PCIe NVMe TLC M.۲ ۴x۴" },
-    { name: "سایر توضیحات حافظه داخلی", value: "قابلیت ارتقا دارد" },
-    { name: "سازنده پردازنده گرافیکی", value: "NVIDIA" },
-    { name: "مدل پردازنده گرافیکی", value: "GeForce RTX ۴۰۵۰" },
-    { name: "حافظه اختصاصی پردازنده گرافیکی", value: "۶ گیگابایت" },
-    { name: "توان پردازنده گرافیکی", value: "حداکثر ۷۵ وات" },
-    { name: "سایر توضیحات پردازنده گرافیکی", value: "نوع حافظه: GDDR۶" },
-    { name: "اندازه صفحه نمایش", value: "۱۵.۶ اینچ" },
-    { name: "نوع صفحه نمایش (پنل)", value: "IPS level panel" },
-    { name: "دقت صفحه نمایش", value: "Full HD| ۱۹۲۰ x۱۰۸۰ پیکسل" },
-    { name: "نرخ بروزرسانی تصویر", value: "۱۴۴ هرتز" },
-  ];
+  const [isModalOpen, setIsModalOpen] = useState(true);
 
   // This are sample datas used for filling the page's data holders for
   // showcasing the component.
@@ -71,16 +37,34 @@ function ProductPage() {
     setOpenedImage(null);
   };
 
-  const images = [
-    { source: "src/assets/sample_images/side-image-1.webp" },
-    { source: "src/assets/sample_images/side-image-2.webp" },
-    { source: "src/assets/sample_images/side-image-3.webp" },
-    { source: "src/assets/sample_images/side-image-4.webp" },
-    { source: "src/assets/sample_images/side-image-5.webp" },
-  ];
+  useEffect(() => {
+    setIsModalOpen(true);
+  }, []);
 
   return (
     <div className="lg:px-3 max-w-screen-2xl">
+      {/* Open the modal using document.getElementById('ID').showModal() method */}
+      {isModalOpen && (
+        <div>
+          <button className="btn">open modal</button>
+          <dialog id="my_modal_1" className="modal">
+            <div className="modal-box">
+              <h3 className="font-bold text-lg">Hello!</h3>
+              <p className="py-4">
+                Press ESC key or click the button below to close
+              </p>
+              <div className="modal-action">
+                <form method="dialog">
+                  {/* if there is a button in form, it will close the modal */}
+                  <button className="btn" onClick={() => setIsModalOpen(false)}>
+                    Close
+                  </button>
+                </form>
+              </div>
+            </div>
+          </dialog>
+        </div>
+      )}
       <div className="justify-items m-2 w-full">
         <div className="flex flex-col lg:flex-row">
           <div className="card grid basis-3/6 place-items-center lg:ml-2 mb-2 ">
@@ -132,7 +116,7 @@ function ProductPage() {
                   ))}
                 </div>
               </div>
-              <div className="card h-full w-full shadow-xl bg-base-200 mr-auto font-medium text-sm col-span-1 row-span-2 self-">
+              <div className="card h-fit w-3/4 shadow-xl bg-base-200 mr-auto font-medium text-sm col-span-1 row-span-2 self-">
                 <div className="card-body p-5 flex flex-col gap-3">
                   <h2 className="card-title">فروشنده</h2>
                   <div className="flex gap-2 border-b-[1px] pb-2 border-gray-500">
@@ -242,7 +226,7 @@ function ProductPage() {
           role="tabpanel"
           className="tab-content bg-base-100 border-r-8 border-primary from-base-200 to-base-300 rounded-box p-6 "
         >
-          <p className="max-w-screen-xl leading-7 text-sm font-medium">
+          <p className="max-w-screen-2xl leading-7 text-sm font-medium">
             اچ پی با سری Victus، لپ‌تاپ‌هایی با سخت‌افزار قدرتمند و طراحی شیک و
             ساده عرضه می‌کند تا نیاز کاربران برای پردازش‌های سنگین و البته بازی
             کردن را برطرف کند. لپ‌تاپ Victus Gaming 15 به عنوان یکی از گزینه‌های
@@ -281,27 +265,6 @@ function ProductPage() {
           className="tab-content bg-base-100 border-accent border-r-8 rounded-box p-8 text-red-500 font-bold text-2xl"
         >
           <h1>این بخش غیر فعال می باشد.🙂</h1>
-        </div>
-      </div>
-      <div className="grid grid-cols-3 row-span-2 gap-4">
-        <div className="bg-blue-300 col-span-3">
-          <h1>Row 1 (Fixed Height)</h1>
-        </div>
-        <div className="bg-green-300 col-span-1">
-          <p>
-            This row will adjust its height based on the amount of text or the
-            size of any child elements placed inside it.
-          </p>
-          <p>
-            Add more content here, and the row height will expand to fit the
-            content.
-          </p>
-          <p>Pow</p>
-          <p>Pow</p>
-          <p>Pow</p>
-        </div>
-        <div className="bg-red-300 col-span-3">
-          <h1>Row 3 (Fixed Height)</h1>
         </div>
       </div>
     </div>
