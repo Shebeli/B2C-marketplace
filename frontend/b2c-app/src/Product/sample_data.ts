@@ -1,7 +1,7 @@
 const colors = [
-  { name: "قرمز", value: "red-600", price: "20,000,000" },
-  { name: "آبی", value: "blue-600", price: "20,200,000" },
-  { name: "زرد", value: "yellow-400", price: "20,400,000" },
+  { name: "قرمز", code: "ef1d1d", price: "20,000,000" },
+  { name: "آبی", code: "0e2ffe", price: "20,200,000" },
+  { name: "زرد", code: "f3fe0e", price: "20,400,000" },
 ];
 const details = [
   { name: "نوع لپ تاپ و الترابوک", value: "نوت بوک (لپ تاپ)" },

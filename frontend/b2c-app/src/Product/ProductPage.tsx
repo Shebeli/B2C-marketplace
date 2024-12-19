@@ -12,6 +12,7 @@ import { useState, useEffect, useRef } from "react";
 import ProductFeature from "./ProductFeature";
 import ProductImage from "./ProductImage";
 import ProductDetail from "./ProductDetail";
+import ProductColor from "./ProductColor";
 import { images, details, colors } from "./sample_data";
 
 function ProductPage() {
@@ -64,8 +65,8 @@ function ProductPage() {
               سلام! به صفحه نمایش محصول خوش آمدید!
             </h3>
             <p className="py-4">
-              این پروژه نرم افزار توسط شروین سعیدی برنا برای درس بازاریابی ارائه محصول
-              طراحی شده است!.
+              این پروژه نرم افزار توسط شروین سعیدی برنا برای درس بازاریابی ارائه
+              محصول طراحی شده است!.
             </p>
           </div>
         </dialog>
@@ -76,7 +77,7 @@ function ProductPage() {
             <div className="card grid basis-3/6 place-items-center lg:ml-2 mb-2 ">
               <img
                 className="mask lg:w-9/12 w-3/6 rounded-2xl pb-4"
-                src="public/sample_images/product-main-image.webp"
+                src="sample_images/product-main-image.webp"
                 alt="Laptop"
               />
               <div className="flex self-start pb-1 gap-3 scrollbar overflow-x-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-slate-700 scrollbar-track-slate-300">
@@ -107,20 +108,11 @@ function ProductPage() {
                       4.1 امتیاز ( از 214 خریدار)
                     </p>
                   </div>
-                  <p>رنگ انتخاب شده: {selectedColor}</p>
-                  <div className="flex my-2 gap-2">
-                    {colors.map((color) => (
-                      <button
-                        key={color.name}
-                        className={`w-9 h-9 rounded-full bg-${color.value} ${
-                          selectedColor === color.name
-                            ? "ring-4 border-4 ring-cyan-500"
-                            : ""
-                        }`}
-                        onClick={() => handleColorClick(color.name)}
-                      ></button>
-                    ))}
-                  </div>
+                  <ProductColor
+                    colors={colors}
+                    selectedColor={selectedColor}
+                    setSelectedColor={setSelectedColor}
+                  />
                 </div>
                 <div className="card h-fit w-3/4 shadow-xl bg-base-200 mr-auto font-medium text-sm col-span-1 row-span-2 self-">
                   <div className="card-body p-5 flex flex-col gap-3">
@@ -131,7 +123,7 @@ function ProductPage() {
                     </div>
                     <div className="flex justify-between my-1 font-medium ">
                       <span>قیمت</span>
-                      <span className="">{selectedColorObj?.price} تومان</span>
+                      <span>{selectedColorObj?.price} تومان</span>
                     </div>
                     <div className="flex gap-2 text-xl border-b-[1px] pb-2 border-gray-500">
                       <FaShieldHalved className="text-blue-400" />
@@ -149,7 +141,7 @@ function ProductPage() {
                   </div>
                 </div>
                 <div className=" lg:col-span-1 col-span-2 ">
-                  <h2 className="font-semibold text-lg mt-2 mb-1">ویژگی ها:</h2>
+                  <h2 className="font-semibold text-lg mt-2 mb-1">ویژگی ها</h2>
                   <div className="lg:grid grid-cols-3 flex gap-4 w-full">
                     <ProductFeature
                       name={"نسل پردازنده"}
