@@ -64,9 +64,8 @@ function ProductPage() {
               سلام! به صفحه نمایش محصول خوش آمدید!
             </h3>
             <p className="py-4">
-              این محصول نرم افزاری توسط شروین سعیدی برنا برای درس بازاریابی
-              طراحی شده است. هر گونه کپی بدون مجوز, توزیع و یا سو استفاده از این
-              محصول طبق لیسانس GPL ممنوع است.
+              این پروژه نرم افزار توسط شروین سعیدی برنا برای درس بازاریابی ارائه محصول
+              طراحی شده است. 
             </p>
           </div>
         </dialog>
@@ -100,7 +99,7 @@ function ProductPage() {
                   8645HS-64GB DDR5-1TB SSD-RTX4050-FHD-W - کاستوم شده
                 </h1>
               </div>
-              <div className="grid grid-rows-[auto_1fr] grid-cols-2 my-3 gap-4 h-fit">
+              <div className="grid grid-rows-[auto_1fr] grid-cols-[6fr_5fr] my-3 gap-4 h-fit">
                 <div className="">
                   <div className="flex gap-1 ">
                     <FaStar className=" text-yellow-300" />
@@ -149,9 +148,9 @@ function ProductPage() {
                     </div>
                   </div>
                 </div>
-                <div className="col-span-1">
+                <div className=" lg:col-span-1 col-span-2 ">
                   <h2 className="font-semibold text-lg mt-2 mb-1">ویژگی ها:</h2>
-                  <div className="lg:grid grid-cols-3 flex gap-4   w-full">
+                  <div className="lg:grid grid-cols-3 flex gap-4 w-full">
                     <ProductFeature
                       name={"نسل پردازنده"}
                       value={"نسل 8 ای ام دی"}
