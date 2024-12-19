@@ -24,9 +24,6 @@ function ProductPage() {
   // This are sample datas used for filling the page's data holders for
   // showcasing the component.
 
-  const handleColorClick = (color: string) => {
-    setSelectedColor(color);
-  };
   const selectedColorObj = colors.find((color) => color.name === selectedColor);
 
   // for opening & closing images
