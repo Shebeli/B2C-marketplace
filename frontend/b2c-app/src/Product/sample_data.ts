@@ -43,3 +43,4 @@ const images = [
 ];
 
 export { details, images, colors };
+// meow
