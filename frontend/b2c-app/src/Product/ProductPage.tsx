@@ -16,7 +16,7 @@ import { images, details, colors } from "./sample_data";
 
 function ProductPage() {
   const [selectedColor, setSelectedColor] = useState("زرد");
-  const [openedImage, setOpenedImage] = useState<string | null>(null);
+  // const [openedImage, setOpenedImage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(true);
   const modalRef = useRef<HTMLDialogElement>(null);
 
@@ -30,13 +30,13 @@ function ProductPage() {
 
   // for opening & closing images
 
-  const openImage = (image: string) => {
-    setOpenedImage(image);
-  };
+  // const openImage = (image: string) => {
+  //   setOpenedImage(image);
+  // };
 
-  const closeImage = () => {
-    setOpenedImage(null);
-  };
+  // const closeImage = () => {
+  //   setOpenedImage(null);
+  // };
 
   useEffect(() => {
     if (isModalOpen) {
