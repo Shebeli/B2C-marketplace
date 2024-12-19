@@ -114,7 +114,7 @@ function ProductPage() {
                     setSelectedColor={setSelectedColor}
                   />
                 </div>
-                <div className="card h-fit w-3/4 shadow-xl bg-base-200 mr-auto font-medium text-sm col-span-1 row-span-2 self-">
+                <div className="card h-fit w-10/12 shadow-xl bg-base-200 mr-auto font-medium text-sm col-span-1 row-span-2 self-">
                   <div className="card-body p-5 flex flex-col gap-3">
                     <h2 className="card-title">فروشنده</h2>
                     <div className="flex gap-2 border-b-[1px] pb-2 border-gray-500">
