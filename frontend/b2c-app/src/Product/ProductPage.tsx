@@ -17,8 +17,12 @@ import { images, details, colors } from "./sample_data";
 
 function ProductPage() {
   const [selectedColor, setSelectedColor] = useState("زرد");
+
+  // clicked product image modal
   const [openedImageSrc, setOpenedImageSrc] = useState<string | null>(null);
   const imageModalRef = useRef<HTMLDialogElement>(null);
+
+  // welcome modal
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(true);
   const welcomeModalRef = useRef<HTMLDialogElement>(null);
 
@@ -71,7 +75,7 @@ function ProductPage() {
         </dialog>
       )}
 
-      <div className="lg:px-3 max-w-screen-2xl">
+      <div className="lg:px-4 max-w-screen-2xl">
         {openedImageSrc && (
           <dialog
             ref={imageModalRef}
@@ -81,10 +85,10 @@ function ProductPage() {
             id="image_modal"
           >
             <div className="modal-box">
-              <form method="dialog" className=" modal-backdrop">
+              <form method="dialog" className=" modal-backdrop ">
                 <button
                   onClick={() => setOpenedImageSrc(null)}
-                  className="btn btn-sm  btn-circle absolute"
+                  className="btn btn-sm btn-circle absolute"
                 >
                   ✕
                 </button>
@@ -109,7 +113,7 @@ function ProductPage() {
               </div>
             </div>
             <div>
-              <div className="card bg-base-200 rounded-box min-h-12 max-h-48 basis-2/3 p-3">
+              <div className="card bg-base-200 rounded-box min-h-16 max-h-48 basis-2/3 p-3 lg:mx-0" >
                 <span className="text-sm font-normal pb-2">
                   <a className="text-blue-400" href="#">
                     وسایل التکرونیکی
@@ -124,9 +128,9 @@ function ProductPage() {
                   8645HS-64GB DDR5-1TB SSD-RTX4050-FHD-W - کاستوم شده
                 </h1>
               </div>
-              <div className="grid grid-rows-[auto_1fr] lg:grid-cols-[7fr_5fr] grid-cols-[2fr_3fr] my-3 gap-4 h-fit">
-                <div className="">
-                  <div className="flex gap-1 ">
+              <div className="grid grid-rows-[auto_1fr] lg:grid-cols-[8fr_5fr] grid-cols-[1fr_2fr] my-3 wrap gap-4">
+                <div className="lg mx-4">
+                  <div className="flex gap-1">
                     <FaStar className=" text-yellow-300" />
                     <p className="font-light text-sm">
                       4.1 امتیاز ( از 214 خریدار)
@@ -166,7 +170,7 @@ function ProductPage() {
                 </div>
                 <div className=" lg:col-span-1 col-span-2 ">
                   <h2 className="font-semibold text-lg mt-2 mb-1">ویژگی ها</h2>
-                  <div className="lg:grid grid-cols-3 flex gap-4 w-full lg:overflow-hidden overflow-scroll py-1">
+                  <div className="lg:grid grid-cols-3 flex gap-4 w-full lg:overflow-hidden overflow-scroll scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-slate-700 scrollbar-track-slate-300 py-1">
                     <ProductFeature
                       name={"نسل پردازنده"}
                       value={"نسل 8 ای ام دی"}

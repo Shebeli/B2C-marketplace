@@ -6,11 +6,11 @@ import ThemeController from "./ThemeController.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <div className="justify-items-center">
-      <div className="pt-2 px-2">
-        <ThemeController />
-      </div>
-      <div className="">
+    <div className="items-start justify-center min-h-screen flex">
+      <div>
+        <div className="pt-2 px-2 self-center justify-self-center flex">
+          <ThemeController />
+        </div>
         <ProductPage />
       </div>
     </div>
