@@ -1,8 +1,9 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
-import ProductPage from "./Product/ProductPage.tsx";
+import ProductPage from "./components/Product/ProductPage.tsx";
 import ThemeController from "./ThemeController.tsx";
+import Footer from "./components/footer.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -12,6 +13,7 @@ createRoot(document.getElementById("root")!).render(
           <ThemeController />
         </div>
         <ProductPage />
+        <Footer />
       </div>
     </div>
   </StrictMode>
