@@ -17,41 +17,43 @@ import { images, details, colors } from "./sample_data";
 
 function ProductPage() {
   const [selectedColor, setSelectedColor] = useState("زرد");
-  // const [openedImage, setOpenedImage] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(true);
-  const modalRef = useRef<HTMLDialogElement>(null);
-
-  // This are sample datas used for filling the page's data holders for
-  // showcasing the component.
+  const [openedImageSrc, setOpenedImageSrc] = useState<string | null>(null);
+  const imageModalRef = useRef<HTMLDialogElement>(null);
+  const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(true);
+  const welcomeModalRef = useRef<HTMLDialogElement>(null);
 
   const selectedColorObj = colors.find((color) => color.name === selectedColor);
 
-  // for opening & closing images
-
-  // const openImage = (image: string) => {
-  //   setOpenedImage(image);
-  // };
-
-  // const closeImage = () => {
-  //   setOpenedImage(null);
-  // };
+  const handleModalOutsideClose = (
+    e: React.MouseEvent<HTMLDialogElement, MouseEvent>
+  ) => {
+    const dialog = imageModalRef.current;
+    if (imageModalRef.current && e.target == dialog) {
+      setOpenedImageSrc(null);
+    }
+  };
 
   useEffect(() => {
-    if (isModalOpen) {
-      modalRef.current?.showModal();
+    if (isWelcomeModalOpen) {
+      welcomeModalRef.current?.showModal();
     } else {
-      modalRef.current?.close();
+      welcomeModalRef.current?.close();
     }
-  }, [isModalOpen]);
+    if (openedImageSrc) {
+      imageModalRef.current?.showModal();
+    } else {
+      imageModalRef.current?.close();
+    }
+  }, [isWelcomeModalOpen, openedImageSrc]);
 
   return (
     <>
-      {isModalOpen && (
-        <dialog ref={modalRef} id="my_modal_3" className="modal">
+      {isWelcomeModalOpen && (
+        <dialog ref={welcomeModalRef} id="my_modal_3" className="modal">
           <div className="modal-box">
             <form method="dialog">
               <button
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => setIsWelcomeModalOpen(false)}
                 className="btn btn-sm btn-ghost btn-circle absolute right-2 top-2"
               >
                 ✕
@@ -68,7 +70,29 @@ function ProductPage() {
           </div>
         </dialog>
       )}
+
       <div className="lg:px-3 max-w-screen-2xl">
+        {openedImageSrc && (
+          <dialog
+            ref={imageModalRef}
+            className="modal"
+            onCancel={() => setOpenedImageSrc(null)}
+            onClick={handleModalOutsideClose}
+            id="image_modal"
+          >
+            <div className="modal-box">
+              <form method="dialog" className=" modal-backdrop">
+                <button
+                  onClick={() => setOpenedImageSrc(null)}
+                  className="btn btn-sm  btn-circle absolute"
+                >
+                  ✕
+                </button>
+              </form>
+              <img src={openedImageSrc} className="place-self-center" />
+            </div>
+          </dialog>
+        )}
         <div className="justify-items m-2 w-full">
           <div className="flex flex-col lg:flex-row">
             <div className="card grid basis-3/6 place-items-center lg:ml-2 mb-2 ">
@@ -78,7 +102,10 @@ function ProductPage() {
                 alt="Laptop"
               />
               <div className="flex self-start pb-1 gap-3 scrollbar overflow-x-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-slate-700 scrollbar-track-slate-300">
-                <ProductImage images={images} />
+                <ProductImage
+                  images={images}
+                  setOpenedImage={setOpenedImageSrc}
+                />
               </div>
             </div>
             <div>
@@ -111,7 +138,7 @@ function ProductPage() {
                     setSelectedColor={setSelectedColor}
                   />
                 </div>
-                <div className="card h-fit lg:w-10/12 w-full shadow-xl bg-base-200 mr-auto font-medium text-sm col-span-1 row-span-2 ">
+                <div className="card h-fit lg:w-10/12 w-full max-w-96 shadow-xl bg-base-200 mr-auto font-medium text-sm col-span-1 row-span-2 ">
                   <div className="card-body p-5 flex flex-col gap-3">
                     <h2 className="card-title">فروشنده</h2>
                     <div className="flex gap-2 border-b-[1px] pb-2 border-gray-500">
