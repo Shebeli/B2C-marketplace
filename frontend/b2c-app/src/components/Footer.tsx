@@ -1,4 +1,6 @@
 const Footer: React.FC = () => {
+  const iconWidth = 60;
+  const iconHeight = 60;
   return (
     <footer className="footer footer-center bg-base-200 text-base-content rounded p-10">
       <nav className="grid grid-flow-col gap-4">
@@ -12,8 +14,8 @@ const Footer: React.FC = () => {
         <div className="grid grid-flow-col gap-6 mt-2">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="70"
-            height="70"
+            width={iconWidth}
+            height={iconHeight}
             viewBox="0 0 128 128"
           >
             <path
@@ -23,8 +25,8 @@ const Footer: React.FC = () => {
           </svg>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="70"
-            height="70"
+            width={iconWidth}
+            height={iconHeight}
             viewBox="0 0 24 24"
           >
             <path
@@ -34,8 +36,8 @@ const Footer: React.FC = () => {
           </svg>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="70"
-            height="70"
+            width={iconWidth}
+            height={iconHeight}
             viewBox="0 0 128 128"
           >
             <path fill="#fff" d="M22.67 47h99.67v73.67H22.67z" />
@@ -48,8 +50,8 @@ const Footer: React.FC = () => {
             xmlns="http://www.w3.org/2000/svg"
             aria-hidden="true"
             role="img"
-            width="70"
-            height="70"
+            width={iconWidth}
+            height={iconHeight}
             preserveAspectRatio="xMidYMid meet"
             viewBox="0 0 256 228"
           >
@@ -60,8 +62,8 @@ const Footer: React.FC = () => {
           </svg>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="70"
-            height="70"
+            width={iconWidth}
+            height={iconHeight}
             viewBox="0 0 128 128"
           >
             <linearGradient
@@ -117,8 +119,8 @@ const Footer: React.FC = () => {
           </svg>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="70"
-            height="70"
+            width={iconWidth}
+            height={iconHeight}
             viewBox="0 0 256 256"
           >
             <g fill="none">
@@ -135,8 +137,8 @@ const Footer: React.FC = () => {
           </svg>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="70"
-            height="70"
+            width={iconWidth}
+            height={iconHeight}
             viewBox="0 0 128 128"
           >
             <path
