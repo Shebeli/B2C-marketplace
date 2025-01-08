@@ -1,6 +1,6 @@
-const ThemeController: React.FC = () => {
+const ThemeController: React.FC = (props: Record<string, unknown>) => {
   return (
-    <label className="flex cursor-pointer gap-2">
+    <label className={`flex flex-row cursor-pointer gap-1 ${{ ...props }}`}>
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="20"

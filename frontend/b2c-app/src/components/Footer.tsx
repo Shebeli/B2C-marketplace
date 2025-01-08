@@ -6,8 +6,6 @@ const Footer: React.FC = () => {
       <nav className="grid grid-flow-col gap-4">
         <a className="link link-hover">درباره ما</a>
         <a className="link link-hover">تماس با ما</a>
-        <a className="link link-hover">کاچینگ لوبرو</a>
-        <a className="link link-hover">آبورمنچش</a>
       </nav>
       <nav>
         <p className="text-lg">ابزار استفاده شده برای توسعه اپلیکیشن:</p>
