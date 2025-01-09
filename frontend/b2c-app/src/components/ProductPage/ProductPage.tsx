@@ -52,28 +52,7 @@ function ProductPage() {
 
   return (
     <>
-      {isWelcomeModalOpen && (
-        <dialog ref={welcomeModalRef} id="my_modal_3" className="modal">
-          <div className="modal-box">
-            <form method="dialog">
-              <button
-                onClick={() => setIsWelcomeModalOpen(false)}
-                className="btn btn-sm btn-ghost btn-circle absolute right-2 top-2"
-              >
-                ✕
-              </button>
-            </form>
-            <h3 className="font-bold text-lg mt-4">
-              {" "}
-              سلام! به صفحه نمایش محصول خوش آمدید!
-            </h3>
-            <p className="py-4">
-              این پروژه نرم افزار توسط شروین سعیدی برنا برای درس بازاریابی ارائه
-              محصول طراحی شده است!.
-            </p>
-          </div>
-        </dialog>
-      )}
+
 
       <div className="lg:px-4 max-w-screen-2xl">
         {openedImageSrc && (

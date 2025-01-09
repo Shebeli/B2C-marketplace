@@ -5,8 +5,8 @@ const Navbar: React.FC = () => {
   return (
     <div className="navbar border-b-2 py-3">
       <div className="flex-1">
-        <a className="btn bg-base-100 border-0">
-          <MainLogo width="120" className="ml-4" />
+        <a className="btn bg-base-100 border-0" href="/">
+          <MainLogo width="120" />
         </a>
         <div className="mr-2">
           <ThemeController />
