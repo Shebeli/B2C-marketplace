@@ -23,8 +23,6 @@ function ProductPage() {
   const imageModalRef = useRef<HTMLDialogElement>(null);
 
   // welcome modal
-  const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(true);
-  const welcomeModalRef = useRef<HTMLDialogElement>(null);
 
   const selectedColorObj = colors.find((color) => color.name === selectedColor);
 
@@ -38,22 +36,15 @@ function ProductPage() {
   };
 
   useEffect(() => {
-    if (isWelcomeModalOpen) {
-      welcomeModalRef.current?.showModal();
-    } else {
-      welcomeModalRef.current?.close();
-    }
     if (openedImageSrc) {
       imageModalRef.current?.showModal();
     } else {
       imageModalRef.current?.close();
     }
-  }, [isWelcomeModalOpen, openedImageSrc]);
+  }, [openedImageSrc]);
 
   return (
     <>
-
-
       <div className="lg:px-4 max-w-screen-2xl">
         {openedImageSrc && (
           <dialog
@@ -92,7 +83,7 @@ function ProductPage() {
               </div>
             </div>
             <div>
-              <div className="card bg-base-200 rounded-box min-h-16 max-h-48 basis-2/3 p-3 lg:mx-0" >
+              <div className="card bg-base-200 rounded-box min-h-16 max-h-48 basis-2/3 p-3 lg:mx-0">
                 <span className="text-sm font-normal pb-2">
                   <a className="text-blue-400" href="#">
                     وسایل التکرونیکی
