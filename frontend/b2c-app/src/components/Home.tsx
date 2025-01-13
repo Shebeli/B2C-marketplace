@@ -3,7 +3,6 @@ import { useState } from "react";
 
 const Home: React.FC = () => {
   const welcomeModalRef = useRef<HTMLDialogElement>(null);
-
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(true);
 
   useEffect(() => {
@@ -13,13 +12,13 @@ const Home: React.FC = () => {
       welcomeModalRef.current?.close();
     }
   });
+
   return (
     <>
-      {" "}
       <div>
         {isWelcomeModalOpen && (
           <dialog ref={welcomeModalRef} id="my_modal_3" className="modal">
-            <div className="modal-box">
+            <div className="modal-box border-[6px] border-info">
               <form method="dialog">
                 <button
                   onClick={() => setIsWelcomeModalOpen(false)}
@@ -28,10 +27,24 @@ const Home: React.FC = () => {
                   ✕
                 </button>
               </form>
-              <h3 className="font-bold text-lg mt-4"> خوش آمدید!</h3>
-              <p className="py-4">
-                این پروژه نرم افزاری توسط شروین سعیدی برنا طراحی شده است.
-              </p>
+              <h3 className="font-bold text-lg mt-4"> خوش آمدید! <span className="text-3xl">😊</span></h3>
+              <ul className="py-4 flex flex-col gap-6 font-medium">
+                <li>
+                  تمامی اطلاعات، نمادها و نشان‌های موجود در این پروژه صرفاً برای
+                  تکمیل نمونه‌کار ارائه شده‌اند و هیچ‌گونه اعتبار رسمی ندارند.
+                </li>
+                <li>
+                  در این پروژه، هدف اصلی صرفاً پرداختن به جزئیات نبوده است؛ بلکه
+                  تلاش شده تا تمامی ویژگی‌های کلیدی و مهم به بهترین شکل ممکن
+                  پیاده‌سازی شوند و از پرداختن به امکانات غیرضروری پرهیز شود.
+                </li>
+                <li>
+                  شایان ذکر است که تمرکز اصلی این پروژه بر توسعه بخش بک‌اند بوده
+                  و این بخش با جزئیات بیشتری نسبت به فرانت‌اند تکمیل شده است. به
+                  همین دلیل، برخی از ویژگی‌های اپلیکیشن در سمت فرانت‌اند، به
+                  دلیل حجم بالای پروژه، پیاده‌سازی نشده‌اند.
+                </li>
+              </ul>
             </div>
           </dialog>
         )}

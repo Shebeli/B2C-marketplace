@@ -69,7 +69,7 @@ const ProductsList: React.FC = () => {
                   <span className="label-text font-semibold text-base ">
                     موجود
                   </span>
-                  <input type="checkbox" className="toggle" />
+                  <input type="checkbox" className="toggle toggle-info" />
                 </label>
               </div>
               <div className="form-control">
@@ -77,7 +77,7 @@ const ProductsList: React.FC = () => {
                   <span className="label-text font-semibold text-base ">
                     ارسال امروز
                   </span>
-                  <input type="checkbox" className="toggle " />
+                  <input type="checkbox" className="toggle toggle-info" />
                 </label>
               </div>
             </div>
