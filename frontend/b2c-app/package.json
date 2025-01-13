@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@persian-tools/persian-tools": "^3.6.0",
     "@types/react-router-dom": "^5.3.3",
     "autoprefixer": "^10.4.20",
     "daisyui": "^4.12.14",
