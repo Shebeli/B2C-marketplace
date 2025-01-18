@@ -78,7 +78,7 @@ class Transaction(models.Model):
         WALLET_PAYMENT: "Order Wallet Payment",
         CANCELLATION: "Cancellation",
     }
-    type = models.CharField(choices=TRANSACTION_TYPES)
+    type = models.CharField(choices=TRANSACTION_TYPES, max_length=2)
 
     class Meta:
         ordering = ["-created_at"]
@@ -119,9 +119,10 @@ class Payment(models.Model):
         ),
     )
     track_id = models.CharField(max_length=50, unique=True)
-    track_id_submitted_at = models.DateTimeField(
-        help_text="When `track_id` field is provided/updated, this field should updated with the current time"
-    )
+    # track_id_submitted_at = models.DateTimeField(
+    #     help_text="When `track_id` field is provided/updated, this field should updated with the current time",
+        
+    # )
     order = models.OneToOneField(
         Order,
         on_delete=models.SET_NULL,

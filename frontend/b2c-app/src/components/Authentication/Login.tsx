@@ -1,7 +1,7 @@
 import { phoneNumberValidator } from "@persian-tools/persian-tools";
 import { MainLogo } from "../../assets/MainLogo";
 import { useNavigate } from "react-router-dom";
-import { useRef, useState } from "react";
+import {useState } from "react";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -15,13 +15,11 @@ const Login: React.FC = () => {
     const userInput = (event.currentTarget.username as HTMLInputElement).value;
     if (phoneNumberValidator(userInput)) {
       const timestamp = new Date().toISOString();
-      localStorage.setItem("inputPhoneTimestamp", timestamp);
+      localStorage.setItem("inputPhoneTimeStamp", timestamp);
       localStorage.setItem("inputPhone", userInput);
       navigate("/verify-phone");
-      console.log("Phone number detected! navigating to verifying phone page!");
     } else if (usernamePattern.test(userInput)) {
       navigate("/login-with-password", { state: { username } });
-      console.log("Username detected! navigating to password input page");
     } else {
       setIsInputInvalid(true);
     }

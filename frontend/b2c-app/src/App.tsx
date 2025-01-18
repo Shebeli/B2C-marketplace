@@ -7,7 +7,7 @@ import Home from "./components/Home";
 import ProductsList from "./components/ProductsList/ProductsList";
 import AuthLayout from "./components/Authentication/AuthLayout";
 import Login from "./components/Authentication/Login";
-import VerifyLogin from "./components/Authentication/Register";
+import VerifyPhone from "./components/Authentication/VerifyPhone";
 
 const App: React.FC = () => {
   return (
@@ -21,7 +21,7 @@ const App: React.FC = () => {
         </Route>
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<VerifyLogin/>}/>
+          <Route path="/verify-phone" element={<VerifyPhone/>}/>
         </Route>
       </Routes>
     </Router>
