@@ -6,7 +6,7 @@ const VerifyPhone: React.FC = () => {
   const [submittedPhone, setSubmittedPhone] = useState<string | null>(null);
   const [isSessionValid, setSessionIsValid] = useState<boolean>(true);
   const [verificationCode, setVerificationCode] = useState<string[]>(
-    Array(5).fill(null)
+    Array(5).fill("")
   );
   const [isFormInvalid, setIsFormInvalid] = useState<boolean>(false);
   const inputsRef = useRef<HTMLInputElement[]>([]);
@@ -24,10 +24,11 @@ const VerifyPhone: React.FC = () => {
     );
   };
 
-  const handleInput =
+  const handleInputChange =
     (index: number) => (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = e.target.value;
-      if (newValue.length == 1) {
+      console.log(`Triggered with value :${newValue}`);
+      if (newValue.length == 1 || newValue === "") {
         setVerificationCode((prev) =>
           prev.map((item, i) => (i === index ? newValue : item))
         );
@@ -65,7 +66,7 @@ const VerifyPhone: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (verificationCode.every((element) => element !== null)) {
+    if (verificationCode.every((element) => element !== "")) {
       const constructedCode = verificationCode.join("");
       console.log(
         `The code is constructed: ${constructedCode}, should be sent to server for verification.`
@@ -107,12 +108,17 @@ const VerifyPhone: React.FC = () => {
                   type="text"
                   maxLength={1}
                   ref={(element) => (inputsRef.current[index] = element!)}
-                  onChange={handleInput(index)}
-                  className={`input input-bordered w-12 text-2xl ${isFormInvalid ? "input-error" : ""}`}
+                  onChange={handleInputChange(index)}
+                  className={`input input-bordered w-12 text-2xl ${
+                    isFormInvalid ? "input-error" : ""
+                  }`}
                   inputMode="numeric"
                   pattern="[0-9]*"
                   onKeyDown={(e) => {
                     if (e.key === "Tab" || e.key === "Shift") {
+                      return;
+                    }
+                    if (e.key === "Backspace") {
                       return;
                     }
                     if (!/^\d$/.test(e.key)) {
