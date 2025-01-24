@@ -27,7 +27,6 @@ const VerifyPhone: React.FC = () => {
   const handleInputChange =
     (index: number) => (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = e.target.value;
-      console.log(`Triggered with value :${newValue}`);
       if (newValue.length == 1 || newValue === "") {
         setVerificationCode((prev) =>
           prev.map((item, i) => (i === index ? newValue : item))
@@ -66,13 +65,13 @@ const VerifyPhone: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (verificationCode.every((element) => element !== "")) {
+    if (verificationCode.every((element) => element !== "") && !isFormInvalid) {
       const constructedCode = verificationCode.join("");
       console.log(
         `The code is constructed: ${constructedCode}, should be sent to server for verification.`
       );
     }
-  }, [verificationCode]);
+  }, [verificationCode, isFormInvalid]);
 
   return (
     <div className="p-6 rounded-xl border-2 flex flex-col  gap-3 shadow-sm">
