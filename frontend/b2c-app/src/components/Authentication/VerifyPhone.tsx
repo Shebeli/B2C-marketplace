@@ -12,7 +12,7 @@ const VerifyPhone: React.FC = () => {
   const inputsRef = useRef<HTMLInputElement[]>([]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
-    if (verificationCode.some((element) => element === null)) {
+    if (verificationCode.some((element) => element === "")) {
       e.preventDefault();
       setIsFormInvalid(true);
       return;
