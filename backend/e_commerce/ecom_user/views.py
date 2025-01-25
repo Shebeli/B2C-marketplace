@@ -26,13 +26,14 @@ from ecom_user.sms_service import (
 from ecom_user.throttle import CodeSubmitAnonRateThrottle, SMSAnonRateThrottle
 
 
-class UserSignupViewSet(ViewSet):
+class UserLoginViewSet(ViewSet):
     """
     Provides the following actions:
     - request_registration: Sends a register verficiation code SMS to user which is to be used in the next action.
-    - verify_registration_request: Input the code recieved from previous action 'request_register'
-      in order to complete the registration. A pair of access and refresh token will be the sent in a
-      succesful response data.
+    - verify_registration: Requires a verification code to be inputted, which is requested via previous action.
+      If the request is succesful, a pair of access and refresh token will be included in the body of the
+      response. Note that if its the first time which the phone number is being registered, then
+      an EcomUser instance will be created with an unusable password using the phone number.
     """
 
     permission_classes = [IsAnonymous]
@@ -76,7 +77,10 @@ class UserSignupViewSet(ViewSet):
                 {"error": "verification code is incorrect."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        user = serializer.save()
+        try:
+            user = EcomUser.objects.get(phone=serializer.validated_data["phone"])
+        except EcomUser.DoesNotExist:
+            user = serializer.save()
         refresh = RefreshToken.for_user(user)
         return Response(
             {
@@ -87,64 +91,65 @@ class UserSignupViewSet(ViewSet):
         )
 
 
-class UserOnetimeAuthViewSet(ViewSet):
-    """
-    Should be used when the user forgets their password or they want to login without
-    inputting their password, which gives them access to one time authentication using OTP via SMS.
-    Provides the following actions:
-    - request_auth: sends an OTP via SMS to the inputted phone
-      number, which is required in the next action.
-    - verify_auth_request: verify the one time authentication using the OTP recieved
-      from previous action.
-    """
+# class UserOnetimeAuthViewSet(ViewSet):
+#     """
+#     [DEPRECATED: use UserSignupViewSet actions instead.]
+#     Should be used when the user forgets their password or they want to login without
+#     inputting their password, which gives them access to one time authentication using OTP via SMS.
+#     Provides the following actions:
+#     - request_auth: sends an OTP via SMS to the inputted phone
+#       number, which is required in the next action.
+#     - verify_auth_request: verify the one time authentication using the OTP recieved
+#       from previous action.
+#     """
 
-    permission_classes = [IsAnonymous]
+#     permission_classes = [IsAnonymous]
 
-    @action(detail=False, methods=["post"], throttle_classes=[SMSAnonRateThrottle])
-    def request_auth(self, request):
-        serializer = OTPAuthSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = get_object_or_404(EcomUser, phone=serializer.data["phone"])
-        code_cooldown_time = cache.ttl(create_sms_cooldown_cache_key(user.phone))
-        if code_cooldown_time:
-            return Response(
-                {"cooldown time to request another code": f"{code_cooldown_time}s"},
-                status=status.HTTP_429_TOO_MANY_REQUESTS,
-            )
-        process_phone_verification(serializer.data["phone"])
-        return Response(
-            {
-                "success": f"verification code has been sent via SMS to this phone number: {user.phone}"
-            },
-            status=status.HTTP_202_ACCEPTED,
-        )
+#     @action(detail=False, methods=["post"], throttle_classes=[SMSAnonRateThrottle])
+#     def request_auth(self, request):
+#         serializer = OTPAuthSerializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         user = get_object_or_404(EcomUser, phone=serializer.data["phone"])
+#         code_cooldown_time = cache.ttl(create_sms_cooldown_cache_key(user.phone))
+#         if code_cooldown_time:
+#             return Response(
+#                 {"cooldown time to request another code": f"{code_cooldown_time}s"},
+#                 status=status.HTTP_429_TOO_MANY_REQUESTS,
+#             )
+#         process_phone_verification(serializer.data["phone"])
+#         return Response(
+#             {
+#                 "success": f"verification code has been sent via SMS to this phone number: {user.phone}"
+#             },
+#             status=status.HTTP_202_ACCEPTED,
+#         )
 
-    @action(
-        detail=False, methods=["post"], throttle_classes=[CodeSubmitAnonRateThrottle]
-    )
-    def verify_auth_request(self, request):
-        serializer = OTPAuthVerificationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        cached_code = cache.get(create_phone_verify_cache_key(serializer.data["phone"]))
-        if not cached_code:
-            return Response(
-                {"error": "server is not expecting a verification code for this phone"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if serializer.data["verification_code"] != cached_code:
-            return Response(
-                {"error": "verification code is incorrect"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        user = EcomUser.objects.get(phone=serializer.data["phone"])
-        refresh = RefreshToken.for_user(user)
-        return Response(
-            {
-                "refresh": str(refresh),
-                "access": str(refresh.access_token),
-            },
-            status=status.HTTP_200_OK,
-        )
+#     @action(
+#         detail=False, methods=["post"], throttle_classes=[CodeSubmitAnonRateThrottle]
+#     )
+#     def verify_auth_request(self, request):
+#         serializer = OTPAuthVerificationSerializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         cached_code = cache.get(create_phone_verify_cache_key(serializer.data["phone"]))
+#         if not cached_code:
+#             return Response(
+#                 {"error": "server is not expecting a verification code for this phone"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+#         if serializer.data["verification_code"] != cached_code:
+#             return Response(
+#                 {"error": "verification code is incorrect"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+#         user = EcomUser.objects.get(phone=serializer.data["phone"])
+#         refresh = RefreshToken.for_user(user)
+#         return Response(
+#             {
+#                 "refresh": str(refresh),
+#                 "access": str(refresh.access_token),
+#             },
+#             status=status.HTTP_200_OK,
+#         )
 
 
 class UserAccountViewSet(ViewSet):

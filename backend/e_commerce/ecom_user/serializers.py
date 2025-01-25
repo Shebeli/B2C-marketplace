@@ -5,11 +5,13 @@ from ecom_core.validators import validate_phone, validate_verification_code
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
+
 from .models import EcomUser
 
 
 class UserAccountSerializer(serializers.ModelSerializer):
     "Account and personal general information"
+
     full_name = serializers.CharField(source="get_fullname", read_only=True)
 
     class Meta:
@@ -28,7 +30,7 @@ class UserPhoneVerificationSerializer(serializers.Serializer):
     )
     phone = serializers.CharField(
         max_length=13,
-        validators=[validate_phone, UniqueValidator(queryset=EcomUser.objects.all())],
+        validators=[validate_phone],
     )
 
     def create(self, validated_data):
