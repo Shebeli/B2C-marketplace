@@ -319,3 +319,17 @@ IPG_CHOICES = {
     ipgs.ZIBAL: "Zibal",
     ipgs.ASAN_PARDAKHT: "Asan Pardakht",
 }
+
+# SMS Cooldown Duration: The duration the user has to wait before
+# requesting another verification code for the same phone number,
+# in minutes.
+SMS_COOLDOWN_DURATION = os.environ.get("SMS_COOLDOWN_DURATION")
+
+# SMS Verification Expiration: For how long a verification code is valid,
+# in minutes.
+SMS_VERIFY_EXP = os.environ.get("SMS_VERIFY_EXP")
+
+if not SMS_COOLDOWN_DURATION:
+    SMS_COOLDOWN_DURATION = 2
+if not SMS_VERIFY_EXP:
+    SMS_VERIFY_EXP = 15
