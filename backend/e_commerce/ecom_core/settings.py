@@ -284,7 +284,8 @@ if not PAYMENT_CALLBACK_URL:
         "Enviroment variable PAYMENT_CALLBACK_URL should be provided"
     )
 
-# should be changed to manually rather than hard code
+# hardcoded for now,
+# should be inputted manually by other means such as env variables.
 COMMISSION_RATE = 0.975
 
 # Celery
