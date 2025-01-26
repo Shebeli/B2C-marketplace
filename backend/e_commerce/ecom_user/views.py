@@ -61,7 +61,7 @@ class UserLoginViewSet(ViewSet):
     @action(
         detail=False, methods=["post"], throttle_classes=[CodeSubmitAnonRateThrottle]
     )
-    def verify_registration_request(self, request):
+    def verify_registration(self, request):
         serializer = UserPhoneVerificationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         cached_code = cache.get(
