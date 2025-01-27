@@ -229,6 +229,8 @@ REST_FRAMEWORK = {
 
 CORS_ALLOWED_ORIGINS = [
     "https://localhost:5173",
+    "http://localhost:5173"
+    
 ]
 
 SMS_USERNAME = os.environ.get("SMS_USERNAME")
