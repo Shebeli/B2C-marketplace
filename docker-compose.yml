@@ -1,0 +1,65 @@
+services:
+  django:
+    build: ./backend
+    container_name: django_app
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "8000:8000"
+    develop:
+      watch:
+        - action: rebuild
+          path: ./backend/pyproject.toml
+        - action: sync
+          path: ./backend/e_commerce
+          target: /e_commerce/
+
+  celery:
+    build: ./backend
+    container_name: celery_worker
+    command: poetry run celery -A ecom_core worker --loglevel=info
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379
+    depends_on:
+      - redis
+      - django
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    expose:
+      - 6379
+
+  db:
+    image: postgres:latest
+    container_name: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    env_file:
+      - .env
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    expose:
+      - 5432
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "${POSTGRES_USER:-postgres}", "-d", "${POSTGRES_DB:-postgres}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  db-data:

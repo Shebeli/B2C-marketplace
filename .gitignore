@@ -37,3 +37,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+frontend/b2c-app/.env.*
+frontend/b2c-app/.env.

@@ -1,0 +1,19 @@
+services:
+  react:
+    build:
+      context: ./frontend
+      target: dev
+    container_name: react_app
+    ports:
+      - "5173:5173"
+    develop:
+      watch:
+        - action: rebuild
+          path: ./frontend/b2c-app/package.json
+        - action: sync
+          path: ./frontend/b2c-app/src
+          target: /app/src
+          ignore:
+            - node_modules/
+    depends_on:
+      - django

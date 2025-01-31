@@ -1,10 +1,11 @@
 [tool.poetry]
-name = "e-commerce backend"
+name = "e_commerce"
 version = "0.1.0"
 description = ""
 authors = ["Shervin Saeedi Borna <Shervinsaeedi78@gmail.com>"]
 license = "MIT License"
 readme = "README.md"
+packages = [{include="e_commerce"}]
 
 [tool.poetry.dependencies]
 python = "^3.12"

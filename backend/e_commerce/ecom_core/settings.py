@@ -142,26 +142,14 @@ WSGI_APPLICATION = "ecom_core.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "e_commerce",
-        "USER": "postgres",
-        "PASSWORD": "1234",
-        "HOST": "localhost",
-        "PORT": "5433",
+        "NAME": os.environ.get("POSTGRES_DB"),
+        "USER": os.environ.get("POSTGRES_USER"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
+        "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
+        "PORT": "5432",
     }
 }
 
-# MYSQL, mostly for local purposes only.
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "e_com",
-        "USER": "root",
-        "PASSWORD": "1234",
-        "HOST": "localhost",  # Or your database host
-        "PORT": "3306",  # Or your database port
-    }
-}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -227,11 +215,9 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
-CORS_ALLOWED_ORIGINS = [
-    "https://localhost:5173",
-    "http://localhost:5173"
-    
-]
+CORS_ALLOWED_ORIGINS = ["https://localhost:5173", "http://localhost:5173"]
+
+CORS_EXPOSE_HEADERS = ["Retry-After", "X-Rate-Limit-Type"]
 
 SMS_USERNAME = os.environ.get("SMS_USERNAME")
 SMS_PASSWORD = os.environ.get("SMS_PASSWORD")
@@ -276,10 +262,6 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
 }
 
-# Celery
-CELERY_BROKER_URL = "redis://localhost:6379"
-CELERY_RESULT_BACKEND = "redis://localhost:6379"
-
 
 if not DEBUG:
     PAYMENT_CALLBACK_URL = os.environ.get("PAYMENT_CALLBACK_URL", None)
@@ -296,8 +278,8 @@ if not PAYMENT_CALLBACK_URL:
 COMMISSION_RATE = 0.975
 
 # Celery
-CELERY_BROKER_URL = "redis://localhost:6379/0"  # Using Redis as the message broker
-CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379")
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_BEAT_SCHEDULE = {

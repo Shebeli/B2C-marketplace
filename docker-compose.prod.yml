@@ -1,0 +1,10 @@
+services:
+  react:
+    build:
+      context: ./frontend
+      target: prod
+    container_name: react_app
+    ports:
+      - "80:80"
+    depends_on:
+      - django
