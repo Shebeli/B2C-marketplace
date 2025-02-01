@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from django.core.exceptions import ImproperlyConfigured
 
 from rest_framework.serializers import Serializer
-from ecom_core import ipgs
+from . import ipgs
 
 load_dotenv()
 
@@ -139,6 +139,7 @@ WSGI_APPLICATION = "ecom_core.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -224,25 +225,21 @@ SMS_PASSWORD = os.environ.get("SMS_PASSWORD")
 SMS_SENDER_PHONE_NUMBER = os.environ.get("SMS_PHONE")
 
 
-REDIS_HOST = os.environ.get("REDIS_HOST")
-REDIS_PORT = os.environ.get("REDIS_PORT")
+REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
+REDIS_PORT = os.environ.get("REDIS_PORT", "6379")
 
-if None in [REDIS_HOST, REDIS_PORT]:
-    REDIS_HOST = "127.0.0.1"
-    REDIS_PORT = "6379"
-
-
+print(f"{REDIS_HOST} {REDIS_PORT}")
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/1",
+        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}",
         "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
     }
 }
 
 SHELL_PLUS_SUBCLASSES_IMPORT = [Serializer]
 
-OTP_LENGTH = os.environ.get("OTP_LENGTH")
+OTP_LENGTH = os.environ.get("OTP_LENGTH", 6)
 if not OTP_LENGTH:
     OTP_LENGTH = 6
 else:
@@ -313,13 +310,8 @@ IPG_CHOICES = {
 # SMS Cooldown Duration: The duration the user has to wait before
 # requesting another verification code for the same phone number,
 # in minutes.
-SMS_COOLDOWN_DURATION = os.environ.get("SMS_COOLDOWN_DURATION")
+SMS_COOLDOWN_DURATION = os.environ.get("SMS_COOLDOWN_DURATION", 2)
 
 # SMS Verification Expiration: For how long a verification code is valid,
 # in minutes.
-SMS_VERIFY_EXP = os.environ.get("SMS_VERIFY_EXP")
-
-if not SMS_COOLDOWN_DURATION:
-    SMS_COOLDOWN_DURATION = 2
-if not SMS_VERIFY_EXP:
-    SMS_VERIFY_EXP = 15
+SMS_VERIFY_EXP = os.environ.get("SMS_VERIFY_EXP", 15)
