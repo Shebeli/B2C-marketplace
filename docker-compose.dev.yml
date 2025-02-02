@@ -15,5 +15,9 @@ services:
           target: /app/src
           ignore:
             - node_modules/
+    environment:
+      - VITE_CODE_REQUEST_COOLDOWN=${CODE_REQUEST_COOLDOWN_TIME}
+      - VITE_CODE_LIFESPAN=${CODE_LIFESPAN}
+    env_file: .env
     depends_on:
       - django

@@ -10,6 +10,8 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - CELERY_BROKER_URL=redis://redis:6379
+      - SMS_COOLDOWN_DURATION=${CODE_REQUEST_COOLDOWN_TIME}
+      - VITE_CODE_LIFESPAN=${SMS_VERIFY_EXP}
     env_file:
       - .env
     depends_on:
