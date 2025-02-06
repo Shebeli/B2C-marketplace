@@ -14,6 +14,7 @@ import AuthLayout from "./components/Authentication/AuthLayout";
 import Login from "./components/Authentication/Login";
 import VerifyPhone from "./components/Authentication/VerifyPhone";
 import { setNavigate } from "./navigation";
+import { ThemeProvider } from "./components/Theme/ThemeContext";
 
 interface NavigationSetupProps {
   children: ReactNode;
@@ -30,22 +31,24 @@ const NavigationSetup: React.FC<NavigationSetupProps> = ({ children }) => {
 
 const App: React.FC = () => {
   return (
-    <Router>
-      <NavigationSetup>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/product-page" element={<ProductPage />} />
-            <Route path="/products-list" element={<ProductsList />} />
-            <Route path="/contact" element={<ProductPage />} />
-          </Route>
-          <Route element={<AuthLayout />}>
-            <Route path="/login" element={<Login />} />
-            <Route path="/verify-phone" element={<VerifyPhone />} />
-          </Route>
-        </Routes>
-      </NavigationSetup>
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <NavigationSetup>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/product-page" element={<ProductPage />} />
+              <Route path="/products-list" element={<ProductsList />} />
+              <Route path="/contact" element={<ProductPage />} />
+            </Route>
+            <Route element={<AuthLayout />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/verify-phone" element={<VerifyPhone />} />
+            </Route>
+          </Routes>
+        </NavigationSetup>
+      </Router>
+    </ThemeProvider>
   );
 };
 

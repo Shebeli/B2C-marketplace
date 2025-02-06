@@ -240,7 +240,7 @@ const VerifyPhone: React.FC = () => {
   }, [verificationCode, formError, sendCodeForVerification]);
 
   return (
-    <div className="p-6 rounded-xl border-2 flex flex-col  gap-3 shadow-sm">
+    <div className="p-6 rounded-xl border-[2.5px] border-base-300 flex flex-col  gap-3 shadow-sm">
       {alertMsg && (
         <TemporaryAlert
           message={alertMsg.message}

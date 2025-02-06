@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
+import time
 
 from ecom_user.authentication import EcomUserJWTAuthentication
 from ecom_user.models import EcomUser
@@ -29,8 +30,8 @@ from ecom_user.throttle import CodeSubmitAnonRateThrottle, SMSAnonRateThrottle
 class UserLoginViewSet(ViewSet):
     """
     Provides the following actions:
-    - request_registration: Sends a register verficiation code SMS to user which is to be used in the next action.
-    - verify_registration: Requires a verification code to be inputted, which is requested via previous action.
+    - request_code: Sends a verficiation code SMS to user which is to be used in the next action.
+    - verify_code: Requires a verification code to be inputted, which is requested via previous action.
       If the request is succesful, a pair of access and refresh token will be included in the body of the
       response. Note that if its the first time which the phone number is being registered, then
       an EcomUser instance will be created with an unusable password using the phone number.
@@ -39,7 +40,8 @@ class UserLoginViewSet(ViewSet):
     permission_classes = [IsAnonymous]
 
     @action(detail=False, methods=["post"], throttle_classes=[SMSAnonRateThrottle])
-    def request_registration(self, request):
+    def request_code(self, request):
+        # time.sleep(3)
         serializer = UserPhoneSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         inputted_phone = serializer.validated_data["phone"]
@@ -47,13 +49,17 @@ class UserLoginViewSet(ViewSet):
         code_cooldown_time = cache.ttl(sms_cooldown_cache_key)
         if code_cooldown_time:
             return Response(
-                {"cooldown time to request another code": f"{code_cooldown_time}s"},
+                {
+                    "error": "Request blocked by SMS rate limiter",
+                    "cooldown_time": f"{code_cooldown_time}",
+                },
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
+                headers={"X-Rate-Limit-Type": "SMS_LIMIT"},
             )
         process_phone_verification(serializer.validated_data["phone"])
         return Response(
             {
-                "success": f"register verification code sent to user for phone {inputted_phone} via SMS"
+                "success": f"verification code sent to user for phone {inputted_phone} via SMS"
             },
             status=status.HTTP_202_ACCEPTED,
         )
@@ -61,15 +67,14 @@ class UserLoginViewSet(ViewSet):
     @action(
         detail=False, methods=["post"], throttle_classes=[CodeSubmitAnonRateThrottle]
     )
-    def verify_registration(self, request):
+    def verify_code(self, request):
         serializer = UserPhoneVerificationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        cached_code = cache.get(
-            create_phone_verify_cache_key(serializer.validated_data["phone"])
-        )
+        cache_key = create_phone_verify_cache_key(serializer.validated_data["phone"])
+        cached_code = cache.get(cache_key)
         if not cached_code:
             return Response(
-                {"error": "server is not expecting a verification code for this phone"},
+                {"error": "verification code is incorrect."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         if serializer.validated_data["verification_code"] != cached_code:
@@ -77,6 +82,7 @@ class UserLoginViewSet(ViewSet):
                 {"error": "verification code is incorrect."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        cache.delete(cache_key)
         try:
             user = EcomUser.objects.get(phone=serializer.validated_data["phone"])
         except EcomUser.DoesNotExist:

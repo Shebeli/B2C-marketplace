@@ -1,9 +1,9 @@
 import { MainLogo } from "../assets/MainLogo";
-import ThemeController from "../ThemeController";
+import ThemeController from "./Theme/ThemeController";
 
 const Navbar: React.FC = () => {
   return (
-    <div className="navbar border-b-2 py-3">
+    <div className="navbar border-b-2 border-base-300 py-3">
       <div className="flex-1">
         <a className="btn bg-base-100 border-0" href="/">
           <MainLogo width="120" />

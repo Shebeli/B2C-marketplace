@@ -115,7 +115,7 @@ function ProductPage() {
                 <div className="card h-fit lg:w-full w-8/12 min-w-64 max-w-96 shadow-xl bg-base-200 mr-auto font-medium text-sm col-span-1 row-span-2 ">
                   <div className="card-body p-5 flex flex-col gap-3">
                     <h2 className="card-title">فروشنده</h2>
-                    <div className="flex gap-2 border-b-[1px] pb-2 border-gray-500">
+                    <div className="flex gap-2 border-b-[1px] pb-2 border-base-300">
                       <FaStore className="text-xl text-orange-400" />
                       <p>فروشگاه تک سینا</p>
                     </div>
@@ -123,7 +123,7 @@ function ProductPage() {
                       <span>قیمت</span>
                       <span>{selectedColorObj?.price} تومان</span>
                     </div>
-                    <div className="flex gap-2 text-xl border-b-[1px] pb-2 border-gray-500">
+                    <div className="flex gap-2 text-xl border-b-[2px] pb-2 border-base-300">
                       <FaShieldHalved className="text-blue-400" />
                       <p className="text-sm"> گارانتی 24 ماهه آوا</p>
                     </div>
@@ -174,7 +174,7 @@ function ProductPage() {
             </div>
           </div>
         </div>
-        <div className="flex gap-16 max-w-screen-2xl  place-self-center justify-between border-y-2 p-4 px-8 mt-8 w-full">
+        <div className="flex gap-16 max-w-screen-2xl  place-self-center justify-between border-y-2 border-base-300 p-4 px-8 mt-8 w-full">
           <div className="bg-base flex flex-col items-center gap-2 ">
             <FaHeadset className="text-4xl" />
             <p>پشتیبانی 24 ساعته</p>

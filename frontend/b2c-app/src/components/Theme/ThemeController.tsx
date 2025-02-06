@@ -1,4 +1,12 @@
+import { useContext } from "react";
+import { ThemeContext, THEMES } from "./themeConfig";
+
 const ThemeController: React.FC = (props: Record<string, unknown>) => {
+  const context = useContext(ThemeContext);
+
+  if (!context) return null;
+
+  const { theme, toggleTheme } = context;
   return (
     <label className={`flex flex-row cursor-pointer gap-1 ${{ ...props }}`}>
       <svg
@@ -17,8 +25,10 @@ const ThemeController: React.FC = (props: Record<string, unknown>) => {
       </svg>
       <input
         type="checkbox"
-        value="night"
+        value={theme}
         className="toggle theme-controller"
+        onClick={toggleTheme}
+        defaultChecked={theme === THEMES.DARK ? true : false}
       />
       <svg
         xmlns="http://www.w3.org/2000/svg"

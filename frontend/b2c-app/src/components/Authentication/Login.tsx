@@ -73,7 +73,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="p-6 rounded-xl border-2 flex flex-col  gap-3 shadow-sm">
+    <div className="p-6 rounded-xl border-[2.5px] border-base-300 flex flex-col  gap-3">
       {alertMsg && (
         <TemporaryAlert message={alertMsg!} type="error" duration={5000} />
       )}
@@ -90,7 +90,7 @@ const Login: React.FC = () => {
       )}
       <form onSubmit={handleUsernameSubmit}>
         <label
-          className={`input input-bordered input-info flex items-center input-md gap-2 ${
+          className={`input input-bordered input-info input-md flex items-center gap-2 ${
             isInputInvalid ? "input-error" : ""
           }`}
         >

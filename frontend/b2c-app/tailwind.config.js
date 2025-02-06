@@ -12,6 +12,8 @@ export default {
     themes: [
       "light",
       "night",
+      "dim",
+      "dark",
       {
         sherdark: {
           primary: "#1e40af",

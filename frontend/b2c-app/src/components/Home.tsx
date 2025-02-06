@@ -27,7 +27,10 @@ const Home: React.FC = () => {
                   ✕
                 </button>
               </form>
-              <h3 className="font-bold text-lg mt-4"> خوش آمدید! <span className="text-3xl">😊</span></h3>
+              <h3 className="font-bold text-lg mt-4">
+                {" "}
+                خوش آمدید! <span className="text-3xl">😊</span>
+              </h3>
               <ul className="py-4 flex flex-col gap-6 font-medium">
                 <li>
                   تمامی اطلاعات، نمادها و نشان‌های موجود در این پروژه صرفاً برای
@@ -50,12 +53,12 @@ const Home: React.FC = () => {
         )}
       </div>
       <div className="p-4 max-w-screen-2xl">
-        <div className="hero bg-gradient-to-r from-base-100 to-sky-200 rounded-lg">
+        <div className="hero bg-gradient-to-br bg-base-100 border-4 border-base-300 rounded-xl">
           <div className="hero-content flex-col lg:flex-row-reverse lg:gap-32 gap-12 py-12">
             <img
               src="home/home-banner.webp"
               alt="E-commerce Banner"
-              className="rounded-full shadow-2xl lg:size-3/12 size-6/12 lg:my-4"
+              className="rounded-full shadow-2xl lg:size-3/12 size-4/12 lg:my-4"
             />
             <div>
               <h1 className="text-5xl font-bold">بهترین کالا ها را بخرید!</h1>

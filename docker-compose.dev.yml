@@ -15,6 +15,9 @@ services:
           target: /app/src
           ignore:
             - node_modules/
+        - action: sync
+          path: ./frontend/b2c-app/tailwind.config.json
+          target: /app/
     environment:
       - VITE_CODE_REQUEST_COOLDOWN=${CODE_REQUEST_COOLDOWN_TIME}
       - VITE_CODE_LIFESPAN=${CODE_LIFESPAN}
