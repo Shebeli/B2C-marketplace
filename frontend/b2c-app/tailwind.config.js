@@ -3,10 +3,11 @@ import scrollbar from "tailwind-scrollbar";
 
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  safelist: ["alert-success", "alert-error", "alert-warning", "alert-info"],
   theme: {
     extend: {},
   },
-  plugins: [scrollbar, daisyui ],
+  plugins: [scrollbar, daisyui],
   daisyui: {
     themes: [
       "light",
