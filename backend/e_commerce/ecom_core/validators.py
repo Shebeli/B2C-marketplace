@@ -4,15 +4,25 @@ from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from django.conf import settings
 import phonenumbers
+from phonenumbers import NumberParseException
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import Token
 
 
 def validate_phone(value: str) -> None:
-    parsed_phone = phonenumbers.parse(
-        value,
-        "IR",
-    )
+    if re.search(r"\D", value):
+        raise ValidationError(
+            _(f"Entered phone number '{value}' is not a valid phone number")
+        )
+    try:
+        parsed_phone = phonenumbers.parse(
+            value,
+            "IR",
+        )
+    except NumberParseException:
+        raise ValidationError(
+            _(f"Entered phone number '{value}' is not a valid phone number")
+        )
     if not phonenumbers.is_valid_number(parsed_phone):
         raise ValidationError(
             _(f"Entered phone number '{value}' is not a valid phone number")
