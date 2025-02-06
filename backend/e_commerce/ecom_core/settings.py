@@ -105,6 +105,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -112,7 +113,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
 ]
 
 ROOT_URLCONF = "ecom_core.urls"
@@ -216,7 +216,7 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
-CORS_ALLOWED_ORIGINS = ["https://localhost:5173", "http://localhost:5173"]
+CORS_ALLOWED_ORIGINS = ["http://localhost:5173", "http://react_app:5173"]
 
 CORS_EXPOSE_HEADERS = ["Retry-After", "X-Rate-Limit-Type"]
 
@@ -239,9 +239,9 @@ CACHES = {
 
 SHELL_PLUS_SUBCLASSES_IMPORT = [Serializer]
 
-OTP_LENGTH = os.environ.get("OTP_LENGTH", 6)
+OTP_LENGTH = os.environ.get("OTP_LENGTH", 5)
 if not OTP_LENGTH:
-    OTP_LENGTH = 6
+    OTP_LENGTH = 5
 else:
     try:
         OTP_LENGTH = abs(int(OTP_LENGTH))
@@ -307,11 +307,16 @@ IPG_CHOICES = {
     ipgs.ASAN_PARDAKHT: "Asan Pardakht",
 }
 
-# SMS Cooldown Duration: The duration the user has to wait before
-# requesting another verification code for the same phone number,
-# in minutes.
-SMS_COOLDOWN_DURATION = os.environ.get("SMS_COOLDOWN_DURATION", 2)
+try:
+    # SMS Cooldown Duration: The duration the user has to wait before
+    # requesting another verification code for the same phone number,
+    # in minutes.
+    SMS_CODE_REQUEST_COOLDOWN = int(os.environ.get("SMS_CODE_REQUEST_COOLDOWN", 2))
 
-# SMS Verification Expiration: For how long a verification code is valid,
-# in minutes.
-SMS_VERIFY_EXP = os.environ.get("SMS_VERIFY_EXP", 15)
+    # SMS Verification Expiration: For how long a verification code is valid,
+    # in minutes.
+    SMS_CODE_LIFESPAN = int(os.environ.get("SMS_CODE_LIFESPAN", 15))
+except ValueError:
+    raise ValueError(
+        "SMS_COOLDOWN_DURATION and SMS_VERIFY_EXP env variables should be integer mutable"
+    )

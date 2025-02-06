@@ -10,8 +10,8 @@ from .tasks import send_sms
 
 VERIFY_PHONE_CACHE_BASE_KEY = "verify:"
 SMS_COOLDOWN_CACHE_BASE_KEY = "cooldown:"
-VERIFY_CACHE_DURATION = 60 * settings.SMS_VERIFY_EXP
-COOLDOWN_CACHE_DURATION = 60 * settings.SMS_COOLDOWN_DURATION
+VERIFY_CACHE_DURATION = 60 * int(settings.SMS_CODE_LIFESPAN)
+COOLDOWN_CACHE_DURATION = 60 * int(settings.SMS_CODE_REQUEST_COOLDOWN)
 
 
 def current_time(time_format: str = "%H:%M:%S") -> str:
@@ -35,7 +35,7 @@ def create_phone_verify_cache_key(phone: str) -> str:
     return VERIFY_PHONE_CACHE_BASE_KEY + phone
 
 
-def generate_random_code(length: int = 6) -> str:
+def generate_random_code(length: int = settings.OTP_LENGTH) -> str:
     return "".join(random.choice(string.digits) for _ in range(length))
 
 
