@@ -5,7 +5,9 @@ import { useState } from "react";
 import { axiosInstance } from "../../axiosInstance";
 import TemporaryAlert from "../TemporaryAlert";
 import { isAxiosError } from "axios";
+import { API_ROUTES } from "../../apiRoutes";
 
+const USER_ENDPOINTS = API_ROUTES.USER;
 const codeRequestCooldown = import.meta.env.VITE_CODE_REQUEST_COOLDOWN; // in minutes
 
 const Login: React.FC = () => {
@@ -17,7 +19,7 @@ const Login: React.FC = () => {
 
   const requestVerificationCode = async (phone: string): Promise<void> => {
     try {
-      await axiosInstance.post("api/user/login/request_code/", {
+      await axiosInstance.post(USER_ENDPOINTS.LOGIN, {
         phone,
       });
       const nowTimestamp = new Date().getTime();
@@ -29,7 +31,7 @@ const Login: React.FC = () => {
         if (error.response?.status === 429) {
           if (error.response.headers["x-rate-limit-type"] === "SMS_LIMIT") {
             const now = Date.now();
-            const cooldownTime = error.response.data["cooldown_time"];
+            const cooldownTime = error.response.data["cooldownTime"];
             const requestTimestamp =
               now - (codeRequestCooldown * 60 - cooldownTime) * 1000;
             localStorage.setItem(

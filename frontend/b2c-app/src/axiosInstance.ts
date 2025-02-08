@@ -35,9 +35,7 @@ const setAuthToken = (token: string) => {
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
-    console.log(error);
     const originalRequest = error.config;
-    console.log(error, originalRequest);
     if (
       error.response &&
       error.response.status == 401 &&
@@ -62,6 +60,7 @@ axiosInstance.interceptors.response.use(
           ...originalRequest.headers,
           Authorization: `Bearer ${newAccesstoken}`,
         };
+        
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         console.error("Token refresh failed:", refreshError);
