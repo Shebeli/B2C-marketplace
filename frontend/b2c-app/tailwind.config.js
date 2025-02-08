@@ -5,7 +5,11 @@ export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   safelist: ["alert-success", "alert-error", "alert-warning", "alert-info"],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ["Inter", "Vazirmatn", "sans-serif"],
+      },
+    },
   },
   plugins: [scrollbar, daisyui],
   daisyui: {

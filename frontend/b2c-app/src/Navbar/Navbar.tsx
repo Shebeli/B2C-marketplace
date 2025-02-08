@@ -1,7 +1,71 @@
 import { MainLogo } from "../assets/MainLogo";
-import ThemeController from "./Theme/ThemeController";
+import { FaRightToBracket } from "react-icons/fa6";
+import ThemeController from "../components/Theme/ThemeController";
+import { useEffect, useState } from "react";
+import { axiosInstance } from "../axiosInstance";
+import { AxiosResponse } from "axios";
+import { navigateTo } from "../navigation";
+import { ProfileInfo } from "./constants";
+import { UserProfileDropdown } from "./UserProfileDropdown";
 
 const Navbar: React.FC = () => {
+  const [userProfile, setUserProfile] = useState<ProfileInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const handleLogout = () => {
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("accessToken");
+    setUserProfile(null);
+    navigateTo("/");
+  };
+
+  useEffect(() => {
+    console.log("meow");
+    if (!localStorage.getItem("accessToken")) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchProfile = async (): Promise<void> => {
+      try {
+        const response: AxiosResponse<ProfileInfo> = await axiosInstance.get(
+          "/api/user/account/navbar_info/"
+        );
+        console.log(response.data);
+        setUserProfile(response.data);
+      } catch (err) {
+        console.error(err);
+        setUserProfile(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  const renderNavbarProfile = () => {
+    if (loading)
+      return <div className="skeleton w-10 h-10 rounded-full "></div>;
+
+    if (userProfile)
+      return (
+        <UserProfileDropdown
+          userProfile={userProfile}
+          handleLogout={handleLogout}
+        />
+      );
+    return (
+      <a
+        href="/login"
+        className="btn btn-ghost border-[1.5px] border-base-300 flex flex-row gap-1.5 items-center justify-center  font-normal"
+      >
+        <FaRightToBracket className="size-5" />
+        <p>ورود | ثبت نام</p>
+      </a>
+    );
+  };
+
   return (
     <div className="navbar border-b-2 border-base-300 py-3">
       <div className="flex-1">
@@ -15,7 +79,7 @@ const Navbar: React.FC = () => {
           <input
             type="text"
             placeholder="جستجو"
-            className="input input-bordered input-sm w-72 bg-base-200 h-9"
+            className="input input-bordered input-sm lg:w-72 md:w-52 w-32 bg-base-200 h-9"
           />
         </div>
       </div>
@@ -53,35 +117,7 @@ const Navbar: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="dropdown dropdown-end">
-          <div
-            tabIndex={0}
-            role="button"
-            className="btn btn-ghost btn-circle avatar"
-          >
-            <div className="w-10 rounded-full">
-              <img
-                alt="Tailwind CSS Navbar component"
-                src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
-              />
-            </div>
-          </div>
-          <ul
-            tabIndex={0}
-            className="menu menu-md dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow font-semibold"
-          >
-            <li>
-              <a>پروفایل خریدار</a>
-            </li>
-            <li>
-              <a>پروفایل فروشنده</a>
-            </li>
-
-            <li>
-              <a>خروج از حساب</a>
-            </li>
-          </ul>
-        </div>
+        {renderNavbarProfile()}
       </div>
     </div>
   );

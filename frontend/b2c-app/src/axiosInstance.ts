@@ -1,18 +1,26 @@
 import axios from "axios";
 import { navigateTo } from "./navigation";
+import { API_ROUTES } from "./apiRoutes";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL;
+const AUTH = API_ROUTES.AUTH;
+
+const headers: Record<string, string> = {
+  "Content-Type": "application/json",
+};
+
+const accessToken = localStorage.getItem("accessToken");
+if (accessToken) {
+  headers["Authorization"] = `Bearer ${localStorage.getItem("accessToken")}`;
+}
 
 const axiosInstance = axios.create({
-  baseURL: baseURL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  headers,
 });
 
-const handleTokenExpiration = () => {
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("refresh_token");
+const handleExpiredRefreshToken = () => {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
   navigateTo("/login");
 };
 
@@ -27,31 +35,37 @@ const setAuthToken = (token: string) => {
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
+    console.log(error);
     const originalRequest = error.config;
-
+    console.log(error, originalRequest);
     if (
       error.response &&
       error.response.status == 401 &&
       !originalRequest._retry
     ) {
       originalRequest._retry = true;
-      const refreshToken = localStorage.getItem("refresh_token");
+      const refreshToken = localStorage.getItem("refreshToken");
       if (!refreshToken) {
-        handleTokenExpiration();
+        handleExpiredRefreshToken();
         return Promise.reject(error);
       }
       try {
-        const { data } = await axiosInstance.post("api/user/token/refresh", {
+        const { data } = await axiosInstance.post(AUTH.REFRESH_TOKEN, {
           refresh: refreshToken,
         });
         const newAccesstoken = data.access;
-        localStorage.setItem("access_token", newAccesstoken);
+        localStorage.setItem("accessToken", newAccesstoken);
         setAuthToken(newAccesstoken);
-        originalRequest.headers["Authorization"] = `Bearer ${newAccesstoken}`;
+
+        // recreate the request object
+        originalRequest.headers = {
+          ...originalRequest.headers,
+          Authorization: `Bearer ${newAccesstoken}`,
+        };
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         console.error("Token refresh failed:", refreshError);
-        handleTokenExpiration();
+        handleExpiredRefreshToken();
         return Promise.reject(refreshError);
       }
     }

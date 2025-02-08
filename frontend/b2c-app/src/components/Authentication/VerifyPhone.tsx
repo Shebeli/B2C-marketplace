@@ -134,8 +134,8 @@ const VerifyPhone: React.FC = () => {
         );
         const { access, refresh } = response.data;
 
-        localStorage.setItem("access_token", access);
-        localStorage.setItem("refresh_token", refresh);
+        localStorage.setItem("accessToken", access);
+        localStorage.setItem("refreshToken", refresh);
         localStorage.removeItem("inputtedPhone");
         localStorage.removeItem("requestedCodeTimestamp");
         setAuthToken(access);
@@ -149,7 +149,9 @@ const VerifyPhone: React.FC = () => {
               `درخواست بیش از حد مجاز. ${error.response.headers["retry-after"]} ثانیه دیگر میتوانید ثبت کد کنید.`,
               "error"
             );
-            setThrottleCooldownTimer(Number(error.response.headers["retry-after"]));
+            setThrottleCooldownTimer(
+              Number(error.response.headers["retry-after"])
+            );
           } else {
             updateAlert(
               "یک خطای غیر منتظره پیش آمده, لطفا مجددا تلاش کنید.",

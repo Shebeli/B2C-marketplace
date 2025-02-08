@@ -14,7 +14,7 @@ const ProductDetail: React.FC<Props> = ({ details }) => {
     <section>
       <ul className="grid md:grid-cols-2">
         {details.map((detail, index) => (
-          <li key={index} className="flex gap-8 border-b-2 py-3">
+          <li key={index} className="flex gap-8 border-b-2 border-base-300 py-3">
             <p className="font-semibold">{detail.name}</p>
             <p className="">{detail.value}</p>
           </li>
