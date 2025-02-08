@@ -68,6 +68,9 @@ class EcomUser(AbstractBaseUser):
     date_created = models.DateTimeField(
         _("UserAccount Creation Date"), default=timezone.now
     )
+    profile_picture = models.ImageField(
+        upload_to="profile_pictures/customers/", null=True, blank=True
+    )
 
     USERNAME_FIELD = "phone"
 

@@ -40,9 +40,6 @@ class CustomerProfile(models.Model):
         on_delete=models.CASCADE,
         related_name="customer_profile",
     )
-    profile_picture = models.ImageField(
-        upload_to="profile_pictures/customers/", null=True, blank=True
-    )
     birth_date = models.DateField(blank=True, null=True)
     bio = models.CharField(max_length=300, blank=True)
     wishlist = models.ManyToManyField(
@@ -83,9 +80,6 @@ class SellerProfile(models.Model):
         max_digits=1,
         decimal_places=1,
         validators=[validate_rating],
-    )
-    profile_picture = models.ImageField(
-        upload_to="profile_pictures/sellers/", null=True, blank=True
     )
     website = models.URLField(blank=True)
     established_date = models.DateField(
