@@ -199,8 +199,14 @@ AUTHENTICATION_BACKENDS = [
     "ecom_user.authentication.EcomUserBackend",
     "ecom_admin.authentication.EcomAdminBackend",
 ]
-
+# YTIU
 REST_FRAMEWORK = {
+    "DEFAULT_RENDERER_CLASSES": (
+        "djangorestframework_camel_case.render.CamelCaseJSONRenderer",
+    ),
+    "DEFAULT_PARSER_CLASSES": (
+        "djangorestframework_camel_case.parser.CamelCaseJSONParser",
+    ),
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "DEFAULT_AUTHENTICATION_CLASSES": (
