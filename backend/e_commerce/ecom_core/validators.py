@@ -6,7 +6,9 @@ from django.conf import settings
 import phonenumbers
 from phonenumbers import NumberParseException
 from rest_framework_simplejwt.exceptions import TokenError
-from rest_framework_simplejwt.tokens import Token
+from rest_framework_simplejwt.tokens import Token, RefreshToken
+
+from string import digits
 
 
 def validate_phone(value: str) -> None:
@@ -65,11 +67,11 @@ def validate_verification_code(code: str) -> None:
         raise ValidationError(
             _(f"The inputed code length isn't {expected_code_length}")
         )
-    if any(digit not in "0123456789" for digit in code):
+    if any(digit not in digits for digit in code):
         raise ValidationError(_("The inputed code cannot contain non-digits"))
 
 
-def validate_token_type(token: Token, expected_user_type: str) -> None:
+def validate_token_type(token: RefreshToken, expected_user_type: str) -> None:
     if token.get("user_type") != expected_user_type:
         raise TokenError("Provided token doesn't contain the expected user type claim")
 
