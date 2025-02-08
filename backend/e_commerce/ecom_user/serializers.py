@@ -10,7 +10,7 @@ from .models import EcomUser
 
 
 class UserAccountSerializer(serializers.ModelSerializer):
-    "Account and personal general information"
+    "Account's general information"
 
     full_name = serializers.CharField(source="get_fullname", read_only=True)
 
@@ -18,6 +18,14 @@ class UserAccountSerializer(serializers.ModelSerializer):
         model = EcomUser
         exclude = ["last_login", "is_active", "password"]
         read_only_fields = ["phone", "email", "date_created", "balance"]
+
+
+class UserNavbarSerializer(serializers.ModelSerializer):
+    "Navbar required information"
+
+    class Meta:
+        model = EcomUser
+        fields = ["phone", "profile_picture"]
 
 
 class UserPhoneSerializer(serializers.Serializer):

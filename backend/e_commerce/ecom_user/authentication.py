@@ -35,9 +35,8 @@ class EcomUserJWTAuthentication(JWTAuthentication):
         auth_info = super().authenticate(request)
         if not auth_info:
             return None
-        user, token = auth_info  
+        user, token = auth_info
+        # If no user type is provided, try to authenticate using django's project AUTH_USER_MODEL
         if token.get("user_type") != "normal":
-            raise InvalidToken(
-                "This token user's type doesn't have the required authorization"
-            )
+            raise InvalidToken("The token user's type doesn't match the expected type.")
         return user, token
