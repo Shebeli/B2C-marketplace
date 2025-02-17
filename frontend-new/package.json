@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@persian-tools/persian-tools": "^3.6.0",
+    "zod": "^3.24.2"
+  }
+}

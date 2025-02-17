@@ -42,11 +42,6 @@ axiosInstance.interceptors.response.use(
       !originalRequest._retry
     ) {
       originalRequest._retry = true;
-      const refreshToken = localStorage.getItem("refreshToken");
-      if (!refreshToken) {
-        handleExpiredRefreshToken();
-        return Promise.reject(error);
-      }
       try {
         const { data } = await axiosInstance.post(AUTH.REFRESH_TOKEN, {
           refresh: refreshToken,

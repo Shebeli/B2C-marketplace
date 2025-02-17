@@ -60,8 +60,8 @@ services:
       - .env
     volumes:
       - db-data:/var/lib/postgresql/data
-    expose:
-      - 5432
+    ports:
+      - "5432:5432"
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "${POSTGRES_USER:-postgres}", "-d", "${POSTGRES_DB:-postgres}" ]
       interval: 10s
