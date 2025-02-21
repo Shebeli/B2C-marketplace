@@ -1,5 +1,5 @@
-import Navbar from "../ui/navbar/navbarprofile/navbar";
 import { Footer } from "../ui/footer";
+import Navbar from "../ui/navbar/navbar";
 
 export default function MainLayout({
   children,
@@ -9,7 +9,7 @@ export default function MainLayout({
   return (
     <div className="items-center justify-center flex flex-col">
       <Navbar />
-        <main>{children}</main>
+      <main>{children}</main>
       <Footer />
     </div>
   );

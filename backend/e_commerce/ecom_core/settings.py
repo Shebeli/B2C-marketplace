@@ -76,7 +76,7 @@ SECRET_KEY = "django-insecure-zwnn7c841o)_)gbatefjd*01*d54ypos7#ew*4o16w%v^(4and
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "django", "django:8000", ]
 
 
 # Application definition
@@ -143,9 +143,9 @@ WSGI_APPLICATION = "ecom_core.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("POSTGRES_DB"),
-        "USER": os.environ.get("POSTGRES_USER"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
+        "NAME": os.environ.get("POSTGRES_DB", "shebel"),
+        "USER": os.environ.get("POSTGRES_USER", "root"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "1234"),
         "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
         "PORT": "5432",
     }
@@ -222,7 +222,12 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
-CORS_ALLOWED_ORIGINS = ["http://localhost:5173", "http://react_app:5173"]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://react_app:5173",
+    "http://localhost:3000",
+    "http://next_app:3000",
+]
 
 CORS_EXPOSE_HEADERS = ["Retry-After", "X-Rate-Limit-Type"]
 
@@ -234,7 +239,6 @@ SMS_SENDER_PHONE_NUMBER = os.environ.get("SMS_PHONE")
 REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
 REDIS_PORT = os.environ.get("REDIS_PORT", "6379")
 
-print(f"{REDIS_HOST} {REDIS_PORT}")
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",

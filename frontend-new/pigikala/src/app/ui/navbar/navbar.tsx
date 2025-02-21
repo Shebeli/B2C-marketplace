@@ -1,15 +1,12 @@
 import NavbarProfile from "./navbarprofile/navbar-profile";
 import { MainLogo } from "@/app/assets/MainLogo";
 import ThemeController from "../theme";
-import Link from "next/link";
 
 export default function Navbar() {
   return (
     <div className="navbar border-b-2 border-base-300 py-3">
       <div className="flex-1">
-        <Link className="btn bg-base-100 border-0" href="/">
-          <MainLogo width="120" />
-        </Link>
+        <MainLogo width="120" />
         <div className="mr-2">
           <ThemeController />
         </div>

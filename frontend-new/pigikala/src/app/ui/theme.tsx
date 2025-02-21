@@ -1,7 +1,19 @@
+"use client";
+
 import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 
 const ThemeController: React.FC = (props: Record<string, unknown>) => {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <label className={`flex flex-row cursor-pointer gap-1 ${{ ...props }}`}>
@@ -22,6 +34,7 @@ const ThemeController: React.FC = (props: Record<string, unknown>) => {
       <input
         type="checkbox"
         value={theme}
+        defaultChecked={theme === "dark" ? true : false}
         className="toggle theme-controller"
         onClick={() =>
           setTheme((prevTheme) => (prevTheme === "dark" ? "light" : "dark"))

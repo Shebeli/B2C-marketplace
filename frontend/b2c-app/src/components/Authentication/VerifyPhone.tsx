@@ -163,7 +163,7 @@ const VerifyPhone: React.FC = () => {
             "یک خطای غیر منتظره پیش آمده, لطفا مجددا تلاش کنید.",
             "error"
           );
-        }
+        
       } finally {
         setIsLoading(false);
       }

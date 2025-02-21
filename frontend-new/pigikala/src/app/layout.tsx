@@ -14,11 +14,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" dir="rtl">
+    <html lang="en" dir="rtl" suppressHydrationWarning>
       <body
         className={`${vazirMatn.variable} font-inter ${inter.variable} font-vazir`}
       >
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider attribute="data-theme">{children}</ThemeProvider>
       </body>
     </html>
   );

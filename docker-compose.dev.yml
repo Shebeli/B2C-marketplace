@@ -1,27 +1,32 @@
 services:
-  react:
+  next:
     build:
-      context: ./frontend
+      context: ./frontend-new
       target: dev
-    container_name: react_app
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    container_name: next_app
     ports:
-      - "5173:5173"
+      - "3000:3000"
     develop:
       watch:
         - action: rebuild
-          path: ./frontend/b2c-app/package.json
+          path: ./frontend-new/pigikala/package.json
         - action: sync
-          path: ./frontend/b2c-app/src
+          path: ./frontend-new/pigikala/src
           target: /app/src
           ignore:
             - node_modules/
         - action: sync
-          path: ./frontend/b2c-app/tailwind.config.json
+          path: ./frontend-new/pigikala/tailwind.config.json
           target: /app/
     environment:
-      - VITE_CODE_REQUEST_COOLDOWN=${CODE_REQUEST_COOLDOWN_TIME}
-      - VITE_CODE_LIFESPAN=${CODE_LIFESPAN}
-      - VITE_API_BASE_URL=http://localhost:8000/
+      - CODE_REQUEST_COOLDOWN=${CODE_REQUEST_COOLDOWN_TIME}
+      - CODE_LIFETIME=${CODE_LIFETIME}
+      - API_BASE_URL=http://django:8000/
+      - ACCESS_TOKEN_LIFETIME=${ACCESS_TOKEN_LIFETIME}
+      - REFRESH_TOKEN_LIFETIME=${REFRESH_TOKEN_LIFETIME}
     env_file: .env
     depends_on:
       - django

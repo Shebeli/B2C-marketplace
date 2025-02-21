@@ -60,8 +60,7 @@ export default function NavbarProfileDropdown({
         <li className="text-error">
           <form
             action={async () => {
-              "use server";
-              await signOut();
+              await signOut("/");
             }}
           >
             <button>

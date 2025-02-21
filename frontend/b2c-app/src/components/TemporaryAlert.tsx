@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { alertTypes } from "./alertConstants";
 import React from "react";
+import { clsx } from "clsx";
 
 interface TemporaryAlertProps {
   message: string;
@@ -79,17 +80,20 @@ const TemporaryAlert: React.FC<TemporaryAlertProps> = ({
   const [isVisible, setIsVisible] = useState<boolean>(true);
 
   useEffect(() => {
+    setIsVisible(true);
     const timeout = setTimeout(() => {
       setIsVisible(false);
     }, duration);
     return () => clearTimeout(timeout);
-  }, [duration]);
+  }, [message, duration]);
 
   if (!isVisible) return null;
 
   return (
     <div
-      className={`alert alert-${type} p-3 self-center w-fit mx-2 flex fixed top-5 shadow-lg transition-all duration-300 ease-in-out transform ${
+      className={`alert ${clsx(
+        `alert-${type}`
+      )} p-3 self-center w-fit mx-2 flex fixed top-5 shadow-lg transition-all duration-300 ease-in-out transform ${
         isVisible
           ? "opacity-100 scale-100 translate-y-0"
           : "opacity-0 scale-95 -translate-y-5"

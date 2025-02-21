@@ -1,9 +1,9 @@
 services:
-  react:
+  next:
     build:
-      context: ./frontend
+      context: ./frontend-new
       target: prod
-    container_name: react_app
+    container_name: next_app
     ports:
       - "80:80"
     depends_on:

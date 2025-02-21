@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { alertTypes } from "@/app/lib/constants";
 import React from "react";
+import clsx from "clsx";
 
 interface TemporaryAlertProps {
   message: string;
@@ -81,21 +82,32 @@ const TemporaryAlert: React.FC<TemporaryAlertProps> = ({
   const [isVisible, setIsVisible] = useState<boolean>(true);
 
   useEffect(() => {
+    if (!message) return;
+
+    setIsVisible(true);
     const timeout = setTimeout(() => {
       setIsVisible(false);
     }, duration);
     return () => clearTimeout(timeout);
-  }, [duration]);
+  }, [duration, message]);
 
   if (!isVisible) return null;
 
   return (
     <div
-      className={`alert alert-${type} p-3 self-center w-fit mx-2 flex fixed top-5 shadow-lg transition-all duration-300 ease-in-out transform ${
-        isVisible
-          ? "opacity-100 scale-100 translate-y-0"
-          : "opacity-0 scale-95 -translate-y-5"
-      } `}
+      className={clsx(
+        `alert p-3 self-center w-fit mx-2 flex fixed top-5 shadow-lg transition-all duration-300 ease-in-out transform ${
+          isVisible
+            ? "opacity-100 scale-100 translate-y-0"
+            : "opacity-0 scale-95 -translate-y-5"
+        } `,
+        {
+          "alert-error": type === "error",
+          "alert-success": type === "success",
+          "alert-info": type === "info",
+          "alert-warning": type === "warning",
+        }
+      )}
     >
       {alertTypeSVGs[type]}
       <span>{message}</span>
