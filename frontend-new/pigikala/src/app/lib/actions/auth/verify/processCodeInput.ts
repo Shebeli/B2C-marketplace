@@ -8,6 +8,8 @@ import { API_ROUTES } from "@/app/lib/drfRoutes";
 export type CodeState = {
   formError?: string | null;
   alertError?: string | null;
+  prevInput?: FormData | undefined;
+  throttleCooldownTimer?: number;
 };
 
 const { USER } = API_ROUTES;
@@ -27,7 +29,8 @@ export async function processVerifyCode(
   }
 
   try {
-    const response = await fetch(USER.VERIFY_CODE, {
+    const url = new URL(USER.VERIFY_CODE, process.env.API_BASE_URL);
+    const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -36,6 +39,7 @@ export async function processVerifyCode(
       }),
     });
 
+    // redirects
     if (response.ok) {
       handleSuccesfulResponse(response);
     }
@@ -53,7 +57,7 @@ export async function processVerifyCode(
 }
 
 // Should update the related cooldown timers
-async function handleErrorResponse(response: Response) {
+async function handleErrorResponse(response: Response): Promise<CodeState> {
   if (response?.status === 429) {
     if (response.headers.get("x-rate-limit-type") === "SMS_LIMIT") {
       const data = await response.json();
@@ -67,10 +71,10 @@ async function handleErrorResponse(response: Response) {
         };
       }
     } else {
+      const throttleCooldownTimer = response.headers.get("retry-after");
       return {
-        alertError: `درخواست بیش از حد مجاز. ${response.headers.get(
-          "retry-after"
-        )} ثانیه دیگر میتوانید درخواست کد کنید.`,
+        alertError: `ثبت بیش از حد مجاز, ${throttleCooldownTimer} ثانیه دیگر میتوانید ثبت کد کنید.`,
+        throttleCooldownTimer: Number(throttleCooldownTimer),
       };
     }
   } else if (response?.status === 400) {
@@ -105,9 +109,11 @@ async function handleSuccesfulResponse(response: Response): Promise<never> {
 function constructCode(formData: FormData) {
   // validate the digits and append them to the array.
   const verificationDigits = [];
-  for (let i = 0; i < Number(process.env.OTPLength); i++) {
+  // 5 for OTP length, should be set env variable instead
+  for (let i = 0; i < 5; i++) {
     const currDigit = formData.get(`digit_${i}`)?.toString();
 
+    console.log("Current digit:", currDigit);
     // validations
     if (!currDigit) throw new Error("لطفا کد را بصورت کامل وارد نمایید");
     if (isNaN(Number(currDigit))) throw new Error("کد فقط باید عدد باشد.");

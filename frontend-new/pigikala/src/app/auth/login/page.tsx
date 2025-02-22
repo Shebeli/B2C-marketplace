@@ -1,9 +1,9 @@
 "use client";
 
-import { MainLogo } from "../../assets/MainLogo";
-import TemporaryAlert from "@/app/ui/alert/alert";
 import { LoginState, processLoginInput } from "@/app/lib/actions/auth/login";
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import toast from "react-hot-toast";
+import { toastCustom } from "@/app/ui/alert/alert";
 
 export default function Login() {
   const initialState: LoginState = { formError: null, alertError: null };
@@ -12,16 +12,14 @@ export default function Login() {
     initialState
   );
 
+  useEffect(() => {
+    if (state.alertError) {
+      toastCustom(state.alertError, "error");
+    }
+  }, [state]);
+
   return (
     <>
-      {state.alertError && (
-        <TemporaryAlert
-          key={Date.now()} // ??
-          message={state.alertError}
-          type="error"
-          duration={4000}
-        />
-      )}
       <h1 className="text-xl mb-4 font-semibold">ورود | ثبت نام</h1>
       <p className="mb-2">لطفا نام کاربری یا شماره تلفن خود را وارد نمایید</p>
       {state.formError && (

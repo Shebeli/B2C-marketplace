@@ -7,6 +7,7 @@ import { CodeState } from "./verify/processCodeInput";
 
 const { USER: USER_ENDPOINTS } = API_ROUTES;
 const codeRequestCooldown = Number(process.env.CODE_REQUEST_COOLDOWN); // in minutes
+const CODE_LIFESPAN = Number(process.env.CODE_LIFETIME); // in minutes
 
 // on void return type, it means the request was succesful
 // on CodeState return type, it means that there was an issue requesting the code
@@ -17,7 +18,6 @@ export async function requestVerificationCode(
 
   try {
     const url = new URL(USER_ENDPOINTS.LOGIN, process.env.API_BASE_URL);
-    console.log(url);
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -61,11 +61,11 @@ async function handleSuccesfulRequest(
   const nowTimestamp = Date.now();
 
   cookieStore.set("requestedCodeTimestamp", String(nowTimestamp), {
-    maxAge: codeRequestCooldown * 60,
+    maxAge: CODE_LIFESPAN * 60,
     httpOnly: true,
   });
   cookieStore.set("inputtedPhone", phone, {
-    maxAge: codeRequestCooldown * 60,
+    maxAge: CODE_LIFESPAN * 60,
     httpOnly: true,
   });
 }

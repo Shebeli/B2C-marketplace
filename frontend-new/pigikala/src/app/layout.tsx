@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import { inter, vazirMatn } from "./ui/fonts";
 import "./ui/globals.css";
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
   title: "%s | Pigikala",
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({
-  children
+  children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
@@ -18,6 +19,7 @@ export default function RootLayout({
       <body
         className={`${vazirMatn.variable} font-inter ${inter.variable} font-vazir`}
       >
+        <Toaster />
         <ThemeProvider attribute="data-theme">{children}</ThemeProvider>
       </body>
     </html>
