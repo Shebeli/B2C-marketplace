@@ -74,7 +74,7 @@ export function toastCustom(
   toast.custom((t) => (
     <div
       role="alert"
-      className={`alert alert-${type} p-3 w-fit mx-2 ${
+      className={`alert alert-${type} flex flex-row text-sm p-3 w-fit mx-2 ${
         t.visible ? "animate-enter" : "animate-leave"
       }`}
     >

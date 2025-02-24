@@ -18,6 +18,7 @@ export default function NavbarProfileDropdown({
       <div
         tabIndex={0}
         role="button"
+        aria-label="User profile dropdown"
         className="btn btn-ghost btn-circle avatar"
       >
         <div className="w-10 rounded-full">
@@ -28,7 +29,7 @@ export default function NavbarProfileDropdown({
             src={
               profileInfo && profileInfo.pictureUrl
                 ? profileInfo.pictureUrl
-                : "default-profile.jpg"
+                : "/default-profile.jpg"
             }
           />
         </div>
@@ -39,19 +40,19 @@ export default function NavbarProfileDropdown({
       >
         <li className="text-sm my-2">وارد شده با {profileInfo?.phone}</li>
         <li>
-          <a>
+          <a aria-label="Account information">
             <FaUser className="size-4" />
             <span>اطلاعات اکانت</span>
           </a>
         </li>
         <li>
-          <a>
+          <a aria-label="Buyer profile">
             <FaBasketShopping className="size-4" />
             <span>پروفایل خریدار</span>
           </a>
         </li>
         <li>
-          <a>
+          <a aria-label="Seller profile">
             <FaShop className="size-4" />
             <span>پروفایل فروشنده</span>
           </a>
@@ -60,10 +61,11 @@ export default function NavbarProfileDropdown({
         <li className="text-error">
           <form
             action={async () => {
+              "use server";
               await signOut("/");
             }}
           >
-            <button>
+            <button className="flex gap-2" aria-label="Sign out">
               <FaRightFromBracket className="size-4" />
               <span>خروج از حساب</span>
             </button>

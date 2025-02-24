@@ -27,7 +27,7 @@ export async function POST() {
       httpOnly: true,
       path: "/",
       secure: process.env.NODE_ENV === "production",
-      maxAge: Number(process.env.ACCESS_TOKEN_LIFESPAN),
+      maxAge: Number(process.env.ACCESS_TOKEN_LIFETIME),
     });
     return res;
   } catch (error) {

@@ -54,7 +54,7 @@ def set_sms_cache_keys(phone_number: str, verification_code: str) -> None:
 def process_phone_verification(phone_number: str) -> None:
     """
     Generate a verification code, cache the verification code
-    and SMS request cooldoown and use celery task queuing to send the SMS.
+    and SMS request cooldown and use celery task queuing to send the SMS.
     """
     verification_code = generate_random_code()
     set_sms_cache_keys(phone_number, verification_code)

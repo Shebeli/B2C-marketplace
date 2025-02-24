@@ -4,6 +4,10 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { API_ROUTES } from "@/app/lib/drfRoutes";
+import {
+  setAccessTokenCookie,
+  setRefreshTokenCookie,
+} from "@/app/lib/utils/fetch";
 
 export type CodeState = {
   formError?: string | null;
@@ -41,7 +45,7 @@ export async function processVerifyCode(
 
     // redirects
     if (response.ok) {
-      handleSuccesfulResponse(response);
+      return handleSuccesfulResponse(response);
     }
 
     return handleErrorResponse(response);
@@ -88,24 +92,14 @@ async function handleSuccesfulResponse(response: Response): Promise<never> {
   const cookieStore = await cookies();
   const { access, refresh } = await response.json();
 
-  cookieStore.set("refresh_token", refresh, {
-    httpOnly: true,
-    path: "/",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: Number(process.env.REFRESH_TOKEN_LIFESPAN),
-  });
-
-  cookieStore.set("access_token", access, {
-    httpOnly: true,
-    path: "/",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: Number(process.env.ACCESS_TOKEN_LIFESPAN),
-  });
+  setRefreshTokenCookie(cookieStore, refresh);
+  setAccessTokenCookie(cookieStore, access);
 
   revalidatePath("/");
   redirect("/");
 }
 
+// constructs the digits using the formData
 function constructCode(formData: FormData) {
   // validate the digits and append them to the array.
   const verificationDigits = [];
@@ -113,7 +107,6 @@ function constructCode(formData: FormData) {
   for (let i = 0; i < 5; i++) {
     const currDigit = formData.get(`digit_${i}`)?.toString();
 
-    console.log("Current digit:", currDigit);
     // validations
     if (!currDigit) throw new Error("لطفا کد را بصورت کامل وارد نمایید");
     if (isNaN(Number(currDigit))) throw new Error("کد فقط باید عدد باشد.");

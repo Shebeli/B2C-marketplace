@@ -20,7 +20,7 @@ services:
             - node_modules/
         - action: sync
           path: ./frontend-new/pigikala/tailwind.config.json
-          target: /app/
+          target: /app/tailwind.config.json
     environment:
       - CODE_REQUEST_COOLDOWN=${CODE_REQUEST_COOLDOWN_TIME}
       - CODE_LIFETIME=${CODE_LIFETIME}
