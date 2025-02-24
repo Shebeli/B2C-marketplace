@@ -8,11 +8,14 @@ export async function middleware(req: NextRequest) {
   let accessToken = req.cookies.get("access_token")?.value;
   const refreshToken = req.cookies.get("refresh_token")?.value;
   const protectedRoutes = ["/dashboard"]; // not implemented yet
-  // const authRoutes = ["/auth/:path*"];
+  const authRoutes = ["/auth/:path"];
 
-  console.error("Calling middleware!:");
-  console.log("access token:", accessToken);
-  console.log("refresh token:", refreshToken);
+  // Check if the path is in auth section, redirect the user to home page instead
+  if (req.nextUrl.pathname.startsWith("/auth/") && accessToken) {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
+  console.log("Calling middleware!:");
   // no access token but refresh token exists, attempt to fetch a new access token
   // race condition can happen where the access token which is just about to be expired,
   // gets validated here in the middleware but when access token is accessed afterwards,
@@ -29,7 +32,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // no access token and the requested url is a protected page, redirect to login page
-  if (protectedRoutes.includes(req.nextUrl.pathname) && !accessToken) {
+  if (req.nextUrl.pathname.startsWith("/dashboard/") && !accessToken) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
