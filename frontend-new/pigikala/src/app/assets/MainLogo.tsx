@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const MainLogo = (props: Record<string, unknown>) => (
-  <Link href="/" className="btn bg-base-100 border-0 self-center">
+  <Link href="/" className="ml-2  bg-base-100 border-0 self-center">
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="292.38 309.15 440.98 141.88"

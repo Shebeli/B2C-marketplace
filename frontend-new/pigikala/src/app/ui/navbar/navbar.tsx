@@ -6,15 +6,15 @@ export default function Navbar() {
   return (
     <div className="navbar border-b-2 border-base-300 py-3">
       <div className="flex-1">
-        <MainLogo width="120" />
-        <div className="mr-2">
+        <MainLogo width="100" />
+        <div>
           <ThemeController />
         </div>
         <div className="form-control mx-4">
           <input
             type="text"
             placeholder="جستجو"
-            className="input input-bordered input-sm lg:w-72 md:w-52 w-32 bg-base-200 h-9"
+            className="input input-bordered input-sm lg:w-72 md:w-52 w-24 bg-base-200 h-9"
           />
         </div>
       </div>

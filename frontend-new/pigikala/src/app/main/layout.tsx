@@ -9,7 +9,7 @@ export default function MainLayout({
   return (
     <div className="items-center justify-center flex flex-col">
       <Navbar />
-      <main>{children}</main>
+      <main className="w-full place-items-center">{children}</main>
       <Footer />
     </div>
   );

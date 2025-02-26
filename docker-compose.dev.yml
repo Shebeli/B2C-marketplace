@@ -13,15 +13,15 @@ services:
       watch:
         - action: rebuild
           path: ./frontend-new/pigikala/package.json
-        - action: sync
-          path: ./frontend-new/pigikala/src
-          target: /app/src
-          ignore:
-            - node_modules/
-        - action: sync
-          path: ./frontend-new/pigikala/tailwind.config.json
-          target: /app/tailwind.config.json
+    volumes:
+      - ./frontend-new/pigikala/src:/app/src
+      - ./frontend-new/pigikala/public:/app/public
+      - ./frontend-new/pigikala/package.json:/app/package.json
+      - ./frontend-new/pigikala/next.config.ts:/app/next.config.ts
+      - ./frontend-new/pigikala/tailwind.config.json:/app/tailwind.config.json
+      - /app/node_modules
     environment:
+      - CHOKIDAR_USEPOLLING=true
       - CODE_REQUEST_COOLDOWN=${CODE_REQUEST_COOLDOWN_TIME}
       - CODE_LIFETIME=${CODE_LIFETIME}
       - API_BASE_URL=http://django:8000/

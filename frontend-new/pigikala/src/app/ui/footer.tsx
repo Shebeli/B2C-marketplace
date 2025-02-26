@@ -11,6 +11,7 @@ export function Footer() {
         <p className="text-lg">ابزار استفاده شده برای توسعه اپلیکیشن:</p>
         <div className="grid grid-flow-col gap-6 mt-2">
           <svg
+            className="sm:size-full size-10"
             xmlns="http://www.w3.org/2000/svg"
             width={iconWidth}
             height={iconHeight}
@@ -22,6 +23,7 @@ export function Footer() {
             />
           </svg>
           <svg
+            className="sm:size-full size-10"
             xmlns="http://www.w3.org/2000/svg"
             width={iconWidth}
             height={iconHeight}
@@ -33,6 +35,7 @@ export function Footer() {
             />
           </svg>
           <svg
+            className="sm:size-full size-10"
             xmlns="http://www.w3.org/2000/svg"
             width={iconWidth}
             height={iconHeight}
@@ -45,6 +48,7 @@ export function Footer() {
             />
           </svg>
           <svg
+            className="sm:size-full size-10"
             width={iconWidth}
             height={iconHeight}
             viewBox="0 0 256 256"
@@ -134,6 +138,7 @@ export function Footer() {
           </svg> */}
           {/* Django */}
           <svg
+            className="sm:size-full size-10"
             xmlns="http://www.w3.org/2000/svg"
             width={iconWidth}
             height={iconHeight}
@@ -153,6 +158,7 @@ export function Footer() {
           </svg>
           {/* Django rest framework */}
           <svg
+            className="sm:size-full size-10"
             xmlns="http://www.w3.org/2000/svg"
             width={iconWidth}
             height={iconHeight}

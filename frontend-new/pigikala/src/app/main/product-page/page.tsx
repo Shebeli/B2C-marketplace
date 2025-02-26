@@ -29,7 +29,6 @@ function ProductPage() {
   const [openedImageSrc, setOpenedImageSrc] = useState<string | null>(null);
   const imageModalRef = useRef<HTMLDialogElement>(null);
 
-  // welcome modal
 
   const selectedColorObj = colors.find((color) => color.name === selectedColor);
 

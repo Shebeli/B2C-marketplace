@@ -15,10 +15,10 @@ export default function Home() {
               width={750}
               height={500}
               alt="Pigikala Home Banner"
-              className="rounded-full shadow-2xl lg:size-3/12 size-4/12 lg:my-4"
+              className="rounded-full shadow-2xl lg:size-3/12 sm:size-4/12 size-7/12 lg:my-4"
             />
             <div>
-              <h1 className="text-5xl font-bold">بهترین کالا ها را بخرید!</h1>
+              <h1 className="text-5xl font-bold">بهترین ها را بخرید!</h1>
               <p className="pt-8 text-2xl">
                 بهترین کالا های مورد پسند خودتان را از فروشنده مد نظرتان را
                 انتخاب کرده و سفارش دهید!
