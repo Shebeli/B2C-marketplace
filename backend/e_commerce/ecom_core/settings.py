@@ -1,11 +1,11 @@
 import os
 from datetime import timedelta
-
 from pathlib import Path
-from dotenv import load_dotenv
-from django.core.exceptions import ImproperlyConfigured
 
+from django.core.exceptions import ImproperlyConfigured
+from dotenv import load_dotenv
 from rest_framework.serializers import Serializer
+
 from . import ipgs
 
 load_dotenv()
@@ -76,12 +76,18 @@ SECRET_KEY = "django-insecure-zwnn7c841o)_)gbatefjd*01*d54ypos7#ew*4o16w%v^(4and
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "django", "django:8000", ]
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "django",
+    "django:8000",
+]
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    "ecom_admin",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -91,7 +97,6 @@ INSTALLED_APPS = [
     # custom apps
     "ecom_user",
     "ecom_user_profile",
-    "ecom_admin",
     "product",
     "order",
     "financeops",
@@ -101,6 +106,7 @@ INSTALLED_APPS = [
     "django_extensions",
     "django_filters",
     "drf_spectacular",
+    "nested_admin",
     "corsheaders",
 ]
 
@@ -113,6 +119,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "ecom_admin.middleware.AdminPanelAccessMiddleware",
 ]
 
 ROOT_URLCONF = "ecom_core.urls"

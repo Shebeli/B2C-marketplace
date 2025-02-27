@@ -1,4 +1,3 @@
-from typing import Tuple
 
 from django.contrib.auth.backends import ModelBackend
 from django.db.models import Q
@@ -36,7 +35,7 @@ class EcomAdminJWTAuthentication(JWTAuthentication):
         super().__init__(*args, **kwargs)
         self.user_model = EcomAdmin
 
-    def authenticate(self, request: Request) -> Tuple[EcomAdmin, Token] | None:
+    def authenticate(self, request: Request) -> tuple[EcomAdmin, Token] | None:
         auth_info = super().authenticate(request)
         if not auth_info:
             return None

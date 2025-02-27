@@ -8,14 +8,14 @@ from .managers import EcomAdminManager
 
 
 class EcomAdmin(AbstractBaseUser):
-    ORDERMANAGER = 'OM'
-    INVENTORYMANAGER = 'IM'
-    SUPERVISOR = 'SV'
-    MANAGER = 'MG'
-    SUPERADMIN = 'SA'
+    ORDERMANAGER = "OM"
+    INVENTORYMANAGER = "IM"
+    SUPERVISOR = "SV"
+    MANAGER = "MG"
+    SUPERADMIN = "SA"
     ADMIN_ROLE_CHOICES = [
-        (ORDERMANAGER, 'Order Manager'),
-        (INVENTORYMANAGER, 'Inventory Manager'),
+        (ORDERMANAGER, "Order Manager"),
+        (INVENTORYMANAGER, "Inventory Manager"),
         (SUPERVISOR, "Super visor"),
         (MANAGER, "Manager"),
         (SUPERADMIN, "Super admin"),
@@ -60,10 +60,24 @@ class EcomAdmin(AbstractBaseUser):
     def is_admin(self):
         "To distinguish user model from admin model"
         return True
-    
+
     @property
     def is_staff(self):
         return True
+
+    @property
+    def is_superuser(self):
+        return self.role == self.SUPERADMIN
+
+    def has_perm(self, perm, obj=None):
+        if self.role == self.SUPERADMIN:
+            return True
+        # other roles perm should be implemented based on their role on what actions they can
+        # commit.
+        return False
+
+    def has_module_perms(self, app_label):
+        return self.is_superuser
 
     @property
     def full_name(self):

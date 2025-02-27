@@ -24,7 +24,7 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: pyproject.toml
+          path: ./backend/pyproject.toml
         - action: sync
           path: ./backend/e_commerce
           target: /app/e_commerce

@@ -1,20 +1,17 @@
 import logging
 from typing import Union
 
-from django.core.cache import cache
 from django.conf import settings
+from django.core.cache import cache
+from ecom_user.models import EcomUser
+from ecom_user_profile.models import CustomerAddress
+from financeops.models import IPG, Payment, Transaction
+from product.models import ProductVariant
 from rest_framework import serializers
 from zibal.client import ZibalIPGClient
 from zibal.response_codes import STATUS_CODES
 
-from ecom_user.models import EcomUser
-from ecom_user_profile.models import CustomerAddress
-from product.models import ProductVariant
 from order.models import Cart, CartItem, Order, OrderItem
-from order.tasks import cancel_unpaid_order, handle_payment
-
-
-from financeops.models import IPG, Payment, Transaction
 from order.services.management import (
     pay_order_using_wallet,
     process_order_creation,
@@ -22,13 +19,13 @@ from order.services.management import (
     update_order_to_shipped,
 )
 from order.services.payment import initiate_order_payment
+from order.tasks import cancel_unpaid_order
 from order.variant_validators import (
-    is_quantity_valid,
     is_available,
-    is_seller_active,
     is_product_enabled,
+    is_quantity_valid,
+    is_seller_active,
 )
-
 
 logger = logging.getLogger("order")
 
@@ -115,14 +112,14 @@ class CartItemSerializer(serializers.ModelSerializer):
                 "The quantity of selected product cannot be higher than the product's available stock"
             )
 
-    def _validate_active_seller(selected_variant: ProductVariant) -> None:
+    def _validate_active_seller(self, selected_variant: ProductVariant) -> None:
         if not selected_variant.owner.is_verified:
             raise serializers.ValidationError(
                 "The selected product cannot be added to cart due to seller's account being inactive"
             )
 
     def _validate_seller_is_not_current_user(
-        selected_variant: ProductVariant, current_user: EcomUser
+        self, selected_variant: ProductVariant, current_user: EcomUser
     ) -> None:
         if selected_variant.owner != current_user:
             raise serializers.ValidationError(
@@ -277,19 +274,19 @@ class OrderSerializerForCustomer(serializers.ModelSerializer):
         # )
         return order
 
-    def _validate_address(attrs: dict) -> None:
+    def _validate_address(self, attrs: dict) -> None:
         customer_address_obj = CustomerAddress.objects.get(attrs["customer_address"])
         if customer_address_obj.user != attrs["user"]:
             raise serializers.ValidationError(
                 "The given customer address does not belong to this user"
             )
 
-    def _validate_cart_not_empty(user: EcomUser) -> None:
+    def _validate_cart_not_empty(self, user: EcomUser) -> None:
         """Cart shouldn't be empty when requesting a new order."""
         if not user.cart.items.exists():
             raise serializers.ValidationError("The cart doesn't contain any items")
 
-    def _validate_no_on_going_orders(user: EcomUser) -> None:
+    def _validate_no_on_going_orders(self, user: EcomUser) -> None:
         """
         Validates no ongoing order should exist with the same seller when
         requesting a new order.
@@ -303,7 +300,7 @@ class OrderSerializerForCustomer(serializers.ModelSerializer):
                 "Cannot create a new order since an order is already on going with the same seller"
             )
 
-    def _validate_passes_seller_minimum(user: EcomUser) -> None:
+    def _validate_passes_seller_minimum(self, user: EcomUser) -> None:
         """Assuming that empty cart validation is run before this validation"""
         seller = user.cart.items.first().seller
         order_min = seller.seller_profile.minimum_order_amount

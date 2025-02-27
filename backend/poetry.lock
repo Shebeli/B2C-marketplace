@@ -471,6 +471,24 @@ files = [
 python-ipware = ">=2.0.3"
 
 [[package]]
+name = "django-nested-admin"
+version = "4.1.1"
+description = "Django admin classes that allow for nested inlines"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "django-nested-admin-4.1.1.tar.gz", hash = "sha256:645d63b38d579b034a65e0983f1f8cbb8824c75b4232f8d62a1583fa7a9f568f"},
+    {file = "django_nested_admin-4.1.1-py3-none-any.whl", hash = "sha256:7e72ab7a8ae4c91074f6f709ce38fdf54f9c5f78d19e68772e0f05b83090ec9f"},
+]
+
+[package.dependencies]
+python-monkey-business = ">=1.0.0"
+
+[package.extras]
+dev = ["Pillow", "black", "dj-database-url", "django-selenosis", "flake8", "pytest", "pytest-cov", "pytest-django", "pytest-xdist", "selenium"]
+test = ["Pillow", "dj-database-url", "django-selenosis", "pytest", "pytest-cov", "pytest-django", "pytest-xdist", "selenium"]
+
+[[package]]
 name = "django-redis"
 version = "5.4.0"
 description = "Full featured redis cache backend for Django."
@@ -1368,6 +1386,17 @@ files = [
 dev = ["coverage[toml]", "coveralls (>=3.3,<4.0)", "ruff", "twine"]
 
 [[package]]
+name = "python-monkey-business"
+version = "1.1.0"
+description = "Utility functions for monkey-patching python code"
+optional = false
+python-versions = "*"
+files = [
+    {file = "python-monkey-business-1.1.0.tar.gz", hash = "sha256:8393839cc741415ed5ddc2bd58e2d4ce07f966a7d26b7aebff19dcec64818edc"},
+    {file = "python_monkey_business-1.1.0-py2.py3-none-any.whl", hash = "sha256:15b4f603c749ba9a7b4f1acd36af023a6c5ba0f7e591c945f8253f0ef44bf389"},
+]
+
+[[package]]
 name = "pytz"
 version = "2024.2"
 description = "World timezone definitions, modern and historical"
@@ -1786,4 +1815,4 @@ types-requests = ">=2.32.0.20240712,<3.0.0.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "37c433b8b811b6ac03500ce0d46c6dcd3f76828370bad3e83b8c2910028093e9"
+content-hash = "fe8e07d1e0028315416e299abf57956f734960ac5a9d81c34ed615b04186dcd0"

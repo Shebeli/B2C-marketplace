@@ -52,15 +52,15 @@ class Order(models.Model):
     1. UNPAID orders should be set to CANCELLED by the web service
     after X amount of time, to release the reserved_stocks.
 
-    2. Cart validations need to be run before attempting to create
+    2. Cart validations need to be executed before attempting to create
     an order using user's current cart items (refer to Cart model business
     policies and validations).
 
     3. If an order is already in UNPAID state by the customer, then they
-    cannot create another order until they cancel the  current order or pay the order.
+    cannot create another order until they cancel the current order or pay the order.
 
     4. The customer should be notified either in the web app or by other means
-    (such as SMS or email) of any update or changes happend to their order's status.
+    (such as SMS or email) of any update or changes committed to their order's status.
 
     5. Stock levels must be updated according to the order's status:
        - Upon order creation (UNPAID status), on_hand_stock should be decreased and

@@ -29,6 +29,9 @@ from .managers import ProductManager
 class MainCategory(models.Model):
     name = models.CharField(max_length=30, unique=True)
 
+    def __str__(self):
+        return self.name
+
 
 class Category(models.Model):
     name = models.CharField(max_length=30, unique=True)
@@ -36,12 +39,21 @@ class Category(models.Model):
         MainCategory, on_delete=models.CASCADE, related_name="categories"
     )
 
+    def __str__(self):
+        return self.name
+
 
 class SubCategory(models.Model):
-    name = models.CharField(max_length=30, unique=True)
+    name = models.CharField(max_length=30)
     category = models.ForeignKey(
         Category, on_delete=models.CASCADE, related_name="subcategories"
     )
+
+    class Meta:
+        unique_together = ("name", "category")
+
+    def __str__(self):
+        return self.name
 
 
 class Tag(models.Model):
@@ -119,7 +131,7 @@ class Product(models.Model):
     )
     name = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
-    description = models.CharField(max_length=500)
+    description = models.TextField()
     subcategory = models.ForeignKey(
         SubCategory, on_delete=models.SET_NULL, null=True, related_name="products"
     )

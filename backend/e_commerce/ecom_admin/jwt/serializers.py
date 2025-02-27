@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 from ecom_core.validators import validate_token_type
 from rest_framework_simplejwt.serializers import (
@@ -22,14 +22,14 @@ class AdminTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class AdminTokenVerifySerializer(TokenVerifySerializer):
-    def validate(self, attrs: Dict[str, None]) -> Dict[Any, Any]:
+    def validate(self, attrs: dict[str, None]) -> dict[Any, Any]:
         token = UntypedToken(attrs["token"])
         validate_token_type(token, "admin")
         return super().validate(attrs)
 
 
 class AdminTokenRefreshSerializer(TokenRefreshSerializer):
-    def validate(self, attrs: Dict[str, Any]) -> Dict[str, str]:
+    def validate(self, attrs: dict[str, Any]) -> dict[str, str]:
         refresh = RefreshToken(attrs["refresh"])
         validate_token_type(refresh, "admin")
         return super().validate(attrs)

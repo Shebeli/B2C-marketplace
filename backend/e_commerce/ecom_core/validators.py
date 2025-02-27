@@ -1,14 +1,13 @@
 import re
+from string import digits
 
-from django.utils.translation import gettext_lazy as _
-from django.core.exceptions import ValidationError
-from django.conf import settings
 import phonenumbers
+from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 from phonenumbers import NumberParseException
 from rest_framework_simplejwt.exceptions import TokenError
-from rest_framework_simplejwt.tokens import Token, RefreshToken
-
-from string import digits
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 def validate_phone(value: str) -> None:

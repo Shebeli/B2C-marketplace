@@ -5,10 +5,8 @@ import {
   productGenericFilters,
 } from "@/app/lib/constants";
 import ProductFilters from "@/app/ui/product-list/filter";
-import sampleColorChoices from "@/app/ui/product-list/placeholder";
-import Image from "next/image";
 import React, { useState } from "react";
-import { FaArrowDownWideShort, FaFilter } from "react-icons/fa6";
+import { FaFilter } from "react-icons/fa6";
 import "react-range-slider-input/dist/style.css";
 import { sortOptions } from "@/app/lib/constants";
 import SortDropdown from "@/app/ui/product-list/sort-dropdown";

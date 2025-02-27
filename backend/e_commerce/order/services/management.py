@@ -1,7 +1,7 @@
 from django.db import transaction
+from financeops.models import MoneyTransferRequest, Transaction, Wallet
 from product.models import ProductVariant
 from rest_framework import serializers
-from financeops.models import Transaction, Wallet, MoneyTransferRequest
 
 from order.models import Order, OrderItem
 

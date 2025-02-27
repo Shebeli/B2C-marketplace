@@ -1,20 +1,19 @@
 from django.core.cache import cache
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
-
 
 from ecom_user.authentication import EcomUserJWTAuthentication
 from ecom_user.models import EcomUser
 from ecom_user.serializers import (
     ChangeCurrentPasswordSerializer,
     UserAccountSerializer,
+    UserNavbarSerializer,
     UserPhoneSerializer,
     UserPhoneVerificationSerializer,
-    UserNavbarSerializer,
 )
 from ecom_user.sms_service import (
     create_phone_verify_cache_key,
