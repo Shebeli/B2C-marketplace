@@ -6,7 +6,7 @@ from django.db import transaction
 from ecom_user.models import EcomUser
 from tqdm import tqdm
 
-from product.models import Product, ProductVariant
+from product.models import Category, MainCategory, Product, ProductVariant, SubCategory
 
 
 class Command(BaseCommand):
@@ -28,11 +28,24 @@ class Command(BaseCommand):
         num_products = kwargs["num_products"]
         variants_per_product = kwargs["variants_per_product"]
         user, _ = EcomUser.objects.get_or_create(phone="09377964142")
+
         with transaction.atomic():
+            # create categories
+            maincategory_obj = MainCategory.objects.create(name="Sample Main Category")
+            category_obj = Category.objects.create(
+                name="Sample Category", main_category=maincategory_obj
+            )
+            subcategory_obj = SubCategory.objects.create(
+                name="Sample SubCategory", category=category_obj
+            )
+
+            # create products
             for i in tqdm(range(num_products), desc="Creating random products"):
                 product = Product.objects.create(
                     name=f"Product {i}",
                     owner=user,
+                    subcategory=subcategory_obj,
+                    description="Lorem pentum of the pottaisum catasium calcium, abatatium shalsium. ",
                 )
                 for j in range(variants_per_product):
                     ProductVariant.objects.create(
@@ -47,6 +60,6 @@ class Command(BaseCommand):
                 product.save()
         self.stdout.write(
             self.style.SUCCESS(
-                f"A total of {num_products*variants_per_product} datarows has been created in the database in {(time.time()-start_time)} seconds."
+                f"A total of {num_products * variants_per_product} datarows has been created in the database in {(time.time() - start_time)} seconds."
             )
         )
