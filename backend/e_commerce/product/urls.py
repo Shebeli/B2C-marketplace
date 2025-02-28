@@ -1,6 +1,4 @@
 from django.urls import path
-from rest_framework.urlpatterns import format_suffix_patterns
-
 
 from product import views
 
@@ -26,5 +24,9 @@ urlpatterns = [
         "<int:product_pk>/technical-infos/<int:technical_pk>/",
         views.ProductTechnicalInfoDetail.as_view(),
         name="technical-info-detail",
+    ),
+    path("sub-categories/", views.SubcategoryList.as_view(), name="subcategory-list"),
+    path(
+        "full-categories/", views.FullCategoryList.as_view(), name="fullcategory-list"
     ),
 ]

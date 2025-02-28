@@ -10,10 +10,17 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
     get_object_or_404,
 )
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from product.filters import ProductFilter
-from product.models import Product, ProductVariant, SubCategory, TechnicalDetail
+from product.models import (
+    MainCategory,
+    Product,
+    ProductVariant,
+    SubCategory,
+    TechnicalDetail,
+)
 from product.permissions import IsOwner, IsSellerVerified
 from product.serializers import (
     ProductListSerializer,
@@ -21,6 +28,8 @@ from product.serializers import (
     ProductSerializerForOwner,
     ProductTechnicalDetailSerializer,
     ProductVariantSerializerForOwner,
+    SubCategorySerializer,
+    FullCategorySerializer,
 )
 
 
@@ -173,3 +182,40 @@ class ShopProductList(ListAPIView):
 
     def get_queryset(self):
         return super().get_queryset().filter(owner=self.request.user)
+
+
+class SubcategoryList(ListAPIView):
+    """
+    Lists all available products subcategories, subject to change over time.
+    Used for checking if a subcategory is valid by the client.
+    """
+
+    permission_classes = [AllowAny]
+    queryset = SubCategory.objects.all()
+    serializer_class = SubCategorySerializer
+    pagination_class = None
+
+    def get(self, request, *args, **kwargs):
+        cached_data = cache.get(SubCategory.cache_key)
+        if cached_data:
+            return Response(cached_data)
+        response = super().get(request, *args, **kwargs)
+        cache.set(SubCategory.cache_key, response.data, 60 * 60 * 24)
+        return response
+
+
+class FullCategoryList(ListAPIView):
+    "List all Maincategories nested with categories, and categories nested with subcategories"
+
+    permission_classes = [AllowAny]
+    queryset = MainCategory.objects.all()
+    serializer_class = FullCategorySerializer
+    pagination_class = None
+
+    def get(self, request, *args, **kwargs):
+        cached_data = cache.get(MainCategory.cache_key)
+        if cached_data:
+            return Response(cached_data)
+        response = super().get(request, *args, **kwargs)
+        cache.set(MainCategory.cache_key, response.data, 60 * 60 * 24)
+        return response

@@ -3,9 +3,11 @@ from rest_framework import serializers
 
 from product.models import (
     Category,
+    MainCategory,
     Product,
     ProductVariant,
     ProductVariantImage,
+    SubCategory,
     Tag,
     TechnicalDetail,
 )
@@ -152,12 +154,6 @@ class ProductListSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "main_price", "main_image"]
 
 
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = "__all__"
-
-
 class TechnicalDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = TechnicalDetail
@@ -169,3 +165,25 @@ class TechnicalDetailSerializer(serializers.ModelSerializer):
                 "Product instance should be passed as keyword argument with serializer.save()"
             )
         return super().create(validated_data)
+
+
+class SubCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubCategory
+        fields = ["name"]
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    subcategories = SubCategorySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Category
+        fields = ["name", "subcategories"]
+
+
+class FullCategorySerializer(serializers.ModelSerializer):
+    categories = CategorySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = MainCategory
+        fields = ["name", "categories"]
