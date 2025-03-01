@@ -11,9 +11,7 @@ class ProductFilter(filters.FilterSet):
     """
 
     name = filters.CharFilter(field_name="name", lookup_expr="icontains")
-    subcategory = filters.CharFilter(
-        field_name="subcategory__name", lookup_expr="iexact"
-    )
+    subcategory = filters.NumberFilter(field_name="subcategory__id", lookup_expr="exact", required=True)
     price_min = filters.NumberFilter(
         field_name="main_variant__price", lookup_expr="gte"
     )

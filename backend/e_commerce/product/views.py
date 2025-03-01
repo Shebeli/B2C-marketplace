@@ -1,3 +1,6 @@
+import logging
+from typing import Type
+
 from django.core.cache import cache
 from django_filters import rest_framework as filters
 from ipware import get_client_ip
@@ -23,14 +26,16 @@ from product.models import (
 )
 from product.permissions import IsOwner, IsSellerVerified
 from product.serializers import (
+    FullCategorySerializer,
     ProductListSerializer,
     ProductSerializerForAny,
     ProductSerializerForOwner,
     ProductTechnicalDetailSerializer,
     ProductVariantSerializerForOwner,
     SubCategorySerializer,
-    FullCategorySerializer,
 )
+
+logger = logging.getLogger("order")
 
 
 class ProductList(ListCreateAPIView):
@@ -54,19 +59,6 @@ class ProductList(ListCreateAPIView):
     filterset_class = ProductFilter
     ordering_fields = ["main_price", "rating", "created_at", "view_count", "in_stock"]
     ordering = ["-created_at", "in_stock"]
-
-    def _validate_subcategory(self) -> None:
-        subcategory_name = self.request.query_params.get("subcategory")
-        if not subcategory_name:
-            raise ValidationError(
-                "query parameter 'subcategory' should be provided", "no_query_param"
-            )
-        if not SubCategory.objects.filter(name__iexact=subcategory_name).exists():
-            raise ValidationError("subcategory does not exist", "subcategory_not_found")
-
-    def get_queryset(self):
-        self._validate_subcategory()
-        return super().get_queryset()
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -187,13 +179,14 @@ class ShopProductList(ListAPIView):
 class SubcategoryList(ListAPIView):
     """
     Lists all available products subcategories, subject to change over time.
-    Used for checking if a subcategory is valid by the client.
+    Since the name of subcategories might not be unique, id of the subcategories
+    are also included.
     """
 
     permission_classes = [AllowAny]
     queryset = SubCategory.objects.all()
-    serializer_class = SubCategorySerializer
     pagination_class = None
+    serializer_class = SubCategorySerializer
 
     def get(self, request, *args, **kwargs):
         cached_data = cache.get(SubCategory.cache_key)

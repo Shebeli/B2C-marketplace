@@ -170,7 +170,7 @@ class TechnicalDetailSerializer(serializers.ModelSerializer):
 class SubCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = SubCategory
-        fields = ["name"]
+        fields = ["id", "name"]
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -187,3 +187,12 @@ class FullCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = MainCategory
         fields = ["name", "categories"]
+
+
+# class SubCategoryNameSerializer(serializers.ListSerializer):
+#     def to_representation(self, data):
+#         return list(data.values_list("name", flat=True))
+
+
+# class SubCategoryListSerialzier(serializers.Serializer):
+#     subcategories = SubCategoryNameSerializer(source="*", read_only=True)
