@@ -1,18 +1,21 @@
+from tkinter.tix import STATUS
+
 from ecom_core.permissions import IsOwner
 from ecom_user.authentication import EcomUserJWTAuthentication
 from rest_framework import mixins, status
 from rest_framework.generics import (
     GenericAPIView,
     ListCreateAPIView,
+    RetrieveAPIView,
     RetrieveUpdateDestroyAPIView,
 )
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from ecom_user_profile.models import (
+    BankCard,
     CustomerAddress,
     CustomerProfile,
-    BankCard,
     SellerBusinessLicense,
     SellerProfile,
 )
@@ -22,6 +25,7 @@ from ecom_user_profile.serializers import (
     SellerBankAccountSerializer,
     SellerBusinessLicenseSerializer,
     SellerProfileSerializer,
+    SellerPublicProfileSerializer,
 )
 
 
@@ -29,6 +33,7 @@ class CustomerProfileAPIView(
     GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin
 ):
     "Retrieve or update current authenticated user's customer profile"
+
     authentication_classes = [EcomUserJWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = CustomerProfileSerializer
@@ -88,7 +93,10 @@ class CustomerAddressDetail(RetrieveUpdateDestroyAPIView):
 class SellerProfileAPIView(
     GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin
 ):
-    "Retrieve or update current authenticated user's seller profile"
+    """
+    Used for current authenticated user to retrive/update their seller's profile.
+    """
+
     authentication_classes = [EcomUserJWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = SellerProfileSerializer
@@ -105,6 +113,24 @@ class SellerProfileAPIView(
 
     def put(self, request, *args, **kwargs):
         return self.update(request, *args, **kwargs)
+
+
+class SellerPublicProfileAPIView(RetrieveAPIView):
+    "For displaying the generic information of a seller's shop publicly."
+
+    permission_classes = [AllowAny]
+    serializer_class = SellerPublicProfileSerializer
+    queryset = SellerProfile.objects.all()
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if not instance.is_verified:
+            return Response(
+                data="The requested seller profile wasn't found.",
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
 
 class SellerBusinessLicenseList(ListCreateAPIView):

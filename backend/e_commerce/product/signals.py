@@ -5,6 +5,7 @@ from django.db import transaction
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 
+from .cache_keys import SUBCATEGORIES_CACHE_KEY, FULLCATEGORIES_CACHE_KEY
 from .models import Category, MainCategory, ProductVariant, SubCategory
 
 logger = logging.getLogger("django")
@@ -39,7 +40,7 @@ def assign_main_variant_on_deletion(sender, instance, **kwargs):
 @receiver([post_save, post_delete], sender=SubCategory)
 def invalidate_subcategory_cache(sender, **kwargs):
     logger.info("Cache invalidated for subcategories.")
-    cache.delete(SubCategory.cache_key)
+    cache.delete(SUBCATEGORIES_CACHE_KEY)
 
 
 @receiver([post_save, post_delete], sender=SubCategory)
@@ -49,4 +50,4 @@ def invalidate_full_category_cache(sender, instance, **kwargs):
     logger.info(
         f"Cache invalidated for full category by model {sender.__name__} with ID {instance.id}"
     )
-    cache.delete(SubCategory.cache_key)
+    cache.delete(FULLCATEGORIES_CACHE_KEY)

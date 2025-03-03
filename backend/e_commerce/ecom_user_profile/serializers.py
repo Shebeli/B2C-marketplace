@@ -1,9 +1,10 @@
+from django.urls import reverse
 from rest_framework import serializers
 
 from ecom_user_profile.models import (
+    BankCard,
     CustomerAddress,
     CustomerProfile,
-    BankCard,
     SellerBusinessLicense,
     SellerProfile,
 )
@@ -43,6 +44,40 @@ class SellerProfileSerializer(serializers.ModelSerializer):
             "established_date",
         ]
         exclude = ["user"]
+
+
+class SellerBriefProfileSerializer(serializers.ModelSerializer):
+    """
+    Used in other serializers or when a brief introduction of seller is required.
+    for representing/serialization only
+    """
+
+    store_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SellerProfile
+        fields = ["id", "store_name", "store_image", "store_url"]
+
+    def get_store_url(self, obj):
+        return reverse("seller-public-profile", kwargs={"pk": obj.id})
+
+
+class SellerPublicProfileSerializer(serializers.ModelSerializer):
+    """
+    Used only for representation/serialization of seller's public information comprehensivly.
+    """
+
+    class Meta:
+        model = SellerProfile
+        fields = [
+            "id",
+            "store_name",
+            "store_address",
+            "store_description",
+            "store_image",
+            "website",
+            "minimum_order_amount",
+        ]
 
 
 class SellerBusinessLicenseSerializer(serializers.ModelSerializer):

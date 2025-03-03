@@ -32,10 +32,6 @@ class MainCategory(models.Model):
     def __str__(self):
         return self.name
 
-    @property
-    def cache_key(self):
-        return "maincategory_list"
-
 
 class Category(models.Model):
     name = models.CharField(max_length=30, unique=True)
@@ -58,11 +54,6 @@ class SubCategory(models.Model):
 
     def __str__(self):
         return self.name
-
-    @property
-    def cache_key(self):
-        return "subcategories_list"
-
 
 class Tag(models.Model):
     name = models.CharField(max_length=30, unique=True, db_index=True)

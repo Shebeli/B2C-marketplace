@@ -21,13 +21,12 @@ services:
         condition: service_started
     ports:
       - "8000:8000"
+    volumes:
+      - ./backend/e_commerce:/app/e_commerce
     develop:
       watch:
         - action: rebuild
           path: ./backend/pyproject.toml
-        - action: sync
-          path: ./backend/e_commerce
-          target: /app/e_commerce
     command: >
       sh -c "poetry run python manage.py migrate &&
              poetry run python manage.py runserver 0.0.0.0:8000"

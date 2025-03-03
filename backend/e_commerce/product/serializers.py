@@ -1,4 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
+from ecom_user_profile.serializers import SellerBriefProfileSerializer
 from rest_framework import serializers
 
 from product.models import (
@@ -146,12 +147,18 @@ class ProductTagSerializer(serializers.ModelSerializer):
 
 
 class ProductListSerializer(serializers.ModelSerializer):
-    main_price = serializers.IntegerField(source="main_variant.price", read_only=True)
-    main_image = serializers.ImageField(source="main_variant.image", read_only=True)
+    """
+    Used only for representing/serializing a list of products
+    with each product's owner .
+    """
+
+    main_price = serializers.IntegerField(read_only=True)
+    main_image = serializers.ImageField(read_only=True)
+    seller = SellerBriefProfileSerializer(read_only=True, source="owner.seller_profile")
 
     class Meta:
         model = Product
-        fields = ["id", "name", "main_price", "main_image"]
+        fields = ["id", "name", "main_price", "main_image", "seller"]
 
 
 class TechnicalDetailSerializer(serializers.ModelSerializer):
@@ -187,6 +194,17 @@ class FullCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = MainCategory
         fields = ["name", "categories"]
+
+
+class CategoryBreadcrumbSerializer(serializers.Serializer):
+    "Only used for representation"
+
+    def to_representation(self, instance: SubCategory):
+        ret = {}
+        ret["subcategory"] = instance.name
+        ret["category"] = instance.category.name
+        ret["main_category"] = instance.category.main_category.name
+        return super().to_representation(instance)
 
 
 # class SubCategoryNameSerializer(serializers.ListSerializer):

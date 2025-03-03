@@ -27,6 +27,11 @@ urlpatterns = [
     ),
     path("sub-categories/", views.SubcategoryList.as_view(), name="subcategory-list"),
     path(
+        "sub-categories/<int:pk>/",
+        views.SubCategory.as_view(),
+        name="subcategory-detail",
+    ),
+    path(
         "full-categories/", views.FullCategoryList.as_view(), name="fullcategory-list"
     ),
 ]

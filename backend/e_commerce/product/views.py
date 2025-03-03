@@ -10,6 +10,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.generics import (
     ListAPIView,
     ListCreateAPIView,
+    RetrieveAPIView,
     RetrieveUpdateDestroyAPIView,
     get_object_or_404,
 )
@@ -34,6 +35,7 @@ from product.serializers import (
     ProductVariantSerializerForOwner,
     SubCategorySerializer,
 )
+from product.cache_keys import SUBCATEGORIES_CACHE_KEY, FULLCATEGORIES_CACHE_KEY
 
 logger = logging.getLogger("order")
 
@@ -53,11 +55,23 @@ class ProductList(ListCreateAPIView):
     """
 
     permission_classes = [IsSellerVerified]
-    queryset = Product.objects.filter(is_valid=True).with_in_stock()
+    queryset = (
+        Product.objects.filter(is_valid=True)
+        .with_in_stock()
+        .with_main_variant_info()
+        .with_total_number_sold()
+    )
     serializer_class = ProductListSerializer
     filter_backends = [OrderingFilter, filters.DjangoFilterBackend]
     filterset_class = ProductFilter
-    ordering_fields = ["main_price", "rating", "created_at", "view_count", "in_stock"]
+    ordering_fields = [
+        "main_price",
+        "rating",
+        "created_at",
+        "view_count",
+        "in_stock",
+        "total_number_sold",
+    ]
     ordering = ["-created_at", "in_stock"]
 
     def perform_create(self, serializer):
@@ -189,11 +203,11 @@ class SubcategoryList(ListAPIView):
     serializer_class = SubCategorySerializer
 
     def get(self, request, *args, **kwargs):
-        cached_data = cache.get(SubCategory.cache_key)
+        cached_data = cache.get(SUBCATEGORIES_CACHE_KEY)
         if cached_data:
             return Response(cached_data)
         response = super().get(request, *args, **kwargs)
-        cache.set(SubCategory.cache_key, response.data, 60 * 60 * 24)
+        cache.set(SUBCATEGORIES_CACHE_KEY, response.data, 60 * 60 * 24)  # 1 day
         return response
 
 
@@ -206,9 +220,24 @@ class FullCategoryList(ListAPIView):
     pagination_class = None
 
     def get(self, request, *args, **kwargs):
-        cached_data = cache.get(MainCategory.cache_key)
+        cached_data = cache.get(FULLCATEGORIES_CACHE_KEY)
         if cached_data:
             return Response(cached_data)
         response = super().get(request, *args, **kwargs)
-        cache.set(MainCategory.cache_key, response.data, 60 * 60 * 24)
+        cache.set(FULLCATEGORIES_CACHE_KEY, response.data, 60 * 60 * 24)  # 1 day
         return response
+
+
+class SubCategory(RetrieveAPIView):
+    """
+    Used to get the subcategory, associated
+    category and maincatory by providing subcategory's ID
+    """
+
+    # can use the subcategories list cache to retrieve the subcategory
+    permission_classes = [AllowAny]
+    queryset = SubCategory.objects.all()
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        return Response({"name": instance.name})

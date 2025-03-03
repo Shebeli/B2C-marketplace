@@ -1,6 +1,6 @@
-from django.db import models
-from django.db.models import Sum, F, OuterRef, Exists
 from django.apps import apps
+from django.db import models
+from django.db.models import Exists, F, OuterRef, Sum
 
 
 class ProductQuerySet(models.QuerySet):

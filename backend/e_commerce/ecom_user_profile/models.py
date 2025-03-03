@@ -73,6 +73,7 @@ class SellerProfile(models.Model):
     store_name = models.CharField(max_length=50, unique=True, null=True)
     store_address = models.CharField(max_length=250)
     store_description = models.CharField(max_length=500, blank=True)
+    store_image = models.ImageField(blank=True, null=True)
     is_verified = models.BooleanField(default=False)
     products_sold = models.PositiveIntegerField(default=0)
     rating = models.DecimalField(
@@ -131,15 +132,15 @@ class SellerProfile(models.Model):
         return [field.decode() for field in required_fields]
 
     def _validate_seller_required_fields(self, required_fields: List[str]) -> None:
-        invalid_field_names = self._get_invalid_field_names()
+        all_field_names = self._get_all_field_names()
         valid_field_names = [
-            field for field in required_fields if field not in invalid_field_names
+            field for field in required_fields if field not in all_field_names
         ]
         empty_fields = self._get_empty_fields(valid_field_names)
         errors = {}
-        if invalid_field_names:
+        if all_field_names:
             errors["invalid_fields"] = (
-                f"The following field(s) don't exist on Ecomuser: {', '.join(invalid_field_names)}"
+                f"The following field(s) don't exist on Ecomuser: {', '.join(all_field_names)}"
             )
         if empty_fields:
             errors["empty_fields"] = (
@@ -148,9 +149,8 @@ class SellerProfile(models.Model):
         if errors:
             raise exceptions.ValidationError(errors)
 
-    def _get_invalid_field_names(self) -> List[str]:
-        valid_field_names = [field.name for field in self._meta.get_fields()]
-        return valid_field_names
+    def _get_all_field_names(self) -> List[str]:
+        return [field.name for field in self._meta.get_fields()]
 
     def _get_empty_fields(self, field_names: List[str]) -> List[str]:
         empty_fields = [field for field in field_names if not getattr(self, field)]
