@@ -8,7 +8,7 @@ from .models import (
     ProductVariantImage,
     TechnicalDetail,
     Category,
-    SubCategory,
+    SubCategoryBreadCrumb,
     MainCategory,
 )
 
@@ -73,7 +73,7 @@ class ProductAdmin(admin.ModelAdmin):
 
 
 class SubCategoryInline(nested.NestedTabularInline):
-    model = SubCategory
+    model = SubCategoryBreadCrumb
     extra = 1
     # fields = ("name",)
 
@@ -101,7 +101,7 @@ class CategoryAdmin(admin.ModelAdmin):
     inlines = [SubCategoryInline]
 
 
-@admin.register(SubCategory)
+@admin.register(SubCategoryBreadCrumb)
 class SubCategoryAdmin(admin.ModelAdmin):
     list_display = ("name", "category", "get_main_category")
     list_filter = ("category", "category__main_category")

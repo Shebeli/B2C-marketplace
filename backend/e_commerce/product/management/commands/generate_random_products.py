@@ -6,7 +6,13 @@ from django.db import transaction
 from ecom_user.models import EcomUser
 from tqdm import tqdm
 
-from product.models import Category, MainCategory, Product, ProductVariant, SubCategory
+from product.models import (
+    Category,
+    MainCategory,
+    Product,
+    ProductVariant,
+    SubCategoryBreadCrumb,
+)
 
 
 class Command(BaseCommand):
@@ -35,7 +41,7 @@ class Command(BaseCommand):
             category_obj = Category.objects.create(
                 name="Sample Category", main_category=maincategory_obj
             )
-            subcategory_obj = SubCategory.objects.create(
+            subcategory_obj = SubCategoryBreadCrumb.objects.create(
                 name="Sample SubCategory", category=category_obj
             )
 

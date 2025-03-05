@@ -8,7 +8,7 @@ from product.models import (
     Product,
     ProductVariant,
     ProductVariantImage,
-    SubCategory,
+    SubCategoryBreadCrumb,
     Tag,
     TechnicalDetail,
 )
@@ -176,7 +176,7 @@ class TechnicalDetailSerializer(serializers.ModelSerializer):
 
 class SubCategorySerializer(serializers.ModelSerializer):
     class Meta:
-        model = SubCategory
+        model = SubCategoryBreadCrumb
         fields = ["id", "name"]
 
 
@@ -196,15 +196,18 @@ class FullCategorySerializer(serializers.ModelSerializer):
         fields = ["name", "categories"]
 
 
-class CategoryBreadcrumbSerializer(serializers.Serializer):
-    "Only used for representation"
+class BreadcrumbSerializer(serializers.Serializer):
+    """
+    Provides a breadcrumb through a passed instance of SubCategory by
+    retrieving the associated category and main category.
+    Only used for representation"""
 
-    def to_representation(self, instance: SubCategory):
+    def to_representation(self, instance: SubCategoryBreadCrumb):
         ret = {}
-        ret["subcategory"] = instance.name
+        ret["sub_category"] = instance.name
         ret["category"] = instance.category.name
         ret["main_category"] = instance.category.main_category.name
-        return super().to_representation(instance)
+        return ret
 
 
 # class SubCategoryNameSerializer(serializers.ListSerializer):

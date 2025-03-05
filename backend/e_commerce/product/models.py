@@ -43,7 +43,7 @@ class Category(models.Model):
         return self.name
 
 
-class SubCategory(models.Model):
+class SubCategoryBreadCrumb(models.Model):
     name = models.CharField(max_length=30)
     category = models.ForeignKey(
         Category, on_delete=models.CASCADE, related_name="subcategories"
@@ -132,7 +132,7 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     description = models.TextField()
     subcategory = models.ForeignKey(
-        SubCategory, on_delete=models.SET_NULL, null=True, related_name="products"
+        SubCategoryBreadCrumb, on_delete=models.SET_NULL, null=True, related_name="products"
     )
     tags = models.ManyToManyField(Tag, related_name="products")
     rating = models.DecimalField(

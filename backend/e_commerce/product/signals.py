@@ -5,8 +5,12 @@ from django.db import transaction
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 
-from .cache_keys import SUBCATEGORIES_CACHE_KEY, FULLCATEGORIES_CACHE_KEY
-from .models import Category, MainCategory, ProductVariant, SubCategory
+from .cache_keys import (
+    SUBCATEGORIES_CACHE_KEY,
+    FULLCATEGORIES_CACHE_KEY,
+    breadcrumb_cache_key,
+)
+from .models import Category, MainCategory, ProductVariant, SubCategoryBreadCrumb
 
 logger = logging.getLogger("django")
 
@@ -37,13 +41,14 @@ def assign_main_variant_on_deletion(sender, instance, **kwargs):
             product.save(update_fields=["main_variant"])
 
 
-@receiver([post_save, post_delete], sender=SubCategory)
-def invalidate_subcategory_cache(sender, **kwargs):
+@receiver([post_save, post_delete], sender=SubCategoryBreadCrumb)
+def invalidate_subcategory_cache(sender, instance, **kwargs):
     logger.info("Cache invalidated for subcategories.")
     cache.delete(SUBCATEGORIES_CACHE_KEY)
+    cache.delete(breadcrumb_cache_key(instance.id))
 
 
-@receiver([post_save, post_delete], sender=SubCategory)
+@receiver([post_save, post_delete], sender=SubCategoryBreadCrumb)
 @receiver([post_save, post_delete], sender=Category)
 @receiver([post_save, post_delete], sender=MainCategory)
 def invalidate_full_category_cache(sender, instance, **kwargs):

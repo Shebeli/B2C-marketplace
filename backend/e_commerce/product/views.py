@@ -17,16 +17,22 @@ from rest_framework.generics import (
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from product.cache_keys import (
+    FULLCATEGORIES_CACHE_KEY,
+    SUBCATEGORIES_CACHE_KEY,
+    breadcrumb_cache_key,
+)
 from product.filters import ProductFilter
 from product.models import (
     MainCategory,
     Product,
     ProductVariant,
-    SubCategory,
+    SubCategoryBreadCrumb,
     TechnicalDetail,
 )
 from product.permissions import IsOwner, IsSellerVerified
 from product.serializers import (
+    BreadcrumbSerializer,
     FullCategorySerializer,
     ProductListSerializer,
     ProductSerializerForAny,
@@ -35,7 +41,6 @@ from product.serializers import (
     ProductVariantSerializerForOwner,
     SubCategorySerializer,
 )
-from product.cache_keys import SUBCATEGORIES_CACHE_KEY, FULLCATEGORIES_CACHE_KEY
 
 logger = logging.getLogger("order")
 
@@ -198,15 +203,15 @@ class SubcategoryList(ListAPIView):
     """
 
     permission_classes = [AllowAny]
-    queryset = SubCategory.objects.all()
+    queryset = SubCategoryBreadCrumb.objects.all()
     pagination_class = None
     serializer_class = SubCategorySerializer
 
-    def get(self, request, *args, **kwargs):
+    def list(self, request, *args, **kwargs):
         cached_data = cache.get(SUBCATEGORIES_CACHE_KEY)
         if cached_data:
             return Response(cached_data)
-        response = super().get(request, *args, **kwargs)
+        response = super().list(request, *args, **kwargs)
         cache.set(SUBCATEGORIES_CACHE_KEY, response.data, 60 * 60 * 24)  # 1 day
         return response
 
@@ -219,25 +224,30 @@ class FullCategoryList(ListAPIView):
     serializer_class = FullCategorySerializer
     pagination_class = None
 
-    def get(self, request, *args, **kwargs):
+    def list(self, request, *args, **kwargs):
         cached_data = cache.get(FULLCATEGORIES_CACHE_KEY)
         if cached_data:
             return Response(cached_data)
-        response = super().get(request, *args, **kwargs)
+        response = super().list(request, *args, **kwargs)
         cache.set(FULLCATEGORIES_CACHE_KEY, response.data, 60 * 60 * 24)  # 1 day
         return response
 
 
-class SubCategory(RetrieveAPIView):
+class SubCategoryBreadCrumb(RetrieveAPIView):
     """
-    Used to get the subcategory, associated
-    category and maincatory by providing subcategory's ID
+    Used to get the subcategory's name and its related category and main category.
     """
 
     # can use the subcategories list cache to retrieve the subcategory
     permission_classes = [AllowAny]
-    queryset = SubCategory.objects.all()
+    queryset = SubCategoryBreadCrumb.objects.all()
+    serializer_class = BreadcrumbSerializer
 
     def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        return Response({"name": instance.name})
+        cache_key = breadcrumb_cache_key(self.kwargs[self.lookup_field])
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return Response(cached_data)
+        response = super().retrieve(request, *args, **kwargs)
+        cache.set(cache_key, response.data, 60 * 60 * 24)  # 1 day
+        return response

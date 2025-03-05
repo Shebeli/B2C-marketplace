@@ -10,7 +10,7 @@ from product.models import (
     MainCategory,
     Product,
     ProductVariant,
-    SubCategory,
+    SubCategoryBreadCrumb,
     Tag,
 )
 
@@ -39,7 +39,7 @@ def category_instances_factory():
             categories.append(category)
 
             # sub categories
-            sub_category = SubCategory.objects.create(
+            sub_category = SubCategoryBreadCrumb.objects.create(
                 name=f"SubCategory {i+1}", category=category
             )
             sub_categories.append(sub_category)

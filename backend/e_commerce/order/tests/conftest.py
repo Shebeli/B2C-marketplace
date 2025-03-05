@@ -2,7 +2,7 @@ import pytest
 
 from product.models import (
     Category,
-    SubCategory,
+    SubCategoryBreadCrumb,
     MainCategory,
     Product,
     ProductVariant,
@@ -98,7 +98,7 @@ def sample_category_instance_factory(db):
         category_obj = Category.objects.create(
             name="Couches and Home Decoration", main_category=maincategory_obj
         )
-        subcategory_obj = SubCategory.objects.create(
+        subcategory_obj = SubCategoryBreadCrumb.objects.create(
             name="Chair", category=category_obj
         )
         return {
