@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { alertTypes } from "@/app/lib/constants";
 import React from "react";
 import clsx from "clsx";
-import { SuccessIcon, WarningIcon, InfoIcon, ErrorIcon } from "./alertIcons";
+import { SuccessIcon, WarningIcon, InfoIcon, ErrorIcon } from "./alert-icons";
 import toast from "react-hot-toast";
 
 export interface AlertProps {

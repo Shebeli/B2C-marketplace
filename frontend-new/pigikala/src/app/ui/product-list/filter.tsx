@@ -1,25 +1,57 @@
 "use client";
 
 import {
-  defaultProductFilters,
-  productGenericFilters,
-} from "@/app/lib/constants";
-import { useState } from "react";
+  ColorFilterOption,
+  ProductGenericFilters,
+} from "@/app/lib/types/ui/product-list-types";
+import { useEffect, useState } from "react";
 import RangeSlider from "react-range-slider-input";
 import "react-range-slider-input/dist/style.css";
-import sampleColorChoices from "./placeholder";
-import clsx from "clsx";
+import { ProductListColorFilter } from "./color-filter";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { useDebouncedCallback } from "use-debounce";
 
-interface productFiltersProps {
-  filters: productGenericFilters;
-  setFilters: React.Dispatch<React.SetStateAction<productGenericFilters>>;
-}
-
+/**
+ * Generic filters are managed and handled in this stated for updating query params.
+ * Color Filter is just passed to a child component in which it handles the state by itself.
+ */
 export default function ProductFilters({
-  filters,
-  setFilters,
-}: productFiltersProps) {
+  initialGenericFilters,
+  initialColorFilterOptions,
+}: {
+  initialGenericFilters: ProductGenericFilters;
+  initialColorFilterOptions: ColorFilterOption[];
+}) {
+  const { replace } = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
   const [isColorChoicesOpen, setIsColorChoicesOpen] = useState<boolean>(false);
+  const [genericFilters, setGenericFilters] = useState(initialGenericFilters);
+
+  const updateParamsGenericFilters = useDebouncedCallback(() => {
+    const newSearchParams = new URLSearchParams(searchParams);
+
+    console.log(genericFilters);
+    // iterate over generic filters and set the new params
+    Object.entries(genericFilters).forEach(([key, value]) => {
+      if (value !== undefined) {
+        newSearchParams.set(key, value.toString());
+      } else {
+        newSearchParams.delete(key);
+      }
+    });
+
+    console.log(newSearchParams.toString());
+    replace(`${pathname}?${newSearchParams.toString()}`);
+  }, 500);
+
+  //
+
+  // Update query params with generic filters
+  useEffect(() => {
+    updateParamsGenericFilters();
+  }, [updateParamsGenericFilters, genericFilters, searchParams]);
 
   return (
     <div className="border-b">
@@ -28,7 +60,14 @@ export default function ProductFilters({
           <div>
             <a
               className="text-sm cursor-pointer link-info"
-              onClick={() => setFilters(defaultProductFilters)}
+              onClick={() =>
+                setGenericFilters({
+                  minPrice: undefined,
+                  maxPrice: undefined,
+                  isAvailable: undefined,
+                  canDeliverToday: undefined,
+                })
+              }
             >
               حذف فیلتر ها
             </a>
@@ -46,42 +85,15 @@ export default function ProductFilters({
                 onClick={() => setIsColorChoicesOpen(!isColorChoicesOpen)}
               />
               <div className={`collapse-title pr-2 font-medium`}>رنگ</div>
-              {/* The condition top padding is because for some reason, the padding persists when the collapse is closed */}
+              {/* The conditional top padding is that for some reason, the default padding persists when the collapse is closed */}
               <div
                 className={`collapse-content border-t border-base-300 ${
                   isColorChoicesOpen ? "pt-4" : ""
                 }`}
               >
-                <div className="grid grid-cols-4 gap-1.5 border-bas-300">
-                  {/* Dynamic color filters*/}
-                  {sampleColorChoices.map((colorChoice) => (
-                    <div
-                      className={
-                        "flex flex-col items-center gap-1 cursor-pointer"
-                      }
-                      key={colorChoice.value}
-                      onClick={() => {
-                        setFilters({
-                          ...filters,
-                          color:
-                            colorChoice === filters.color ? null : colorChoice,
-                        });
-                      }}
-                    >
-                      <div
-                        style={{ backgroundColor: colorChoice.value }}
-                        className={clsx(
-                          `size-7 rounded-md border-[2.5px] border-white ${
-                            colorChoice === filters.color
-                              ? "ring-[3.5px] ring-cyan-400"
-                              : ""
-                          }`
-                        )}
-                      ></div>
-                      <p className="text-sm font-medium">{colorChoice.name}</p>
-                    </div>
-                  ))}
-                </div>
+                <ProductListColorFilter
+                  initialColorFilterOptions={initialColorFilterOptions}
+                />
               </div>
             </div>
           </div>
@@ -89,16 +101,23 @@ export default function ProductFilters({
             {/* Price range slider */}
             <p className="font-medium">محدوده قیمت به تومن</p>
             <RangeSlider
-              value={[filters.priceRange.min, filters.priceRange.max]}
-              onInput={(e) =>
-                setFilters({ ...filters, priceRange: { min: e[0], max: e[1] } })
-              }
+              value={[
+                genericFilters.minPrice ?? 0,
+                genericFilters.maxPrice ?? 1000000000,
+              ]}
+              onInput={(e) => {
+                setGenericFilters({
+                  ...genericFilters,
+                  minPrice: e[0],
+                  maxPrice: e[1],
+                });
+              }}
               min={0}
-              max={100000000}
+              max={1000000000}
             />
             <div className="flex justify-between">
-              <p>{filters.priceRange.max.toLocaleString()}</p>
-              <p>{filters.priceRange.min.toLocaleString()}</p>
+              <p>{genericFilters.maxPrice?.toLocaleString() ?? 1000000000}</p>
+              <p>{genericFilters.minPrice?.toLocaleString() ?? 0}</p>
             </div>
           </div>
           <div className="form-control">
@@ -106,11 +125,11 @@ export default function ProductFilters({
               <span className="label-text font-semibold text-base ">موجود</span>
               <input
                 type="checkbox"
-                checked={filters.isAvailable}
+                checked={genericFilters.isAvailable ?? false}
                 onChange={() =>
-                  setFilters({
-                    ...filters,
-                    isAvailable: !filters.isAvailable,
+                  setGenericFilters({
+                    ...genericFilters,
+                    isAvailable: !genericFilters.isAvailable,
                   })
                 }
                 className="toggle toggle-info"
@@ -124,11 +143,11 @@ export default function ProductFilters({
               </span>
               <input
                 type="checkbox"
-                checked={filters.canDeliverToday}
+                checked={genericFilters.canDeliverToday ?? false}
                 onChange={() =>
-                  setFilters({
-                    ...filters,
-                    canDeliverToday: !filters.canDeliverToday,
+                  setGenericFilters({
+                    ...genericFilters,
+                    canDeliverToday: !genericFilters.canDeliverToday,
                   })
                 }
                 className="toggle toggle-info"

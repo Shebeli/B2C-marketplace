@@ -1,23 +1,21 @@
-import Link from "next/link";
+import { BreadCrumbResponse } from "../lib/types/api/responses/product-list-responses";
+import { ApiResponse, isError } from "../lib/fetch/fetch-wrapper";
 
-export interface breadcrumb {
-  name: string;
-  url: string;
-}
-
-export default function Breadcrumbs({
-  breadcrumbs,
+export default function CategoryBreadcrumb({
+  breadcrumbsResult,
 }: {
-  breadcrumbs: breadcrumb[];
+  breadcrumbsResult: ApiResponse<BreadCrumbResponse>;
 }) {
-  return (
+  return isError(breadcrumbsResult) ? (
+    <div className="text-xs pt-2 pb-1">
+      <p> خطا در دریافت دسته بندی ها </p>
+    </div>
+  ) : (
     <div className="breadcrumbs text-xs pt-2 pb-1">
       <ul>
-        {breadcrumbs.map((bread) => (
-          <li key={bread.name}>
-            <Link href={bread.url}>{bread.name}</Link>
-          </li>
-        ))}
+        <li>{breadcrumbsResult.mainCategory}</li>
+        <li>{breadcrumbsResult.category}</li>
+        <li>{breadcrumbsResult.subCategory}</li>
       </ul>
     </div>
   );

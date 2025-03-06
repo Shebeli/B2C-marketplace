@@ -3,7 +3,7 @@
 import { requestVerificationCode } from "./requestNewCode";
 import { redirect } from "next/navigation";
 import { phoneNumberValidator } from "@persian-tools/persian-tools";
-import { usernamePattern } from "../../constants";
+import { usernamePattern } from "../../constants/ui/general-constants";
 
 // formErrors for client-side form errors
 // alertError for server-side errors such as failed API fetch request

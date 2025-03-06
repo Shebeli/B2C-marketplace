@@ -1,10 +1,10 @@
 import { phoneNumberValidator } from "@persian-tools/persian-tools";
-import { usernamePattern } from "../constants";
 import {
   CodeRequestInfo,
   ValidatedCodeRequestInfo,
 } from "../actions/auth/verify/verifyPhone";
 import { startTransition } from "react";
+import { usernamePattern } from "../constants/ui/general-constants";
 
 export function isValidPhoneorUsername(input: string): boolean {
   const isPhone = phoneNumberValidator(input);
@@ -50,8 +50,13 @@ export function isCodeRequestValid(
   return elapsedTime <= codeLifespan;
 }
 
-// to prevent the fields getting reset upon submitting a form, use this event handler
-// instead of passing the actionForm to form, pass this action to event listener "onSubmit"
+/**
+ * When using formAction (for binding next.js server actions to forms through react
+ * useActionState hook)  by passing it to the form 'action' attribute, to
+ * prevent the fields of the form getting emptied upon submitting the form,
+ * pass this function with formAction as input to form's event
+ * listener "onSubmit".
+ */
 export const handleFormSubmit =
   (formAction: (formData: FormData) => void) =>
   (event: React.FormEvent<HTMLFormElement>) => {

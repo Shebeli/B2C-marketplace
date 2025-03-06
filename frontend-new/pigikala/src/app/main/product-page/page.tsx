@@ -1,26 +1,26 @@
 "use client";
 
-import Image from "next/image";
 import {
-  FaShieldHalved,
-  FaStore,
-  FaStar,
+  colors,
+  details,
+  images,
+} from "@/app/ui/product-page/placeholder-data";
+import ProductColor from "@/app/ui/product-page/product-color";
+import ProductDetail from "@/app/ui/product-page/product-detail";
+import ProductFeature from "@/app/ui/product-page/product-feature";
+import ProductImage from "@/app/ui/product-page/product-image";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
+import {
+  FaCalendarCheck,
   FaCheck,
-  FaTruck,
   FaCreditCard,
   FaHeadset,
-  FaCalendarCheck,
+  FaShieldHalved,
+  FaStar,
+  FaStore,
+  FaTruck,
 } from "react-icons/fa6";
-import { useState, useEffect, useRef } from "react";
-import ProductColor from "@/app/ui/product-page/product-color";
-import ProductImage from "@/app/ui/product-page/product-image";
-import ProductFeature from "@/app/ui/product-page/product-feature";
-import ProductDetail from "@/app/ui/product-page/product-detail";
-import {
-  images,
-  details,
-  colors,
-} from "@/app/ui/product-page/placeholder-data";
 
 function ProductPage() {
   const [selectedColor, setSelectedColor] = useState("زرد");
@@ -29,9 +29,9 @@ function ProductPage() {
   const [openedImageSrc, setOpenedImageSrc] = useState<string | null>(null);
   const imageModalRef = useRef<HTMLDialogElement>(null);
 
-
   const selectedColorObj = colors.find((color) => color.name === selectedColor);
 
+  // For closing the opened image by clicking outside the box.
   const handleModalOutsideClose = (
     e: React.MouseEvent<HTMLDialogElement, MouseEvent>
   ) => {
@@ -41,6 +41,8 @@ function ProductPage() {
     }
   };
 
+  // When opened image state gets changed, using its ref,
+  // open or close the image based on state's value
   useEffect(() => {
     if (openedImageSrc) {
       imageModalRef.current?.showModal();
@@ -61,7 +63,7 @@ function ProductPage() {
             id="image_modal"
           >
             <div className="modal-box">
-              <form method="dialog" className=" modal-backdrop ">
+              <form method="dialog" className="modal-backdrop ">
                 <button
                   onClick={() => setOpenedImageSrc(null)}
                   className="btn btn-sm btn-circle absolute"

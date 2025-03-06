@@ -1,6 +1,6 @@
-import { colorChoice } from "@/app/lib/constants";
+import { ColorChoice } from "@/app/lib/types/ui/product-list-types";
 //
-export const sampleColorChoices: colorChoice[] = [
+export const sampleColorChoices: ColorChoice[] = [
   {
     name: "قرمز", // Red
     value: "#FF0000",

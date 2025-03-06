@@ -1,93 +1,114 @@
-"use client";
-
 import {
-  defaultProductFilters,
-  productGenericFilters,
-} from "@/app/lib/constants";
-import ProductFilters from "@/app/ui/product-list/filter";
-import React, { useState } from "react";
-import { FaFilter } from "react-icons/fa6";
+  fetchBreadCrumb,
+  fetchProducts,
+} from "@/app/lib/actions/product-list-actions";
+import { productSortOptions } from "@/app/lib/constants/ui/product-list-constants";
+import {
+  ColorFilterOption,
+  ProductGenericFilters,
+} from "@/app/lib/types/ui/product-list-types";
+import { isError } from "@/app/lib/fetch/fetch-wrapper";
+import { ProductQueryParamsSchema } from "@/app/lib/schemas/product-list-schemas";
+import CategoryBreadcrumb from "@/app/ui/breadcrumbs";
+import ProductListMain from "@/app/ui/product-list/header";
+import sampleColorChoices from "@/app/ui/product-list/placeholder";
 import "react-range-slider-input/dist/style.css";
-import { sortOptions } from "@/app/lib/constants";
-import SortDropdown from "@/app/ui/product-list/sort-dropdown";
-import ProductCard from "@/app/ui/product-list/product-card";
-import Breadcrumbs from "@/app/ui/breadcrumbs";
+import { ZodError } from "zod";
 
-export default function ProductListPage() {
-  // Sort
-  const [selectedSort, setSelectedSort] = useState<string>("جدید ترین");
-  const [toggleFilters, setToggleFilters] = useState<boolean>(false);
+export default async function ProductListPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  let productsListResponse;
+  let validatedParams;
 
-  // Filter
-  const [filters, setFilters] = useState<productGenericFilters>(
-    defaultProductFilters
+  // parse the query params
+  try {
+    const paramResults = await searchParams;
+    validatedParams = ProductQueryParamsSchema.parse(paramResults);
+  } catch (error) {
+    console.error(
+      "Error when parsing query params with zod in product list component",
+      error instanceof ZodError ? error.format() : "Unknown error"
+    );
+    throw new Error(
+      JSON.stringify({
+        status: 400,
+        message: "مشکلی در دریافت لیست کالا ها پیش آمده است",
+        details: error instanceof ZodError ? error.format() : "Unknown error",
+      })
+    );
+  }
+
+  // fetch breadcrumb data
+  const categoryBreadCrumbResult = await fetchBreadCrumb(
+    validatedParams.subCategoryId
   );
+
+  // data transformation
+  const genericFiltersData: ProductGenericFilters = {
+    minPrice: validatedParams.minPrice,
+    maxPrice: validatedParams.maxPrice,
+    isAvailable: validatedParams.isAvailable,
+    canDeliverToday: validatedParams.canDeliverToday,
+  };
+
+  try {
+    productsListResponse = await fetchProducts({
+      subCategoryId: validatedParams.subCategoryId,
+      sort: validatedParams.sort,
+      page: validatedParams.page,
+      genericFilters: genericFiltersData,
+    });
+
+
+
+    if (isError(productsListResponse)) {
+      console.error("Error when fetching product list from the server");
+      throw new Error(JSON.stringify(productsListResponse));
+    }
+  } catch (error) {
+    console.error(
+      "An unexpected error has occured when fetching product list:",
+      error
+    );
+    throw new Error(
+      JSON.stringify({
+        status: 500,
+        message: "یک خطای غیر منتظره پیش آمده است.",
+        details: "Unexpected error",
+      })
+    );
+  }
+
+  // TODO: fetch color choices from the server and validate the current selected color choices based on the fetch results
+  const availableColorChoices = sampleColorChoices;
+  const selectedColors = validatedParams.selectedColors;
+
+  // Instead of array lookups, we transform the array to a set which will result in O(m+n) complexity instead of O(m*n). (m =< n)
+  const selectedColorsSet = new Set(selectedColors);
+
+  const colorFilterOptions: ColorFilterOption[] = availableColorChoices.map(
+    (colorChoice) => {
+      return {
+        ...colorChoice,
+        selected: selectedColorsSet.has(colorChoice.value),
+      };
+    }
+  );
+
 
   return (
     <>
       <div className="max-w-screen-2xl flex flex-col p-2 w-full">
-        <Breadcrumbs
-          breadcrumbs={[
-            { name: "وسایل دیجیتال", url: "/main/category/digital" },
-            {
-              name: "لپتاپ",
-              url: "/main/category/laptop",
-            },
-          ]}
+        <CategoryBreadcrumb breadcrumbsResult={categoryBreadCrumbResult} />
+        <ProductListMain
+          initialGenericFilters={genericFiltersData}
+          initialColorFilterOptions={colorFilterOptions}
+          sortOptions={productSortOptions}
+          products={productsListResponse.results}
         />
-        <div className="my-2 flex items-center gap-1">
-          <button
-            className="md:tooltip md:tooltip-left cursor-pointer btn btn-circle justify-items-center"
-            data-tip="فیلتر ها"
-            aria-label="Toggle filters"
-            onClick={() => setToggleFilters(!toggleFilters)}
-          >
-            <FaFilter className="size-7 text-primary" />
-          </button>
-          <h3 className="text-lg">لپتاپ ASUS</h3>
-        </div>
-        <div className="flex gap-2">
-          {/* Filter */}
-
-          <div
-            className={`overflow-hidden transition-all duration-300 ease-in-out ${
-              toggleFilters
-                ? "w-full min-w-56 max-w-64 opacity-100 transform translate-x-0"
-                : "w-0 opacity-0 transform -translate-x-20"
-            }`}
-          >
-            {toggleFilters && (
-              <ProductFilters filters={filters} setFilters={setFilters} />
-            )}
-          </div>
-
-          <div className="flex-col">
-            {/* Sort drop down*/}
-            <SortDropdown
-              sortOptions={sortOptions}
-              setSelectedSort={setSelectedSort}
-            />
-            <div>
-              <div className="grid 2xl:grid-cols-5 xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mt-6">
-                {Array(25)
-                  .fill(null)
-                  .map((_, index) => (
-                    <ProductCard
-                      key={index}
-                      id={index}
-                      name={
-                        "لپ تاپ 15.6 اینچی ایسوس مدل Vivobook 15 F1504VA-NJ826-i7 1355U 16GB 512SSD TN Fingerprint Backlit"
-                      }
-                      image={"/sample_images/product-main-image.webp"}
-                      price={500000}
-                      sellerName={"فروشگاه تک سینا"}
-                      sellerPic={"/home/random-avatar.webp"}
-                    />
-                  ))}
-              </div>
-            </div>
-          </div>
-        </div>
         {/* Pagination */}
         <div className="join self-center my-5">
           <input

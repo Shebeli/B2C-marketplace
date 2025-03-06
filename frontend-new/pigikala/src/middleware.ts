@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   fetchNewAccessToken,
   setAccessTokenCookie,
-} from "@/app/lib/utils/fetch";
+} from "@/app/lib/fetch/fetch-auth";
 
 export async function middleware(req: NextRequest) {
   let accessToken = req.cookies.get("access_token")?.value;

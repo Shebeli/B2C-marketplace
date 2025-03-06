@@ -3,11 +3,11 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { API_ROUTES } from "@/app/lib/drfRoutes";
+import { API_ROUTES } from "@/app/lib/apiRoutes";
 import {
   setAccessTokenCookie,
   setRefreshTokenCookie,
-} from "@/app/lib/utils/fetch";
+} from "@/app/lib/fetch/fetch-auth";
 
 export type CodeState = {
   formError?: string | null;

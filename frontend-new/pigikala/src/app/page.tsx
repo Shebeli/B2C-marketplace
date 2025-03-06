@@ -1,6 +1,7 @@
 import Image from "next/image";
 import MainLayout from "./main/layout";
 import HomeModal from "./ui/home-modal";
+import { DEFAULT_PRODUCT_IMAGE_URL } from "./lib/constants/assets";
 
 // This component is exceptionally wrapped by MainLayout
 export default function Home() {
@@ -11,7 +12,7 @@ export default function Home() {
         <div className="hero ">
           <div className="hero-content flex-col lg:flex-row-reverse lg:gap-32 gap-12 py-12">
             <Image
-              src="/home/home-banner.webp"
+              src={"/home/home-banner.webp"}
               width={750}
               height={500}
               alt="Pigikala Home Banner"
@@ -106,7 +107,7 @@ export default function Home() {
                 <div key={index} className="card bg-base-100 shadow-lg">
                   <figure>
                     <Image
-                      src="https://via.placeholder.com/300"
+                      src={DEFAULT_PRODUCT_IMAGE_URL}
                       width={500}
                       height={300}
                       alt={`Product ${index + 1}`}

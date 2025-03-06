@@ -5,7 +5,8 @@ import {
   FaRightFromBracket,
   FaBasketShopping,
 } from "react-icons/fa6";
-import { NavbarProfileInfo } from "@/app/lib/constants";
+import { NavbarProfileInfo } from "@/app/lib/types/ui/general-types";
+import { DEFAULT_PROFILE_IMAGE_URL } from "@/app/lib/constants/assets";
 import { signOut } from "@/app/lib/actions/general";
 
 export default function NavbarProfileDropdown({
@@ -29,7 +30,7 @@ export default function NavbarProfileDropdown({
             src={
               profileInfo && profileInfo.pictureUrl
                 ? profileInfo.pictureUrl
-                : "/default-profile.jpg"
+                : DEFAULT_PROFILE_IMAGE_URL
             }
           />
         </div>

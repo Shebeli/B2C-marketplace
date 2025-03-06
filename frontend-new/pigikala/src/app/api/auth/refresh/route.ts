@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { axiosInstance } from "@/app/lib/axiosInstance";
-import { API_ROUTES } from "@/app/lib/drfRoutes";
+import { API_ROUTES } from "@/app/lib/apiRoutes";
 
 const { REFRESH } = API_ROUTES.AUTH;
 
