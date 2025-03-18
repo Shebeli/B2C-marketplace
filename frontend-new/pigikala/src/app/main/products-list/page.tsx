@@ -7,8 +7,13 @@ import { isError } from "@/app/lib/fetch/fetch-wrapper";
 import { ProductQueryParamsSchema } from "@/app/lib/schemas/product-list-schemas";
 import { ProductGenericFilters } from "@/app/lib/types/ui/product-list-types";
 import CategoryBreadcrumb from "@/app/ui/breadcrumbs";
+import ProductFilter from "@/app/ui/product-list/filter/product-filter";
 import sampleColorChoices from "@/app/ui/product-list/placeholder";
-import ProductListMain from "@/app/ui/product-list/product-list-main";
+import ProductListDisplay from "@/app/ui/product-list/product-list-display";
+import ProductListPagination from "@/app/ui/product-list/product-list-pagination";
+import ProductListSortDropdown from "@/app/ui/product-list/sort-dropdown";
+import { BreadCrumbSkeleton, ProductsListSkeleton } from "@/app/ui/skeletons";
+import { Suspense } from "react";
 import "react-range-slider-input/dist/style.css";
 import { ZodError } from "zod";
 
@@ -39,45 +44,16 @@ export default async function ProductListPage({
     );
   }
 
-  // fetch breadcrumb data
-  const categoryBreadCrumbResult = await fetchBreadCrumb(
-    validatedParams.subCategoryId
-  );
-
   // transform the filters for fetching
   const genericFiltersData: ProductGenericFilters = {
-    minPrice: validatedParams.minPrice,
-    maxPrice: validatedParams.maxPrice,
+    priceMin: validatedParams.minPrice,
+    priceMax: validatedParams.maxPrice,
     isAvailable: validatedParams.isAvailable,
     canDeliverToday: validatedParams.canDeliverToday,
   };
 
   // Fetch the products
-  try {
-    productsListResponse = await fetchProducts({
-      subCategoryId: validatedParams.subCategoryId,
-      sort: validatedParams.sort,
-      page: validatedParams.page,
-      genericFilters: genericFiltersData,
-    });
-
-    if (isError(productsListResponse)) {
-      console.error("Error when fetching product list from the server");
-      throw new Error(JSON.stringify(productsListResponse));
-    }
-  } catch (error) {
-    console.error(
-      "An unexpected error has occured when fetching product list:",
-      error
-    );
-    throw new Error(
-      JSON.stringify({
-        status: 500,
-        message: "یک خطای غیر منتظره پیش آمده است.",
-        details: "Unexpected error",
-      })
-    );
-  }
+  
 
   // Get available color choices by fetching the color options for given subCategoryId
   const availableColorChoices = sampleColorChoices;
@@ -85,40 +61,19 @@ export default async function ProductListPage({
   return (
     <>
       <div className="max-w-(--breakpoint-2xl) flex flex-col p-2 w-full">
-        <CategoryBreadcrumb breadcrumbsResult={categoryBreadCrumbResult} />
-        <ProductListMain
-          colorChoices={availableColorChoices}
-          sortOptions={productSortOptions}
-          products={productsListResponse.results}
-        />
-        {/* Pagination */}
-        <div className="join self-center my-5">
-          <input
-            className="join-item btn btn-square"
-            type="radio"
-            name="options"
-            aria-label="1"
-            defaultChecked
-          />
-          <input
-            className="join-item btn btn-square"
-            type="radio"
-            name="options"
-            aria-label="2"
-          />
-          <input
-            className="join-item btn btn-square"
-            type="radio"
-            name="options"
-            aria-label="3"
-          />
-          <input
-            className="join-item btn btn-square"
-            type="radio"
-            name="options"
-            aria-label="4"
-          />
+        <Suspense fallback={<BreadCrumbSkeleton />}>
+          <CategoryBreadcrumb subCategoryId={validatedParams.subCategoryId} />
+        </Suspense>
+        <div className="flex gap-2">
+          <ProductFilter colorChoices={availableColorChoices} />
+          <div className="flex-col">
+            <ProductListSortDropdown sortOptions={productSortOptions} />
+            <Suspense fallback={<ProductsListSkeleton />}>
+              <ProductListDisplay products={productsListResponse.results} />
+            </Suspense>
+          </div>
         </div>
+        <ProductListPagination />
       </div>
     </>
   );

@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { useFilters } from "./filter/filterContext";
+import { useFilters } from "./filterContext";
 import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
 
 // It is expected that the colorChoices are provided to the filter context.

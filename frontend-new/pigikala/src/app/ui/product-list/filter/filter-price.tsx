@@ -10,7 +10,7 @@ export default function PriceFilter() {
   // are reflected immediately in the UI, but the non-shallow query updates
   // are debounced.
   const [minPrice, setMinPrice] = useQueryState(
-    "minPrice",
+    "priceMin",
     parseAsInteger
       .withOptions({
         shallow: false,
@@ -19,7 +19,7 @@ export default function PriceFilter() {
       .withDefault(0)
   );
   const [maxPrice, setMaxPrice] = useQueryState(
-    "maxPrice",
+    "priceMax",
     parseAsInteger
       .withOptions({
         shallow: false,

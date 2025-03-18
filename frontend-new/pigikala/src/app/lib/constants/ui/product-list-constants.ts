@@ -1,7 +1,7 @@
-
 // Product sorting
 export const productSortOptions = [
-  { name: "گران ترین", value: "main_price" },
+  { name: "گران ترین", value: "-main_price" },
+  { name: "ارزان ترین", value: "main_price" },
   { name: "بالاترین امتیاز", value: "rating" },
   { name: "جدیدترین", value: "created_at" },
   { name: "بیشترین بازدید", value: "view_count" },
@@ -11,6 +11,7 @@ export const productSortOptions = [
 
 export const sortOptions = [
   "main_price",
+  "-main_price",
   "rating",
   "created_at",
   "view_count",
@@ -25,13 +26,19 @@ export const defaultSortOption = {
   value: "created_at",
 };
 
-export const FILTER_MAX_PRICE = 1000000000
+export const FILTER_MAX_PRICE = 1000000000;
 
 export const defaultFilterOptions = {
   isAvailable: false,
   canDeliverToday: false,
-  minPrice: 0,
-  maxPrice: FILTER_MAX_PRICE,
-  selectedColors: []
-}
-export const filterKeys = ['isAvailable', 'canDeliverToday', 'minPrice', 'maxPrice', 'selectedColors'] as const
+  priceMin: 0,
+  priceMax: FILTER_MAX_PRICE,
+  selectedColors: [],
+};
+export const filterKeys = [
+  "isAvailable",
+  "canDeliverToday",
+  "priceMin",
+  "priceMax",
+  "selectedColors",
+] as const;

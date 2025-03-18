@@ -4,7 +4,7 @@ import { ProductListItemResponse } from "@/app/lib/types/api/responses/product-l
 import { ColorChoice, SortChoice } from "@/app/lib/types/ui/product-list-types";
 import { useState } from "react";
 import { FaFilter } from "react-icons/fa6";
-import ProductFilters from "./filter/filter";
+import ProductFilterOptions from "./filter/product-filters";
 import FilterProvider from "./filter/filter-provider";
 import ProductCard from "./product-card";
 import ProductListSortDropdown from "./sort-dropdown";
@@ -40,15 +40,16 @@ export default function ProductListMain({
             toggleFilters ? "w-full min-w-52 max-w-60" : "w-0 opacity-0"
           }`}
         >
-          {toggleFilters && <ProductFilters />}
+          {toggleFilters && <ProductFilterOptions />}
         </div>
 
+        {/* Sort dropdown and products */}
         <div className="flex-col">
           {/* Sort drop down*/}
           <ProductListSortDropdown sortOptions={sortOptions} />
 
           <div>
-            <div className="grid 2xl:grid-cols-5 xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mt-6">
+            <div className="grid 2xl:grid-cols-5 xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 my-6">
               {products.map((product) => (
                 <ProductCard
                   key={product.id}

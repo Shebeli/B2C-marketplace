@@ -1,6 +1,6 @@
 import {
   defaultFilterOptions,
-  filterKeys
+  filterKeys,
 } from "@/app/lib/constants/ui/product-list-constants";
 import { ColorChoice } from "@/app/lib/types/ui/product-list-types";
 import {
@@ -25,10 +25,14 @@ export default function FilterProvider({
   const [queryFilters, setQueryFilters] = useQueryStates(
     {
       isAvailable: parseAsBoolean.withDefault(defaultFilterOptions.isAvailable),
-      canDeliverToday: parseAsBoolean.withDefault(defaultFilterOptions.canDeliverToday),
-      minPrice: parseAsInteger.withDefault(defaultFilterOptions.minPrice),
-      maxPrice: parseAsInteger.withDefault(defaultFilterOptions.maxPrice),
-      selectedColors: parseAsArrayOf(parseAsString).withDefault(defaultFilterOptions.selectedColors),
+      canDeliverToday: parseAsBoolean.withDefault(
+        defaultFilterOptions.canDeliverToday
+      ),
+      priceMin: parseAsInteger.withDefault(defaultFilterOptions.priceMin),
+      priceMax: parseAsInteger.withDefault(defaultFilterOptions.priceMax),
+      selectedColors: parseAsArrayOf(parseAsString).withDefault(
+        defaultFilterOptions.selectedColors
+      ),
     },
     {
       shallow: false,

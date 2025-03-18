@@ -52,7 +52,6 @@ export const createFetchClient = (
       });
       url = `${url}${url.includes("?") ? "&" : "?"}${queryStr}`;
     }
-
     try {
       // setup abort controller
       const controller = new AbortController();
@@ -84,7 +83,8 @@ export const createFetchClient = (
         };
       }
 
-      return await response.json();
+      const resJson = await response.json();
+      return resJson;
     } catch (error) {
       console.error(
         `An unexpected error has happened when fetching ${endpoint}`,

@@ -1,21 +1,27 @@
-import { BreadCrumbResponse } from "../lib/types/api/responses/product-list-responses";
-import { ApiResponse, isError } from "../lib/fetch/fetch-wrapper";
+import { fetchBreadCrumb } from "../lib/actions/product-list-actions";
+import { isError } from "../lib/fetch/fetch-wrapper";
 
-export default function CategoryBreadcrumb({
-  breadcrumbsResult,
+export default async function CategoryBreadcrumb({
+  subCategoryId,
 }: {
-  breadcrumbsResult: ApiResponse<BreadCrumbResponse>;
+  subCategoryId: number;
 }) {
-  return isError(breadcrumbsResult) ? (
+  // fetch breadcrumb data
+  const categoryBreadCrumbResult = await fetchBreadCrumb(subCategoryId);
+
+  return isError(categoryBreadCrumbResult) ? (
     <div className="text-sm pt-2 pb-1">
-      <p className="text-error font-semibold italic"> خطا در دریافت بردکرامپ ⚠️ </p>
+      <p className="text-error font-semibold italic">
+        {" "}
+        خطا در دریافت بردکرامپ ⚠️{" "}
+      </p>
     </div>
   ) : (
     <div className="breadcrumbs text-sm pt-2 pb-1">
       <ul>
-        <li>{breadcrumbsResult.mainCategory}</li>
-        <li>{breadcrumbsResult.category}</li>
-        <li>{breadcrumbsResult.subCategory}</li>
+        <li>{categoryBreadCrumbResult.mainCategory}</li>
+        <li>{categoryBreadCrumbResult.category}</li>
+        <li>{categoryBreadCrumbResult.subCategory}</li>
       </ul>
     </div>
   );

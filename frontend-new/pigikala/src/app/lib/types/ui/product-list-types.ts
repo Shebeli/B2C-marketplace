@@ -16,8 +16,8 @@ export interface ColorFilterOption {
  * A field having undefined value means the filter isn't provided at all.
  */
 export interface ProductGenericFilters {
-  minPrice: number | undefined;
-  maxPrice: number | undefined;
+  priceMin: number | undefined;
+  priceMax: number | undefined;
   isAvailable: boolean | undefined;
   canDeliverToday: boolean | undefined;
 }

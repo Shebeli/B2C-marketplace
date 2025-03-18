@@ -2,12 +2,12 @@
 
 import { useState, useTransition } from "react";
 import "react-range-slider-input/dist/style.css";
-import { ProductColorFilter } from "../color-filter";
 import PriceFilter from "./filter-price";
 import FilterToggleOption from "./filter-toggle-option";
 import { useFilters } from "./filterContext";
+import { ProductColorFilter } from "./color-filter";
 
-export default function ProductFilters() {
+export default function ProductFilterOptions() {
   const [isColorChoicesOpen, setIsColorChoicesOpen] = useState<boolean>(false);
 
   const { hasFilters, resetFilters } = useFilters();
@@ -17,39 +17,7 @@ export default function ProductFilters() {
   const customResetFilters = () => {
     startTransition(resetFilters);
   };
-  // const resetFilters = () => {
-  //   startTransition(() => {
-  //     const newSearchParams = new URLSearchParams();
 
-  //     newSearchParams.set("subCategoryId", searchParams.get("subCategoryId")!);
-  //     const currentSort = newSearchParams.get("sort");
-  //     if (currentSort) {
-  //       newSearchParams.set("sort", currentSort);
-  //     }
-
-  //     replace(`${pathname}?${newSearchParams}`);
-  //   });
-  // };
-  /**
-   * Checks if any query param (except 'subCategoyId' and 'sort') exists in the
-   * URL's query params.
-   */
-
-  // const updateHasFilters = useCallback(() => {
-  //   const paramKeys = Array.from(
-  //     searchParams
-  //       .keys()
-  //       .filter((paramKey) => !["subCategoryId", "sort"].includes(paramKey))
-  //   );
-
-  //   setHasFilters(paramKeys.length > 0);
-  // }, [searchParams]);
-
-  // useEffect(() => {
-  //   updateHasFilters();
-  // }, [updateHasFilters]);
-
-  console.log("HAS FILTERS????:", hasFilters())
   return (
     <div>
       <div className="border border-base-300 p-1">

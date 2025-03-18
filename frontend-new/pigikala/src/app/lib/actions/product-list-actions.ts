@@ -40,6 +40,8 @@ export async function fetchProducts({
     ...genericFilters,
   };
 
+  
+  
   return await api.get<ProductListResponse>(PRODUCT_ROUTES.PRODUCTS_LIST, {
     params: transformKeysToSnakeCase(queryParams),
     revalidate: 60,
