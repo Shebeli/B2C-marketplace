@@ -1,6 +1,8 @@
+import {
+  defaultFilterOptions,
+  filterKeys
+} from "@/app/lib/constants/ui/product-list-constants";
 import { ColorChoice } from "@/app/lib/types/ui/product-list-types";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { FilterContext } from "./filterContext";
 import {
   parseAsArrayOf,
   parseAsBoolean,
@@ -8,11 +10,7 @@ import {
   parseAsString,
   useQueryStates,
 } from "nuqs";
-import {
-  defaultFilterOptions,
-  FILTER_MAX_PRICE,
-  filterKeys,
-} from "@/app/lib/constants/ui/product-list-constants";
+import { FilterContext } from "./filterContext";
 
 interface FilterProviderProps {
   children: React.ReactNode;

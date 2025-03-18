@@ -1,24 +1,18 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
-import { startTransition, useCallback, useEffect, useState } from "react";
+import { useState, useTransition } from "react";
 import "react-range-slider-input/dist/style.css";
 import { ProductColorFilter } from "../color-filter";
 import PriceFilter from "./filter-price";
 import FilterToggleOption from "./filter-toggle-option";
 import { useFilters } from "./filterContext";
-import { useRouter } from "next/navigation";
-import { useTransition } from "react";
 
 export default function ProductFilters() {
   const [isColorChoicesOpen, setIsColorChoicesOpen] = useState<boolean>(false);
 
   const { hasFilters, resetFilters } = useFilters();
-  const { replace } = useRouter();
-  const pathname = usePathname();
 
   const [isPending, startTransition] = useTransition();
-  const searchParams = useSearchParams();
 
   const customResetFilters = () => {
     startTransition(resetFilters);
