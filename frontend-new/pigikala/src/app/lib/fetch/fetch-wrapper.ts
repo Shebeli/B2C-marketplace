@@ -73,7 +73,6 @@ export const createFetchClient = (
         fetchOptions.next = { revalidate };
       }
 
-      console.log(url)
       const response = await fetch(url, fetchOptions);
       clearTimeout(timeoutId);
 

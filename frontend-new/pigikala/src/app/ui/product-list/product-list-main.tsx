@@ -1,32 +1,28 @@
 "use client";
 
-import {
-  ColorFilterOption,
-  ProductGenericFilters,
-  SortChoice,
-} from "@/app/lib/types/ui/product-list-types";
 import { ProductListItemResponse } from "@/app/lib/types/api/responses/product-list-responses";
+import { ColorChoice, SortChoice } from "@/app/lib/types/ui/product-list-types";
 import { useState } from "react";
 import { FaFilter } from "react-icons/fa6";
-import ProductFilters from "./filter";
+import ProductFilters from "./filter/filter";
+import FilterProvider from "./filter/filter-provider";
 import ProductCard from "./product-card";
 import ProductListSortDropdown from "./sort-dropdown";
 
+// The generic filters are static.
 export default function ProductListMain({
-  initialGenericFilters,
-  initialColorFilterOptions,
+  colorChoices,
   sortOptions,
   products,
 }: {
-  initialColorFilterOptions: ColorFilterOption[];
-  initialGenericFilters: ProductGenericFilters;
+  colorChoices: ColorChoice[];
   sortOptions: readonly SortChoice[];
   products: ProductListItemResponse[];
 }) {
   const [toggleFilters, setToggleFilters] = useState<boolean>(true);
 
   return (
-    <>
+    <FilterProvider colorChoices={colorChoices}>
       <div className="my-2 flex items-center gap-1">
         <button
           className="md:tooltip md:tooltip-left cursor-pointer btn btn- btn-circle justify-items-center"
@@ -40,18 +36,11 @@ export default function ProductListMain({
       <div className="flex gap-2">
         {/* Filter */}
         <div
-          className={`overflow-hidden transition-all duration-300 ease-in-out ${
-            toggleFilters
-              ? "w-full min-w-56 max-w-64 opacity-100 transform translate-x-0"
-              : "w-0 opacity-0 transform -translate-x-20"
+          className={`overflow-hidden ${
+            toggleFilters ? "w-full min-w-52 max-w-60" : "w-0 opacity-0"
           }`}
         >
-          {toggleFilters && (
-            <ProductFilters
-              initialGenericFilters={initialGenericFilters}
-              initialColorFilterOptions={initialColorFilterOptions}
-            />
-          )}
+          {toggleFilters && <ProductFilters />}
         </div>
 
         <div className="flex-col">
@@ -76,6 +65,6 @@ export default function ProductListMain({
           </div>
         </div>
       </div>
-    </>
+    </FilterProvider>
   );
 }

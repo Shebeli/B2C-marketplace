@@ -53,7 +53,7 @@ function ProductPage() {
 
   return (
     <>
-      <div className="lg:px-4 max-w-screen-2xl">
+      <div className="lg:px-4 max-w-(--breakpoint-2xl)">
         {openedImageSrc && (
           <dialog
             ref={imageModalRef}
@@ -190,7 +190,7 @@ function ProductPage() {
             </div>
           </div>
         </div>
-        <div className="flex gap-16 max-w-screen-2xl  place-self-center justify-between border-y-2 border-base-300 p-4 px-8 mt-8 w-full">
+        <div className="flex gap-16 max-w-(--breakpoint-2xl)  place-self-center justify-between border-y-2 border-base-300 p-4 px-8 mt-8 w-full">
           <div className="bg-base flex flex-col items-center gap-2 ">
             <FaHeadset className="text-4xl" />
             <p>پشتیبانی 24 ساعته</p>
@@ -238,7 +238,7 @@ function ProductPage() {
             role="tabpanel"
             className="tab-content bg-base-100 border-r-8 border-primary from-base-200 to-base-300 rounded-box p-6 "
           >
-            <p className="max-w-screen-2xl leading-7 text-sm font-medium">
+            <p className="max-w-(--breakpoint-2xl) leading-7 text-sm font-medium">
               اچ پی با سری Victus، لپ‌تاپ‌هایی با سخت‌افزار قدرتمند و طراحی شیک
               و ساده عرضه می‌کند تا نیاز کاربران برای پردازش‌های سنگین و البته
               بازی کردن را برطرف کند. لپ‌تاپ Victus Gaming 15 به عنوان یکی از

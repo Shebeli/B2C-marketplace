@@ -3,15 +3,12 @@ import {
   fetchProducts,
 } from "@/app/lib/actions/product-list-actions";
 import { productSortOptions } from "@/app/lib/constants/ui/product-list-constants";
-import {
-  ColorFilterOption,
-  ProductGenericFilters,
-} from "@/app/lib/types/ui/product-list-types";
 import { isError } from "@/app/lib/fetch/fetch-wrapper";
 import { ProductQueryParamsSchema } from "@/app/lib/schemas/product-list-schemas";
+import { ProductGenericFilters } from "@/app/lib/types/ui/product-list-types";
 import CategoryBreadcrumb from "@/app/ui/breadcrumbs";
-import ProductListMain from "@/app/ui/product-list/header";
 import sampleColorChoices from "@/app/ui/product-list/placeholder";
+import ProductListMain from "@/app/ui/product-list/product-list-main";
 import "react-range-slider-input/dist/style.css";
 import { ZodError } from "zod";
 
@@ -23,7 +20,8 @@ export default async function ProductListPage({
   let productsListResponse;
   let validatedParams;
 
-  // parse the query params
+  // 1) Parse the query params and prepare the data for fetching
+  // 2) Call the fetches in proper ordering
   try {
     const paramResults = await searchParams;
     validatedParams = ProductQueryParamsSchema.parse(paramResults);
@@ -46,7 +44,7 @@ export default async function ProductListPage({
     validatedParams.subCategoryId
   );
 
-  // data transformation
+  // transform the filters for fetching
   const genericFiltersData: ProductGenericFilters = {
     minPrice: validatedParams.minPrice,
     maxPrice: validatedParams.maxPrice,
@@ -54,6 +52,7 @@ export default async function ProductListPage({
     canDeliverToday: validatedParams.canDeliverToday,
   };
 
+  // Fetch the products
   try {
     productsListResponse = await fetchProducts({
       subCategoryId: validatedParams.subCategoryId,
@@ -61,8 +60,6 @@ export default async function ProductListPage({
       page: validatedParams.page,
       genericFilters: genericFiltersData,
     });
-
-
 
     if (isError(productsListResponse)) {
       console.error("Error when fetching product list from the server");
@@ -82,30 +79,15 @@ export default async function ProductListPage({
     );
   }
 
-  // TODO: fetch color choices from the server and validate the current selected color choices based on the fetch results
+  // Get available color choices by fetching the color options for given subCategoryId
   const availableColorChoices = sampleColorChoices;
-  const selectedColors = validatedParams.selectedColors;
-
-  // Instead of array lookups, we transform the array to a set which will result in O(m+n) complexity instead of O(m*n). (m =< n)
-  const selectedColorsSet = new Set(selectedColors);
-
-  const colorFilterOptions: ColorFilterOption[] = availableColorChoices.map(
-    (colorChoice) => {
-      return {
-        ...colorChoice,
-        selected: selectedColorsSet.has(colorChoice.value),
-      };
-    }
-  );
-
 
   return (
     <>
-      <div className="max-w-screen-2xl flex flex-col p-2 w-full">
+      <div className="max-w-(--breakpoint-2xl) flex flex-col p-2 w-full">
         <CategoryBreadcrumb breadcrumbsResult={categoryBreadCrumbResult} />
         <ProductListMain
-          initialGenericFilters={genericFiltersData}
-          initialColorFilterOptions={colorFilterOptions}
+          colorChoices={availableColorChoices}
           sortOptions={productSortOptions}
           products={productsListResponse.results}
         />

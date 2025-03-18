@@ -144,7 +144,7 @@ export default function VerifyPhoneClient({
                   inputsRef.current[index] = element!;
                 }}
                 onChange={handleInputChange(index)}
-                className={`input input-bordered input-info w-12 text-2xl ${
+                className={`input input-info text-2xl rounded-lg text-center h-11 w-12 ${
                   state.formError ? "input-error" : ""
                 }`}
                 inputMode="numeric"
@@ -164,7 +164,7 @@ export default function VerifyPhoneClient({
             ))}
           </div>
           <button
-            className={`btn btn-primary h-11 btn-sm mt-4 w-full text-lg font-bold ${
+            className={`btn btn-primary h-11  mt-4 w-full font-bold ${
               pending || throttleCooldownTimer !== 0 ? "btn-disabled" : ""
             }`}
             type="submit"

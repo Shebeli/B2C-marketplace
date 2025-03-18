@@ -7,11 +7,11 @@ export default function CategoryBreadcrumb({
   breadcrumbsResult: ApiResponse<BreadCrumbResponse>;
 }) {
   return isError(breadcrumbsResult) ? (
-    <div className="text-xs pt-2 pb-1">
-      <p> خطا در دریافت دسته بندی ها </p>
+    <div className="text-sm pt-2 pb-1">
+      <p className="text-error font-semibold italic"> خطا در دریافت بردکرامپ ⚠️ </p>
     </div>
   ) : (
-    <div className="breadcrumbs text-xs pt-2 pb-1">
+    <div className="breadcrumbs text-sm pt-2 pb-1">
       <ul>
         <li>{breadcrumbsResult.mainCategory}</li>
         <li>{breadcrumbsResult.category}</li>

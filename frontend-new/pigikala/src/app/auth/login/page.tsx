@@ -51,7 +51,7 @@ export default function Login() {
           />
         </label>
         <button
-          className="btn btn-primary self-center h-11 btn-sm mt-4 w-full  text-lg font-bold"
+          className="btn btn-primary self-center h-11 mt-4 w-full  font-bold"
           type="submit"
           disabled={pending}
         >

@@ -37,7 +37,7 @@ export default function NavbarProfileDropdown({
       </div>
       <ul
         tabIndex={0}
-        className="menu menu-md dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 shadow"
+        className="menu menu-md dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 shadow-sm"
       >
         <li className="text-sm my-2">وارد شده با {profileInfo?.phone}</li>
         <li>

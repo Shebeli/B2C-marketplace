@@ -4,7 +4,7 @@ import { sortOptions } from "../constants/ui/product-list-constants";
 const ProductGenericFilterSchema = z
   .object({
     minPrice: z.coerce.number().nonnegative().optional(),
-    maxPrice: z.coerce.number().positive().optional(),
+    maxPrice: z.coerce.number().nonnegative().optional(),
     isAvailable: z.coerce.boolean().optional(),
     canDeliverToday: z.coerce.boolean().optional(),
   })
@@ -23,7 +23,10 @@ export const ProductGeneralParamsChema = z.object({
   subCategoryId: z.coerce.number(),
   page: z.coerce.number().int().positive().optional().default(1),
   sort: z.enum(sortOptions).default("created_at"),
-  selectedColors: z.string().array().optional(), // in hex code
+  selectedColors: z
+    .string()
+    .optional()
+    .transform((colors) => (colors ? colors.split(",") : [])), // in hex code
 });
 
 export const ProductQueryParamsSchema = z.intersection(

@@ -36,9 +36,7 @@ export async function requestVerificationCode(
       } else {
         // throttled
         return {
-          alertError: `درخواست بیش از حد مجاز. ${response.headers.get(
-            "retry-after"
-          )} ثانیه دیگر میتوانید درخواست کد کنید.`,
+          alertError: "درخواست بیش از حد مجاز. لحظاتی بعد تلاش کنید.",
         };
       }
     } else {

@@ -25,3 +25,13 @@ export const defaultSortOption = {
   value: "created_at",
 };
 
+export const FILTER_MAX_PRICE = 1000000000
+
+export const defaultFilterOptions = {
+  isAvailable: false,
+  canDeliverToday: false,
+  minPrice: 0,
+  maxPrice: FILTER_MAX_PRICE,
+  selectedColors: []
+}
+export const filterKeys = ['isAvailable', 'canDeliverToday', 'minPrice', 'maxPrice', 'selectedColors'] as const

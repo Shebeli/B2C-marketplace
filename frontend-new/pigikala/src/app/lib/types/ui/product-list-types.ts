@@ -26,3 +26,8 @@ export interface SortChoice {
   name: string; // for displaying
   value: string; // value for updating the query parameters with.
 }
+
+export interface FilterToggle {
+  name: string; // to be displayed in the UI
+  queryParam: string; // value to be set in the query param
+}

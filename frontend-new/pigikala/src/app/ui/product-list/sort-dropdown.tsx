@@ -1,8 +1,9 @@
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { FaArrowDownWideShort } from "react-icons/fa6";
+"use client";
+
 import { SortChoice } from "@/app/lib/types/ui/product-list-types";
-import { defaultSortOption } from "@/app/lib/constants/ui/product-list-constants";
-import { useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { parseAsStringEnum, parseAsStringLiteral, useQueryState } from "nuqs";
+import { FaArrowDownWideShort } from "react-icons/fa6";
 
 export default function ProductListSortDropdown({
   sortOptions,
@@ -12,14 +13,18 @@ export default function ProductListSortDropdown({
   const pathname = usePathname();
   const { replace } = useRouter();
   const searchParams = useSearchParams();
-  const [sort, setSort] = useState(searchParams.get("sort"))
+  const [sort, setSort] = useQueryState("sort", {
+    shallow: false,
+  });
 
   const handleSortChange = (sortOption: string) => {
-    const newSearchParams = new URLSearchParams(searchParams);
+    // const newSearchParams = new URLSearchParams(searchParams);
 
-    newSearchParams.set("sort", sortOption);
+    // newSearchParams.set("sort", sortOption);
 
-    replace(`${pathname}?${newSearchParams.toString()}`);
+    // replace(`${pathname}?${newSearchParams.toString()}`);
+
+    setSort(sortOption);
   };
 
   return (
@@ -28,14 +33,11 @@ export default function ProductListSortDropdown({
         <FaArrowDownWideShort className="ml-1.5 size-5" />
         <span className="font-medium ml-2">مرتب سازی:</span>
         <select
-          defaultValue={
-            sortOptions.find(
-              (sortChoice) => sortChoice.name === searchParams.get("sort")
-            )?.name ?? defaultSortOption.name
-          }
-          className="select select-primary select-sm font-medium"
-          onClick={(e) => handleSortChange(e.currentTarget.value)}
+          defaultValue={sort ?? "یک گزینه را انتخاب کنید"}
+          className="select font-medium"
+          onChange={(e) => handleSortChange(e.currentTarget.value)}
         >
+          <option disabled={true}>یک گزینه را انتخاب کنید</option>
           {sortOptions.map((sortOption) => (
             <option key={sortOption.value} value={sortOption.value}>
               {sortOption.name}

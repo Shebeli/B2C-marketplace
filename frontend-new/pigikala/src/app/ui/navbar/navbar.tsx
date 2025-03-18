@@ -5,7 +5,7 @@ import ThemeController from "../theme";
 export default function Navbar() {
   return (
     <div className="navbar border-b-2 border-base-300 py-3">
-      <div className="flex-1">
+      <div className="flex flex-1 items-center">
         <MainLogo width="100" />
         <div>
           <ThemeController />
@@ -18,7 +18,7 @@ export default function Navbar() {
           />
         </div>
       </div>
-      <div className="flex-none">
+      <div className="flex items-center">
         <div className="dropdown dropdown-end mx-2">
           <div tabIndex={0} role="button" className="btn btn-ghost btn-circle">
             <div className="indicator">
@@ -41,7 +41,7 @@ export default function Navbar() {
           </div>
           <div
             tabIndex={0}
-            className="card card-compact dropdown-content bg-base-100 z-[1] mt-3 w-52 shadow"
+            className="card card-compact dropdown-content bg-base-100 z-1 mt-3 w-52 shadow-sm"
           >
             <div className="card-body">
               <span className="text-lg font-bold">8 Items</span>
