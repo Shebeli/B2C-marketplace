@@ -3,15 +3,15 @@ import { sortOptions } from "../constants/ui/product-list-constants";
 
 const ProductGenericFilterSchema = z
   .object({
-    minPrice: z.coerce.number().nonnegative().optional(),
-    maxPrice: z.coerce.number().nonnegative().optional(),
+    priceMin: z.coerce.number().nonnegative().optional(),
+    priceMax: z.coerce.number().nonnegative().optional(),
     isAvailable: z.coerce.boolean().optional(),
     canDeliverToday: z.coerce.boolean().optional(),
   })
   .refine(
     (data) =>
-      !(data.maxPrice !== undefined && data.minPrice !== undefined) ||
-      data.maxPrice >= data.minPrice,
+      !(data.priceMax !== undefined && data.priceMin !== undefined) ||
+      data.priceMax >= data.priceMin,
     {
       message: "Max price should be higher or equal to min price",
       path: ["min"],

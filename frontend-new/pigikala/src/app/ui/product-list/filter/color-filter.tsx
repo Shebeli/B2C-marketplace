@@ -48,7 +48,7 @@ export function ProductColorFilter() {
               }`
             )}
           ></div>
-          <p className="text-sm font-medium">{colorChoice.name}</p>
+          <p className="text-sm">{colorChoice.name}</p>
         </div>
       ))}
     </div>

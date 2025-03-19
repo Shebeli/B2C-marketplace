@@ -28,11 +28,11 @@ export default function ProductFilterOptions() {
             </button>
           ) : (
             <button
-              className="btn btn-soft btn-sm btn-secondary"
+              className="btn btn-sm btn-secondary rounded-2xl btn-soft"
               onClick={customResetFilters}
               disabled={!hasFilters()}
             >
-              حذف فیلتر ها
+              حذف فیلترها
             </button>
           )}
         </div>

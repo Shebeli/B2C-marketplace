@@ -30,7 +30,7 @@ export default function ProductListMain({
           aria-label="Toggle filters"
           onClick={() => setToggleFilters(!toggleFilters)}
         >
-          <FaFilter className="size-7 text-primary" />
+        <FaFilter className="size-7 text-primary" />
         </button>
       </div>
       <div className="flex gap-2">

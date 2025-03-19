@@ -1,9 +1,4 @@
-import {
-  fetchBreadCrumb,
-  fetchProducts,
-} from "@/app/lib/actions/product-list-actions";
 import { productSortOptions } from "@/app/lib/constants/ui/product-list-constants";
-import { isError } from "@/app/lib/fetch/fetch-wrapper";
 import { ProductQueryParamsSchema } from "@/app/lib/schemas/product-list-schemas";
 import { ProductGenericFilters } from "@/app/lib/types/ui/product-list-types";
 import CategoryBreadcrumb from "@/app/ui/breadcrumbs";
@@ -22,7 +17,6 @@ export default async function ProductListPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  let productsListResponse;
   let validatedParams;
 
   // 1) Parse the query params and prepare the data for fetching
@@ -46,30 +40,37 @@ export default async function ProductListPage({
 
   // transform the filters for fetching
   const genericFiltersData: ProductGenericFilters = {
-    priceMin: validatedParams.minPrice,
-    priceMax: validatedParams.maxPrice,
+    priceMin: validatedParams.priceMin,
+    priceMax: validatedParams.priceMax,
     isAvailable: validatedParams.isAvailable,
     canDeliverToday: validatedParams.canDeliverToday,
   };
 
   // Fetch the products
-  
 
   // Get available color choices by fetching the color options for given subCategoryId
   const availableColorChoices = sampleColorChoices;
 
   return (
     <>
-      <div className="max-w-(--breakpoint-2xl) flex flex-col p-2 w-full">
+      <div className="max-w-(--breakpoint-2xl) flex flex-col p-2 w-full gap-3">
         <Suspense fallback={<BreadCrumbSkeleton />}>
           <CategoryBreadcrumb subCategoryId={validatedParams.subCategoryId} />
         </Suspense>
         <div className="flex gap-2">
           <ProductFilter colorChoices={availableColorChoices} />
-          <div className="flex-col">
+          <div className="flex-col w-full">
             <ProductListSortDropdown sortOptions={productSortOptions} />
-            <Suspense fallback={<ProductsListSkeleton />}>
-              <ProductListDisplay products={productsListResponse.results} />
+            <Suspense
+              key={JSON.stringify(validatedParams)}
+              fallback={<ProductsListSkeleton />}
+            >
+              <ProductListDisplay
+                subCategoryId={validatedParams.subCategoryId}
+                sort={validatedParams.sort}
+                page={validatedParams.page}
+                genericFilters={genericFiltersData}
+              />
             </Suspense>
           </div>
         </div>

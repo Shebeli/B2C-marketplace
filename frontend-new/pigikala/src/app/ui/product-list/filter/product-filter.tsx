@@ -19,7 +19,7 @@ export default function ProductFilter({
 
   return (
     <FilterProvider colorChoices={colorChoices}>
-      <div className="flex flex-col">
+      <div className={`flex flex-col`}>
         <div className="my-2 flex items-center gap-1">
           <button
             className="md:tooltip md:tooltip-left cursor-pointer btn btn- btn-circle justify-items-center"
@@ -32,7 +32,7 @@ export default function ProductFilter({
         </div>
         <div
           className={`overflow-hidden ${
-            toggleFilters ? "w-full min-w-52 max-w-60" : "w-0 opacity-0"
+            toggleFilters ? "min-w-60" : "w-0 opacity-0"
           }`}
         >
           {toggleFilters && <ProductFilterOptions />}

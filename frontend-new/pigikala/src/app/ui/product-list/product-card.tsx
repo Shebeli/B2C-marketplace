@@ -53,7 +53,7 @@ export default function ProductCard({
           <span className="text-sm mr-1.5">{sellerName}</span>
         </div>
 
-        <p className=" text-left text-sm">{price.toLocaleString()} تومان</p>
+        <p className="text-left text-sm">{price.toLocaleString()} تومان</p>
         <div className="card-actions justify-end">
           <button className="btn btn-primary btn-sm ">مشاهده محصول</button>
         </div>

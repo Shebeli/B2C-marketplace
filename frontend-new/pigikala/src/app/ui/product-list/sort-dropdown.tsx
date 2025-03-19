@@ -1,29 +1,20 @@
 "use client";
 
 import { SortChoice } from "@/app/lib/types/ui/product-list-types";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { parseAsStringEnum, parseAsStringLiteral, useQueryState } from "nuqs";
+import { useQueryState } from "nuqs";
 import { FaArrowDownWideShort } from "react-icons/fa6";
+// import { startTransition } from "react";
 
 export default function ProductListSortDropdown({
   sortOptions,
 }: {
   sortOptions: readonly SortChoice[];
 }) {
-  const pathname = usePathname();
-  const { replace } = useRouter();
-  const searchParams = useSearchParams();
   const [sort, setSort] = useQueryState("sort", {
     shallow: false,
   });
 
   const handleSortChange = (sortOption: string) => {
-    // const newSearchParams = new URLSearchParams(searchParams);
-
-    // newSearchParams.set("sort", sortOption);
-
-    // replace(`${pathname}?${newSearchParams.toString()}`);
-
     setSort(sortOption);
   };
 
