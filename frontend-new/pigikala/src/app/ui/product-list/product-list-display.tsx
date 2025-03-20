@@ -3,6 +3,7 @@ import { isError } from "@/app/lib/fetch/fetch-wrapper";
 import { fetchProducts } from "@/app/lib/actions/product-list-actions";
 import { ProductGenericFilters } from "@/app/lib/types/ui/product-list-types";
 import { ProductSort } from "@/app/lib/constants/ui/product-list-constants";
+import ProductListPagination from "./product-list-pagination";
 
 export default async function ProductListDisplay({
   subCategoryId,
@@ -59,8 +60,6 @@ export default async function ProductListDisplay({
     />
   ));
 
-  console.log("PRODUCT CDAARDS", productCards);
-
   return (
     <div>
       {productCards.length !== 0 ? (
@@ -75,6 +74,7 @@ export default async function ProductListDisplay({
           </div>
         </div>
       )}
+      <ProductListPagination itemTotalCount={productsListResponse.count} />
     </div>
   );
 }

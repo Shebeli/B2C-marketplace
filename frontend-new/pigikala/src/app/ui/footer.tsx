@@ -2,7 +2,7 @@ export function Footer() {
   const iconWidth = 60;
   const iconHeight = 60;
   return (
-    <footer className="footer footer-center footer-horizontal bg-base-200 text-base-content rounded-sm py-5 gap-8">
+    <footer className="footer footer-center footer-horizontal bg-base-200 text-base-content rounded-sm py-5 gap-8 border-t-2 border-base-300">
       <nav className="grid grid-flow-col gap-4">
         <a className="link link-hover">درباره ما</a>
         <a className="link link-hover">تماس با ما</a>

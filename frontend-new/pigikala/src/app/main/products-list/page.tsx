@@ -53,7 +53,7 @@ export default async function ProductListPage({
 
   return (
     <>
-      <div className="max-w-(--breakpoint-2xl) flex flex-col p-2 w-full gap-3">
+      <div className="max-w-(--breakpoint-2xl) flex flex-col px-3 py-2 mb-4 w-full gap-3">
         <Suspense fallback={<BreadCrumbSkeleton />}>
           <CategoryBreadcrumb subCategoryId={validatedParams.subCategoryId} />
         </Suspense>
@@ -74,7 +74,6 @@ export default async function ProductListPage({
             </Suspense>
           </div>
         </div>
-        <ProductListPagination />
       </div>
     </>
   );

@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <MainLayout>
       <HomeModal />
-      <div className="p-4 max-w-(--breakpoint-2xl)">
+      <div className="p-4 my-4 max-w-(--breakpoint-2xl)">
         <div className="hero ">
           <div className="hero-content flex-col lg:flex-row-reverse lg:gap-32 gap-12 py-12">
             <Image
