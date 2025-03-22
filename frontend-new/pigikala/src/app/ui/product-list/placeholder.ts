@@ -1,4 +1,4 @@
-import { ColorChoice } from "@/app/lib/types/ui/product-list-types";
+import { ColorChoice } from "@/app/lib/types/ui/productListTypes";
 //
 export const sampleColorChoices: ColorChoice[] = [
   {

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { sortOptions } from "../constants/ui/product-list-constants";
+import { sortOptions } from "../constants/ui/productListConstants";
 
 const ProductGenericFilterSchema = z
   .object({

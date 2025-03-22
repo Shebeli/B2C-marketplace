@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { CodeState } from "../lib/actions/auth/verify/processCodeInput";
-import { processVerifyCode } from "../lib/actions/auth/verify/processCodeInput";
+import { CodeState } from "../lib/auth/verify/processCodeInput";
+import { processVerifyCode } from "../lib/auth/verify/processCodeInput";
 import { useActionState } from "react";
 import { formatCooldownTime } from "../lib/utils/helpers";
-import { requestVerificationCode } from "../lib/actions/auth/requestNewCode";
+import { requestVerificationCode } from "../lib/auth/requestNewCode";
 import { handleFormSubmit } from "../lib/utils/helpers";
 import { toastCustom } from "./alert/alert";
 

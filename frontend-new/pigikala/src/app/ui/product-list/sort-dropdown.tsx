@@ -1,6 +1,6 @@
 "use client";
 
-import { SortChoice } from "@/app/lib/types/ui/product-list-types";
+import { SortChoice } from "@/app/lib/types/ui/productListTypes";
 import { useQueryState } from "nuqs";
 import { FaArrowDownWideShort } from "react-icons/fa6";
 // import { startTransition } from "react";

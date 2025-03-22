@@ -1,4 +1,4 @@
-import { PaginatedResponse } from "./general-responses";
+import { PaginatedResponse } from "./generalResponses";
 
 /**
  * 

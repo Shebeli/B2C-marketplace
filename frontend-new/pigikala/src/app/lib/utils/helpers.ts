@@ -2,9 +2,9 @@ import { phoneNumberValidator } from "@persian-tools/persian-tools";
 import {
   CodeRequestInfo,
   ValidatedCodeRequestInfo,
-} from "../actions/auth/verify/verifyPhone";
+} from "../auth/verify/verifyPhone";
 import { startTransition } from "react";
-import { usernamePattern } from "../constants/ui/general-constants";
+import { usernamePattern } from "../constants/ui/generalConstants";
 
 export function isValidPhoneorUsername(input: string): boolean {
   const isPhone = phoneNumberValidator(input);

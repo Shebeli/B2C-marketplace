@@ -1,8 +1,8 @@
 import ProductCard from "./product-card";
-import { isError } from "@/app/lib/fetch/fetch-wrapper";
-import { fetchProducts } from "@/app/lib/actions/product-list-actions";
-import { ProductGenericFilters } from "@/app/lib/types/ui/product-list-types";
-import { ProductSort } from "@/app/lib/constants/ui/product-list-constants";
+import { isError } from "@/app/lib/fetch/fetchWrapper";
+import { fetchProducts } from "@/app/lib/fetch/product-list/fetch-product-list";
+import { ProductGenericFilters } from "@/app/lib/types/ui/productListTypes";
+import { ProductSort } from "@/app/lib/constants/ui/productListConstants";
 import ProductListPagination from "./product-list-pagination";
 
 export default async function ProductListDisplay({

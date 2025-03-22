@@ -1,14 +1,14 @@
 "use server";
 
-import { ProductSort } from "../constants/ui/product-list-constants";
-import { API_ROUTES } from "../apiRoutes";
-import { ProductGenericFilters } from "../types/ui/product-list-types";
-import { api } from "../fetch/fetch-wrapper";
+import { ProductSort } from "../../constants/ui/productListConstants";
+import { API_ROUTES } from "../../apiRoutes";
+import { ProductGenericFilters } from "../../types/ui/productListTypes";
+import { api } from "../fetchWrapper";
 import {
   BreadCrumbResponse,
   ProductListResponse,
-} from "../types/api/responses/product-list-responses";
-import { transformKeysToSnakeCase } from "../utils/product-list-helpers/product-list-helpers";
+} from "../../types/api/responses/productListResponses";
+import { transformKeysToSnakeCase } from "../../utils/product-list-helpers/productListHelpers";
 
 const { PRODUCT: PRODUCT_ROUTES } = API_ROUTES;
 

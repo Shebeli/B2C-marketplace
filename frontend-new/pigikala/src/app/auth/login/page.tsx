@@ -1,9 +1,8 @@
 "use client";
 
-import { LoginState, processLoginInput } from "@/app/lib/actions/auth/login";
-import { useActionState, useEffect } from "react";
-import toast from "react-hot-toast";
+import { LoginState, processLoginInput } from "@/app/lib/auth/login";
 import { toastCustom } from "@/app/ui/alert/alert";
+import { useActionState, useEffect } from "react";
 
 export default function Login() {
   const initialState: LoginState = { formError: null, alertError: null };

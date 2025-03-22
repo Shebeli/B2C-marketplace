@@ -1,7 +1,7 @@
 "use client";
 
-import { ProductListItemResponse } from "@/app/lib/types/api/responses/product-list-responses";
-import { ColorChoice, SortChoice } from "@/app/lib/types/ui/product-list-types";
+import { ProductListItemResponse } from "@/app/lib/types/api/responses/productListResponses";
+import { ColorChoice, SortChoice } from "@/app/lib/types/ui/productListTypes";
 import { useState } from "react";
 import { FaFilter } from "react-icons/fa6";
 import ProductFilterOptions from "./filter/product-filters";

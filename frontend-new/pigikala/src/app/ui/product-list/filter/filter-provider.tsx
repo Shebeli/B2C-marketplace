@@ -1,8 +1,8 @@
 import {
   defaultFilterOptions,
   filterKeys,
-} from "@/app/lib/constants/ui/product-list-constants";
-import { ColorChoice } from "@/app/lib/types/ui/product-list-types";
+} from "@/app/lib/constants/ui/productListConstants";
+import { ColorChoice } from "@/app/lib/types/ui/productListTypes";
 import {
   parseAsArrayOf,
   parseAsBoolean,

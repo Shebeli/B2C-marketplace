@@ -1,4 +1,4 @@
-import { FilterToggle } from "@/app/lib/types/ui/product-list-types";
+import { FilterToggle } from "@/app/lib/types/ui/productListTypes";
 import { useQueryState } from "nuqs";
 
 export default function FilterToggleOption({

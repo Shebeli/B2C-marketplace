@@ -1,6 +1,6 @@
 import NavbarLoginButton from "./login-button";
 import NavbarProfileDropdown from "./profile";
-import { getUserNavbarProfile } from "@/app/lib/actions/navbar/navbar-actions";
+import { getUserNavbarProfile } from "@/app/lib/fetch/navbar/fetchNavbar";
 
 export default async function NavbarProfile() {
   const navbarProfileData = await getUserNavbarProfile();

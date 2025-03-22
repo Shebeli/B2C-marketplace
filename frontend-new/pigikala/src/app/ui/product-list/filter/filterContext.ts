@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // idc setting the type for custom generic types
 import { createContext, useContext } from "react";
-import { ColorChoice } from "@/app/lib/types/ui/product-list-types";
+import { ColorChoice } from "@/app/lib/types/ui/productListTypes";
 import { SetValues, Values } from "nuqs";
 
 interface FilterContextType {

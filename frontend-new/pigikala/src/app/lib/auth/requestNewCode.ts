@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { API_ROUTES } from "../../apiRoutes";
+import { API_ROUTES } from "../apiRoutes";
 import { CodeState } from "./verify/processCodeInput";
 
 const { USER: USER_ENDPOINTS } = API_ROUTES;

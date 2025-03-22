@@ -7,7 +7,7 @@ import { API_ROUTES } from "@/app/lib/apiRoutes";
 import {
   setAccessTokenCookie,
   setRefreshTokenCookie,
-} from "@/app/lib/fetch/fetch-auth";
+} from "@/app/lib/fetch/fetchAuth";
 
 export type CodeState = {
   formError?: string | null;

@@ -1,16 +1,20 @@
-import { productSortOptions } from "@/app/lib/constants/ui/product-list-constants";
-import { ProductQueryParamsSchema } from "@/app/lib/schemas/product-list-schemas";
-import { ProductGenericFilters } from "@/app/lib/types/ui/product-list-types";
+import { productSortOptions } from "@/app/lib/constants/ui/productListConstants";
+import { ProductQueryParamsSchema } from "@/app/lib/schemas/productListSchemas";
+import { ProductGenericFilters } from "@/app/lib/types/ui/productListTypes";
 import CategoryBreadcrumb from "@/app/ui/breadcrumbs";
 import ProductFilter from "@/app/ui/product-list/filter/product-filter";
 import sampleColorChoices from "@/app/ui/product-list/placeholder";
 import ProductListDisplay from "@/app/ui/product-list/product-list-display";
-import ProductListPagination from "@/app/ui/product-list/product-list-pagination";
 import ProductListSortDropdown from "@/app/ui/product-list/sort-dropdown";
 import { BreadCrumbSkeleton, ProductsListSkeleton } from "@/app/ui/skeletons";
 import { Suspense } from "react";
 import "react-range-slider-input/dist/style.css";
 import { ZodError } from "zod";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Products List"
+}
 
 export default async function ProductListPage({
   searchParams,
@@ -19,8 +23,7 @@ export default async function ProductListPage({
 }) {
   let validatedParams;
 
-  // 1) Parse the query params and prepare the data for fetching
-  // 2) Call the fetches in proper ordering
+  // Parse the query params and prepare the data for fetching
   try {
     const paramResults = await searchParams;
     validatedParams = ProductQueryParamsSchema.parse(paramResults);
@@ -38,15 +41,13 @@ export default async function ProductListPage({
     );
   }
 
-  // transform the filters for fetching
+  // transform generic filters for fetching
   const genericFiltersData: ProductGenericFilters = {
     priceMin: validatedParams.priceMin,
     priceMax: validatedParams.priceMax,
     isAvailable: validatedParams.isAvailable,
     canDeliverToday: validatedParams.canDeliverToday,
   };
-
-  // Fetch the products
 
   // Get available color choices by fetching the color options for given subCategoryId
   const availableColorChoices = sampleColorChoices;

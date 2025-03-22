@@ -1,4 +1,4 @@
-import { getCodeRequestData } from "@/app/lib/actions/auth/verify/verifyPhone";
+import { getCodeRequestData } from "@/app/lib/auth/verify/verifyPhone";
 import VerifyPhoneClient from "@/app/ui/verify";
 import { isCodeRequestValid } from "@/app/lib/utils/helpers";
 import { calculateCodeRemainingTimer } from "@/app/lib/utils/time";
