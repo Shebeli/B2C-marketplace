@@ -151,6 +151,7 @@ class Product(models.Model):
     )
     is_enabled = models.BooleanField(default=True)
 
+
     objects = ProductManager()
 
     def increase_view_count(self) -> None:

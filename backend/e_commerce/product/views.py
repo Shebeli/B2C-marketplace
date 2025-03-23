@@ -102,13 +102,15 @@ class ProductDetail(RetrieveUpdateDestroyAPIView):
 
     def get(self, request, *args, **kwargs):
         """
-        Increase the view count of a product but with the constraint of having a cooldown
-        period of one day for each client, which is handled by caching the client's IP.
+        Upon calling, the view count of a product increases
+        with the constraint of having a cooldown period of
+        one day for each client, which is handled by caching the client's IP.
         """
+        user_ip = request.query_params.get("user_ip")
         product_obj = self.get_object()
         serializer = self.get_serializer(product_obj)
-        user_ip, _ = get_client_ip(self.request)
         if not user_ip:
+            print(serializer.data)
             return Response(serializer.data)
         self._cache_client_ip(product_obj, user_ip)
         return Response(serializer.data)

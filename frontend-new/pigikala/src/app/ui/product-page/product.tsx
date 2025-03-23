@@ -10,79 +10,35 @@ import ProductDetail from "@/app/ui/product-page/product-detail";
 import ProductFeature from "@/app/ui/product-page/product-feature";
 import ProductImage from "@/app/ui/product-page/product-image";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import {
   FaCalendarCheck,
   FaCheck,
-  FaCreditCard,
-  FaHeadset,
   FaShieldHalved,
-  FaStar,
   FaStore,
-  FaTruck,
 } from "react-icons/fa6";
+import ProductImageModal from "./product-image-modal";
+import ProductRating from "./product-rating";
 
+interface ProductFeature {
+  name: string;
+  value: string;
+}
 
 // This page is used as show case using the UI with some placeholder data.
-function ProductPage() {
+function Product({ productFeatures }: { productFeatures: ProductFeature[] }) {
   const [selectedColor, setSelectedColor] = useState("زرد");
-
-  // clicked product image modal
   const [openedImageSrc, setOpenedImageSrc] = useState<string | null>(null);
-  const imageModalRef = useRef<HTMLDialogElement>(null);
 
   const selectedColorObj = colors.find((color) => color.name === selectedColor);
-
-  // For closing the opened image by clicking outside the box.
-  const handleModalOutsideClose = (
-    e: React.MouseEvent<HTMLDialogElement, MouseEvent>
-  ) => {
-    const dialog = imageModalRef.current;
-    if (imageModalRef.current && e.target == dialog) {
-      setOpenedImageSrc(null);
-    }
-  };
-
-  // When opened image state gets changed, using its ref,
-  // open or close the image based on state's value
-  useEffect(() => {
-    if (openedImageSrc) {
-      imageModalRef.current?.showModal();
-    } else {
-      imageModalRef.current?.close();
-    }
-  }, [openedImageSrc]);
 
   return (
     <>
       <div className="lg:px-4 max-w-(--breakpoint-2xl)">
-        {openedImageSrc && (
-          <dialog
-            ref={imageModalRef}
-            className="modal"
-            onCancel={() => setOpenedImageSrc(null)}
-            onClick={handleModalOutsideClose}
-            id="image_modal"
-          >
-            <div className="modal-box">
-              <form method="dialog" className="modal-backdrop ">
-                <button
-                  onClick={() => setOpenedImageSrc(null)}
-                  className="btn btn-sm btn-circle absolute"
-                >
-                  ✕
-                </button>
-              </form>
-              <Image
-                src={openedImageSrc}
-                width={450}
-                height={450}
-                alt="product"
-                className="place-self-center"
-              />
-            </div>
-          </dialog>
-        )}
+        <ProductImageModal
+          openedImageSrc={openedImageSrc}
+          setOpenedImageSrc={setOpenedImageSrc}
+        />
         <div className="justify-items m-2 w-full">
           <div className="flex flex-col lg:flex-row">
             <div className="card grid basis-3/6 place-items-center lg:ml-2 mb-2 ">
@@ -94,10 +50,13 @@ function ProductPage() {
                 height={1000}
               />
               <div className="flex self-start pb-1 gap-3 scrollbar overflow-x-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-slate-700 scrollbar-track-slate-300">
-                <ProductImage
-                  images={images}
-                  onClickEventHandler={setOpenedImageSrc}
-                />
+                {images.map((image, index) => (
+                  <ProductImage
+                    key={index}
+                    image={image}
+                    onClickEventHandler={() => setOpenedImageSrc(image.source)}
+                  />
+                ))}
               </div>
             </div>
             <div>
@@ -118,12 +77,7 @@ function ProductPage() {
               </div>
               <div className="grid grid-rows-[auto_1fr] lg:grid-cols-[8fr_5fr] grid-cols-[1fr_2fr] my-3 wrap gap-4">
                 <div className="lg mx-4">
-                  <div className="flex gap-1">
-                    <FaStar className=" text-yellow-300" />
-                    <p className="font-light text-sm">
-                      4.1 امتیاز ( از 214 خریدار)
-                    </p>
-                  </div>
+                  <ProductRating rating={2.4} buyersCount={200} />
                   <ProductColor
                     colors={colors}
                     selectedColor={selectedColor}
@@ -159,57 +113,20 @@ function ProductPage() {
                 <div className=" lg:col-span-1 col-span-2 ">
                   <h2 className="font-semibold text-lg mt-2 mb-1">ویژگی ها</h2>
                   <div className="lg:grid grid-cols-3 flex gap-4 w-full lg:overflow-hidden overflow-scroll scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-slate-700 scrollbar-track-slate-300 py-1">
-                    <ProductFeature
-                      name={"نسل پردازنده"}
-                      value={"نسل 8 ای ام دی"}
-                    />
-                    <ProductFeature name={"سری پردازنده"} value={"Ryzen 5"} />
-                    <ProductFeature name={"ظرفیت حافظه RAM"} value={"16GB"} />
-                    <ProductFeature
-                      name={"سازنده پردازنده گرافیکی"}
-                      value={"NVIDIA"}
-                    />
-                    <ProductFeature
-                      name={"رزولوشن صفحه نمایش"}
-                      value={"1920x1080"}
-                    />
-                    <ProductFeature
-                      name={"نرخ بروز رسانی تصویر"}
-                      value={"144 هرتز"}
-                    />
-                    <ProductFeature name={"نسخه ی بلوتوث"} value={"5.3"} />
-                    <ProductFeature
-                      name={"مدل پردازنده گرافیکی"}
-                      value={"GeForce RTX 4050"}
-                    />
-                    <ProductFeature
-                      name={"اندازه صفحه نمایش"}
-                      value={"15.6 اینچ"}
-                    />
+                    {productFeatures.map((productFeature, index) => (
+                      <ProductFeature
+                        key={index}
+                        name={productFeature.name}
+                        value={productFeature.value}
+                      />
+                    ))}
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div className="flex gap-16 max-w-(--breakpoint-2xl)  place-self-center justify-between border-y-2 border-base-300 p-4 px-8 mt-8 w-full">
-          <div className="bg-base flex flex-col items-center gap-2 ">
-            <FaHeadset className="text-4xl" />
-            <p>پشتیبانی 24 ساعته</p>
-          </div>
-          <div className="bg-base flex flex-col items-center gap-2">
-            <FaCreditCard className="text-4xl" />
-            <p> امکان پرداخت در محل </p>
-          </div>
-          <div className="bg-base flex flex-col items-center gap-2">
-            <FaTruck className="text-4xl" />
-            <p>تحویل به موقع</p>
-          </div>
-          <div className="bg-base flex flex-col items-center gap-2">
-            <FaCalendarCheck className="text-4xl" />
-            <p>7 روز ضمانت بازگشت کالا</p>
-          </div>
-        </div>
+        <FaCalendarCheck />
         <div
           role="tablist"
           className="tabs tabs-lifted place-self-center w-full my-8 shadow-lg"
@@ -287,4 +204,4 @@ function ProductPage() {
   );
 }
 
-export default ProductPage;
+export default Product;

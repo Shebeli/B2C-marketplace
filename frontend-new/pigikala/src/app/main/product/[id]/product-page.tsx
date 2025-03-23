@@ -94,7 +94,7 @@ function ProductPage() {
               <div className="flex self-start pb-1 gap-3 scrollbar overflow-x-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-slate-700 scrollbar-track-slate-300">
                 <ProductImage
                   images={images}
-                  setOpenedImage={setOpenedImageSrc}
+                  onClickEventHandler={setOpenedImageSrc}
                 />
               </div>
             </div>

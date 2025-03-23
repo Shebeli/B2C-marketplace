@@ -15,7 +15,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 
-  // no access token but refresh token exists, attempt to fetch a new access token.
+  // no access token but refresh token exists, attempt to fetch a new access token, but note that
   // race condition can happen where the access token which is just about to be expired,
   // gets validated here in the middleware but when access token is accessed afterwards,
   // the token is already expired.
