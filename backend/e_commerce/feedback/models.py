@@ -1,8 +1,8 @@
-from backend.e_commerce.ecom_user.models import EcomUser
-from backend.e_commerce.order.models import Order
 from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from ecom_user.models import EcomUser
+from order.models import Order
 from product.models import Product
 
 
@@ -13,7 +13,6 @@ class ProductReview(models.Model):
         EcomUser,
         verbose_name=_("Reviewed by"),
         on_delete=models.SET_NULL,
-        null=True,
         blank=False,
     )
     rating = models.PositiveSmallIntegerField(
@@ -46,7 +45,6 @@ class ProductComment(models.Model):
         EcomUser,
         verbose_name=_("Commented by"),
         on_delete=models.SET_NULL,
-        null=True,
         blank=False,
     )
     title = models.CharField(max_length=100)

@@ -1,18 +1,19 @@
-from backend.e_commerce.feedback.models import ProductComment, ProductReview
-from backend.e_commerce.feedback.permissions import (
-    IsCommentOwner,
-    IsEcomAdmin,
-    IsReviewOwner,
-)
-from backend.e_commerce.feedback.serializers import (
-    ProductCommentSerializer,
-    ProductReviewSerializer,
-)
 from rest_framework import mixins, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+
+from feedback.models import ProductComment, ProductReview
+from feedback.permissions import (
+    IsCommentOwner,
+    IsEcomAdmin,
+    IsReviewOwner,
+)
+from feedback.serializers import (
+    ProductCommentSerializer,
+    ProductReviewSerializer,
+)
 
 
 class ProductReviewList(GenericAPIView, mixins.CreateModelMixin):

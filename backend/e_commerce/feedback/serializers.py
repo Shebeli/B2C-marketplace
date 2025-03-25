@@ -1,4 +1,4 @@
-from backend.e_commerce.order.models import Order
+from order.models import Order
 from rest_framework import serializers
 
 from feedback.models import ProductComment, ProductReview

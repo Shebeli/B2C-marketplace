@@ -75,6 +75,11 @@ SECRET_KEY = "django-insecure-zwnn7c841o)_)gbatefjd*01*d54ypos7#ew*4o16w%v^(4and
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+if os.environ.get("CONTAINER"):
+    CONTAINER = True
+else:
+    CONTAINER = False
+
 
 ALLOWED_HOSTS = [
     "localhost",
@@ -100,6 +105,7 @@ INSTALLED_APPS = [
     "product",
     "order",
     "financeops",
+    "feedback",
     # 3rd party apps
     "rest_framework",
     "rest_framework_simplejwt",
@@ -146,17 +152,34 @@ WSGI_APPLICATION = "ecom_core.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+POSTGRES_DB = os.environ.get("POSTGRES_DB")
+POSTGRES_USER = os.environ.get("POSTGRES_USER")
+POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
+POSTGRES_HOST = os.environ.get("POSTGRES_HOST")
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("POSTGRES_DB", "shebel"),
-        "USER": os.environ.get("POSTGRES_USER", "root"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "1234"),
-        "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
-        "PORT": "5432",
+# for local developments outside of docker
+if DEBUG and CONTAINER:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": POSTGRES_DB,
+            "USER": POSTGRES_USER,
+            "PASSWORD": POSTGRES_PASSWORD,
+            "HOST": POSTGRES_HOST,
+            "PORT": "5432",
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": "e_com",
+            "USER": "root",
+            "PASSWORD": "1234",
+            "HOST": "localhost",  # Or an IP Address that your DB is hosted on
+            "PORT": "3306",
+        }
+    }
 
 
 # Password validation

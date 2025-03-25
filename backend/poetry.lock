@@ -639,6 +639,38 @@ offline = ["drf-spectacular-sidecar"]
 sidecar = ["drf-spectacular-sidecar"]
 
 [[package]]
+name = "factory-boy"
+version = "3.3.3"
+description = "A versatile test fixtures replacement based on thoughtbot's factory_bot for Ruby."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "factory_boy-3.3.3-py2.py3-none-any.whl", hash = "sha256:1c39e3289f7e667c4285433f305f8d506efc2fe9c73aaea4151ebd5cdea394fc"},
+    {file = "factory_boy-3.3.3.tar.gz", hash = "sha256:866862d226128dfac7f2b4160287e899daf54f2612778327dd03d0e2cb1e3d03"},
+]
+
+[package.dependencies]
+Faker = ">=0.7.0"
+
+[package.extras]
+dev = ["Django", "Pillow", "SQLAlchemy", "coverage", "flake8", "isort", "mongoengine", "mongomock", "mypy", "tox", "wheel (>=0.32.0)", "zest.releaser[recommended]"]
+doc = ["Sphinx", "sphinx-rtd-theme", "sphinxcontrib-spelling"]
+
+[[package]]
+name = "faker"
+version = "37.0.2"
+description = "Faker is a Python package that generates fake data for you."
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "faker-37.0.2-py3-none-any.whl", hash = "sha256:8955706c56c28099585e9e2b6f814eb0a3a227eb36a2ee3eb9ab577c4764eacc"},
+    {file = "faker-37.0.2.tar.gz", hash = "sha256:948bd27706478d3aa0b6f9f58b9f25207098f6ca79852c7b49c44a8ced2bc59b"},
+]
+
+[package.dependencies]
+tzdata = "*"
+
+[[package]]
 name = "flower"
 version = "2.0.1"
 description = "Celery Flower"
@@ -1815,4 +1847,4 @@ types-requests = ">=2.32.0.20240712,<3.0.0.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "fe8e07d1e0028315416e299abf57956f734960ac5a9d81c34ed615b04186dcd0"
+content-hash = "0e3f7a12076288e1a2eaacabaadcdb77f46eb4702c61b16b90d9832e50912252"
