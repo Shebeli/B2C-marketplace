@@ -17,7 +17,7 @@ class ProductReviewSerializer(serializers.ModelSerializer):
         new_data = dict(data)
         if self.instance:
             for field in self.non_updatable_fields:
-                new_data[field] = getattr(self.instance, "id")
+                new_data[field] = getattr(self.instance, field).id
         return super().to_internal_value(new_data)
 
     def validate(self, data):
@@ -40,6 +40,7 @@ class ProductCommentSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def to_internal_value(self, data):
+        new_data = dict(data)
         if self.instance:
-            self.data["product"] = self.instance["product"]
+            new_data["product"] = getattr(self.instance, "product").id
         return super().to_internal_value(data)
