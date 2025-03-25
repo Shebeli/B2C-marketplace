@@ -61,7 +61,7 @@ class ProductVariantFactory(DjangoModelFactory):
         model = ProductVariant
 
     product = SubFactory(ProductFactory)
-    name = factory.Faker("word")
+    name = factory.Sequence(lambda n: f"product variant {n}")
     price = FuzzyInteger(100, 5000)
     on_hand_stock = FuzzyInteger(5, 100)
 

@@ -12,7 +12,7 @@ class ProductReview(models.Model):
     reviewed_by = models.ForeignKey(
         EcomUser,
         verbose_name=_("Reviewed by"),
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         blank=False,
     )
     rating = models.PositiveSmallIntegerField(
@@ -44,7 +44,7 @@ class ProductComment(models.Model):
     commented_by = models.ForeignKey(
         EcomUser,
         verbose_name=_("Commented by"),
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         blank=False,
     )
     title = models.CharField(max_length=100)

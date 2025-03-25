@@ -11,7 +11,7 @@ urlpatterns = [
     path("review/<int:pk>/", views.ProductReviewDetail.as_view(), name="review-detail"),
     path("user-reviews/", views.EcomUserProductReviews.as_view(), name="user-reviews"),
     path("comment/", views.ProductCommentList.as_view(), name="comment-list"),
-    path("comment/<int:pk>", views.ProductComment.as_view(), name="comment-detail"),
+    path("comment/<int:pk>", views.ProductCommentDetail.as_view(), name="comment-detail"),
     
     
 ]
