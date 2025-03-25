@@ -1,25 +1,12 @@
-import factory
 import pytest
-from ecom_user.models import EcomUser
 from ecom_user_profile.tests.profile_factory import CustomerFactory
-from factory import SubFactory
-from factory.django import DjangoModelFactory
-from order.models import Order
 from order.tests.order_factory import OrderFactory, OrderItemFactory
-from product.models import (
-    Category,
-    MainCategory,
-    Product,
-    ProductVariant,
-    SubCategoryBreadCrumb,
-    Tag,
-    TechnicalDetail,
-)
 from product.tests.product_factory import ProductFactory, ProductVariantFactory
 
-from feedback.models import ProductReview, ProductComment
-from feedback.serializers import ProductReviewSerializer
-from feedback.tests.feedback_factory import ProductReviewFactory
+from feedback.serializers import ProductCommentSerializer, ProductReviewSerializer
+from feedback.tests.feedback_factory import ProductCommentFactory, ProductReviewFactory
+
+# ------ Review Serializer -------
 
 
 @pytest.mark.django_db
@@ -90,6 +77,69 @@ def test_review_serializer_update():
         "product": obj.product.id,
         "reviewed_by": obj.reviewed_by.id,
         "rating": obj.rating,
+        "title": obj.title,
+        "description": obj.description,
+    }
+
+
+# ------ Comment Serializer -------
+
+
+@pytest.mark.django_db
+def test_comment_serializer_representation():
+    comment = ProductCommentFactory()
+    serializer = ProductCommentSerializer(comment)
+    assert serializer.data == {
+        "id": comment.id,
+        "product": comment.product.id,
+        "commented_by": comment.commented_by.id,
+        "title": comment.title,
+        "description": comment.description,
+    }
+
+
+@pytest.mark.django_db
+def test_comment_serializer_creation():
+    customer = CustomerFactory()
+    product = ProductFactory()
+
+    data = {
+        "product": product.id,
+        "commented_by": customer.id,
+        "title": "Sample title",
+        "description": "Sample description",
+    }
+
+    serializer = ProductCommentSerializer(data=data)
+    assert serializer.is_valid(), f"Serializer errors: {serializer.errors}"
+
+    obj = serializer.save()
+    assert data == {
+        "product": obj.product.id,
+        "commented_by": obj.commented_by.id,
+        "title": obj.title,
+        "description": obj.description,
+    }
+
+
+@pytest.mark.django_db
+def test_comment_serializer_update():
+    product = ProductFactory()
+    comment = ProductCommentFactory(product=product)
+    new_data = {
+        "product": comment.product.id,
+        "commented_by": comment.commented_by.id,
+        "title": "New title",
+        "description": "New description",
+    }
+
+    serializer = ProductCommentSerializer(comment, data=new_data)
+    assert serializer.is_valid(), f"Serializer errors: {serializer.errors}"
+
+    obj = serializer.save()
+    assert new_data == {
+        "product": obj.product.id,
+        "commented_by": obj.commented_by.id,
         "title": obj.title,
         "description": obj.description,
     }
