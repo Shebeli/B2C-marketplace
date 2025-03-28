@@ -20,7 +20,6 @@ class ProductReviewSerializer(serializers.ModelSerializer):
         exclude = ["reviewed_by"]
         extra_kwargs = {
             "order": {"write_only": True},
-            "reviewed_by": {"required": False},
         }
 
     def to_internal_value(self, data):
@@ -67,8 +66,7 @@ class ProductReviewSerializer(serializers.ModelSerializer):
 class ProductCommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductComment
-        fields = "__all__"
-        extra_kwargs = {"commented_by": {"required": False}}
+        exclude = ["commented_by"]
 
     def to_internal_value(self, data):
         if self.instance:

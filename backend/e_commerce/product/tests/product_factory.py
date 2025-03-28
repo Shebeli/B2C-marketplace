@@ -19,14 +19,14 @@ class MainCategoryFactory(DjangoModelFactory):
     class Meta:
         model = MainCategory
 
-    name = factory.Faker("word")
+    name = factory.Sequence(lambda n: f"Maincategory {n}")
 
 
 class CategoryFactory(DjangoModelFactory):
     class Meta:
         model = Category
 
-    name = factory.Faker("word")
+    name = factory.Sequence(lambda n: f"Category {n}")
     main_category = factory.SubFactory(MainCategoryFactory)
 
 
@@ -34,7 +34,7 @@ class SubCategoryBreadCrumbFactory(DjangoModelFactory):
     class Meta:
         model = SubCategoryBreadCrumb
 
-    name = factory.Faker("word")
+    name = factory.Sequence(lambda n: f"SubCategory {n}")
     category = factory.SubFactory(CategoryFactory)
 
 

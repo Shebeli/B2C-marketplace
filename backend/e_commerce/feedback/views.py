@@ -1,12 +1,10 @@
-from rest_framework import mixins
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import (
     CreateAPIView,
-    GenericAPIView,
     ListAPIView,
     RetrieveUpdateDestroyAPIView,
 )
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 
 from feedback.models import ProductComment, ProductReview
 from feedback.permissions import (
@@ -22,7 +20,7 @@ from feedback.serializers import (
 # Product Reviews Views
 
 
-class ProductReviewList(GenericAPIView, mixins.CreateModelMixin):
+class ProductReviewList(ListAPIView):
     """
     GET:
     Lists all the reviews for the provided product id (paginated).
@@ -34,13 +32,12 @@ class ProductReviewList(GenericAPIView, mixins.CreateModelMixin):
     def get_queryset(self):
         if not self.kwargs["pk"]:
             raise ValidationError("Product's id should be provided.")
-        return super().get_queryset().filter(product=self.kwargs["pk"]).order_by("id")
-
-    def get(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        page = self.paginate_queryset(queryset)
-        serializer = self.get_serializer(page, many=True)
-        return self.get_paginated_response(serializer.data)
+        return (
+            super()
+            .get_queryset()
+            .filter(product=self.kwargs["pk"])
+            .order_by("created_at")
+        )
 
 
 class ProductReviewCreate(CreateAPIView):
@@ -61,7 +58,6 @@ class ProductReviewCreate(CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(reviewed_by=self.request.user)
 
-    
 
 class ProductReviewDetail(RetrieveUpdateDestroyAPIView):
     """
@@ -89,7 +85,12 @@ class CustomerProductReviews(ListAPIView):
     serializer_class = ProductReviewSerializer
 
     def get_queryset(self):
-        return super().get_queryset().filter(reviewed_by=self.request.user)
+        return (
+            super()
+            .get_queryset()
+            .filter(reviewed_by=self.request.user)
+            .order_by("created_at")
+        )
 
 
 # Product Comment Views
@@ -106,11 +107,11 @@ class ProductCommentCreate(CreateAPIView):
     """
 
     permission_classes = [IsAuthenticated]
-    queryset = ProductReview.objects.all()
-    serializer_class = ProductReviewSerializer
+    queryset = ProductComment.objects.all()
+    serializer_class = ProductCommentSerializer
 
     def perform_create(self, serializer):
-        serializer.save(reviewed_by=self.request.user)
+        serializer.save(commented_by=self.request.user)
 
 
 class CustomerProductComments(ListAPIView):
@@ -124,7 +125,12 @@ class CustomerProductComments(ListAPIView):
     serializer_class = ProductCommentSerializer
 
     def get_queryset(self):
-        return super().get_queryset().filter(reviewed_by=self.request.user)
+        return (
+            super()
+            .get_queryset()
+            .filter(commented_by=self.request.user)
+            .order_by("created_at")
+        )
 
 
 class ProductCommentList(ListAPIView):
@@ -136,6 +142,16 @@ class ProductCommentList(ListAPIView):
     permission_classes = [IsAuthenticated]
     queryset = ProductComment.objects.all()
     serializer_class = ProductCommentSerializer
+
+    def get_queryset(self):
+        if not self.kwargs["pk"]:
+            raise ValidationError("Product's id should be provided.")
+        return (
+            super()
+            .get_queryset()
+            .filter(product=self.kwargs["pk"])
+            .order_by("created_at")
+        )
 
 
 class ProductCommentDetail(RetrieveUpdateDestroyAPIView):
