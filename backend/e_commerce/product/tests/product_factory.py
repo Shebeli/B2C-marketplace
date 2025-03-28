@@ -19,14 +19,14 @@ class MainCategoryFactory(DjangoModelFactory):
     class Meta:
         model = MainCategory
 
-    name = "Home and Kitchen"
+    name = factory.Faker("word")
 
 
 class CategoryFactory(DjangoModelFactory):
     class Meta:
         model = Category
 
-    name = "Couches and Home Decoration"
+    name = factory.Faker("word")
     main_category = factory.SubFactory(MainCategoryFactory)
 
 
@@ -34,7 +34,7 @@ class SubCategoryBreadCrumbFactory(DjangoModelFactory):
     class Meta:
         model = SubCategoryBreadCrumb
 
-    name = "Chair"
+    name = factory.Faker("word")
     category = factory.SubFactory(CategoryFactory)
 
 

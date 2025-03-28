@@ -19,7 +19,6 @@ class ProductReviewFactory(DjangoModelFactory):
     title = factory.Faker("sentence", nb_words=3)
     description = factory.Faker("text")
 
-
 class ProductCommentFactory(DjangoModelFactory):
     class Meta:
         model = ProductComment

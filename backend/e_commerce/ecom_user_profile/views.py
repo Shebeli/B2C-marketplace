@@ -1,4 +1,3 @@
-from tkinter.tix import STATUS
 
 from ecom_core.permissions import IsOwner
 from ecom_user.authentication import EcomUserJWTAuthentication

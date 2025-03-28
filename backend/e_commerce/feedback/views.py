@@ -1,8 +1,12 @@
-from rest_framework import mixins, status
+from rest_framework import mixins
 from rest_framework.exceptions import ValidationError
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import (
+    CreateAPIView,
+    GenericAPIView,
+    ListAPIView,
+    RetrieveUpdateDestroyAPIView,
+)
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.response import Response
 
 from feedback.models import ProductComment, ProductReview
 from feedback.permissions import (
@@ -15,38 +19,22 @@ from feedback.serializers import (
     ProductReviewSerializer,
 )
 
+# Product Reviews Views
+
 
 class ProductReviewList(GenericAPIView, mixins.CreateModelMixin):
     """
     GET:
-    Lists all the reviews for a given product id.
-    The id of product should be provided in the URL.
-
-    POST:
-    For creating a review for a product, user should be authenticated.
-
-    If the following criteria are not met, an appropriate error will be returned:
-
-    1) The user should have an order either in COMPLETED or DELIVERED status with
-    the given product existing in the order items.
-
-    2) The user also cannot leave out more than one review for each product.
-
-    The review is specific to a product, not its variants.
+    Lists all the reviews for the provided product id (paginated).
     """
 
     queryset = ProductReview.objects.all()
     serializer_class = ProductReviewSerializer
 
-    def get_permissions(self):
-        if self.request.method == "POST":
-            return [IsAuthenticated()]
-        return [AllowAny()]
-
     def get_queryset(self):
         if not self.kwargs["pk"]:
             raise ValidationError("Product's id should be provided.")
-        return super().get_queryset().filter(product=self.kwargs["pk"])
+        return super().get_queryset().filter(product=self.kwargs["pk"]).order_by("id")
 
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -54,22 +42,35 @@ class ProductReviewList(GenericAPIView, mixins.CreateModelMixin):
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
+
+class ProductReviewCreate(CreateAPIView):
+    """
+    POST:
+    For creating a review for a product, user should be authenticated.
+
+    If the following criteria are not met, an appropriate error will be returned:
+
+    1) The passed in order should be either in COMPLETED or DELIVERED status.
+    2) The user cannot leave out more than one review for each product.
+    """
+
+    permission_classes = [IsAuthenticated]
+    queryset = ProductReview.objects.all()
+    serializer_class = ProductReviewSerializer
+
     def perform_create(self, serializer):
         serializer.save(reviewed_by=self.request.user)
 
+    
 
-class ProductReviewDetail(
-    GenericAPIView, mixins.UpdateModelMixin, mixins.DestroyModelMixin
-):
+class ProductReviewDetail(RetrieveUpdateDestroyAPIView):
     """
-    Allows the owner of the given review object to either edit or delete it.
-
     DELETE:
-    Deletes the given review
+    Deletes the given review object.
 
     PUT/PATCH:
     Update the given review (fields 'product' and 'order' are not updatable, thus
-    any inputted values are ignored for this fields)
+    any inputted values are ignored for this fields).
     """
 
     permission_classes = [IsReviewOwner | IsEcomAdmin]
@@ -77,9 +78,10 @@ class ProductReviewDetail(
     serializer_class = ProductReviewSerializer
 
 
-class EcomUserProductReviews(GenericAPIView, mixins.ListModelMixin):
+class CustomerProductReviews(ListAPIView):
     """
-    Lists all the reviews for the current authenticated user.
+    GET:
+    Lists all the reviews for the current authenticated user (paginated).
     """
 
     permission_classes = [IsAuthenticated]
@@ -90,18 +92,31 @@ class EcomUserProductReviews(GenericAPIView, mixins.ListModelMixin):
         return super().get_queryset().filter(reviewed_by=self.request.user)
 
 
-class ProductCommentList(
-    GenericAPIView, mixins.CreateModelMixin, mixins.ListModelMixin
-):
+# Product Comment Views
+
+
+class ProductCommentCreate(CreateAPIView):
     """
-    Requires the current user to be authenticated. both create and list will
-    use the current authenticated user.
-
     POST:
-    Create a product comment (with constraint of only one comment per product).
+    For creating a comment for a product, user should be authenticated.
 
+    If the following criteria are not met, an appropriate error will be returned:
+
+    1) The user cannot leave out more than one comment for each product.
+    """
+
+    permission_classes = [IsAuthenticated]
+    queryset = ProductReview.objects.all()
+    serializer_class = ProductReviewSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(reviewed_by=self.request.user)
+
+
+class CustomerProductComments(ListAPIView):
+    """
     GET:
-    Lists all comments for current authenticated user.
+    Lists all the comments for the current authenticated user (paginated).
     """
 
     permission_classes = [IsAuthenticated]
@@ -109,18 +124,21 @@ class ProductCommentList(
     serializer_class = ProductCommentSerializer
 
     def get_queryset(self):
-        return super().get_queryset().filter(commented_by=self.request.user)
-
-    def perform_create(self, serializer):
-        serializer.save(commented_by=self.request.user)
+        return super().get_queryset().filter(reviewed_by=self.request.user)
 
 
-class ProductCommentDetail(
-    GenericAPIView,
-    mixins.DestroyModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.UpdateModelMixin,
-):
+class ProductCommentList(ListAPIView):
+    """
+    GET:
+    Lists all the comments for a specific product (paginated).
+    """
+
+    permission_classes = [IsAuthenticated]
+    queryset = ProductComment.objects.all()
+    serializer_class = ProductCommentSerializer
+
+
+class ProductCommentDetail(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsCommentOwner | IsEcomAdmin]
     queryset = ProductComment.objects.all()
     serializer_class = ProductCommentSerializer

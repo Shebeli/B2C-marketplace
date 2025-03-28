@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 import pytest
 from ecom_user_profile.tests.profile_factory import CustomerFactory
 from order.tests.order_factory import OrderFactory, OrderItemFactory
@@ -7,6 +9,8 @@ from feedback.serializers import ProductCommentSerializer, ProductReviewSerializ
 from feedback.tests.feedback_factory import ProductCommentFactory, ProductReviewFactory
 
 # ------ Review Serializer -------
+# Note that date time fields are not a matter of importance to get asserted
+# with some expected value
 
 
 @pytest.mark.django_db
@@ -16,11 +20,16 @@ def test_review_serializer_representation():
     assert serializer.data == {
         "id": review.id,
         "product": review.product.id,
-        # "order": review.order.id, this is a write only field!
-        "reviewed_by": review.reviewed_by.id,
+        "reviewed_by": {
+            "id": review.reviewed_by.id,
+            "full_name": review.reviewed_by.full_name,
+            "profile_picture": None,
+        },
         "rating": 3,
         "title": review.title,
         "description": review.description,
+        "created_at": serializer.data["created_at"],
+        "updated_at": serializer.data["updated_at"],
     }
 
 
@@ -33,7 +42,6 @@ def test_review_serializer_creation():
 
     data = {
         "product": product.id,
-        "reviewed_by": customer.id,
         "order": order.id,
         "rating": 5,
         "title": "Sample title",
@@ -43,15 +51,15 @@ def test_review_serializer_creation():
     serializer = ProductReviewSerializer(data=data)
     assert serializer.is_valid(), f"Serializer errors: {serializer.errors}"
 
-    obj = serializer.save()
-    assert data == {
+    obj = serializer.save(reviewed_by=customer)
+    expected_data = {
         "product": obj.product.id,
-        "reviewed_by": obj.reviewed_by.id,
         "order": obj.order.id,
         "rating": obj.rating,
         "title": obj.title,
         "description": obj.description,
     }
+    assert data == expected_data
 
 
 @pytest.mark.django_db
@@ -62,8 +70,7 @@ def test_review_serializer_update():
     OrderItemFactory.create(product_variant=variant, order=order)
     review = ProductReviewFactory(order=order, product=product)
     new_data = {
-        "product": review.product.id,
-        "reviewed_by": review.reviewed_by.id,
+        "id": review.id,
         "rating": 1,
         "title": "New title",
         "description": "New description",
@@ -73,13 +80,15 @@ def test_review_serializer_update():
     assert serializer.is_valid(), f"Serializer errors: {serializer.errors}"
 
     obj = serializer.save()
-    assert new_data == {
-        "product": obj.product.id,
-        "reviewed_by": obj.reviewed_by.id,
+    expected_data = {
+        "id": obj.id,
         "rating": obj.rating,
+        "order": obj.order.id,
+        "product": obj.product.id,
         "title": obj.title,
         "description": obj.description,
     }
+    assert new_data == expected_data
 
 
 # ------ Comment Serializer -------
@@ -89,12 +98,19 @@ def test_review_serializer_update():
 def test_comment_serializer_representation():
     comment = ProductCommentFactory()
     serializer = ProductCommentSerializer(comment)
+
     assert serializer.data == {
         "id": comment.id,
         "product": comment.product.id,
-        "commented_by": comment.commented_by.id,
+        "commented_by": {
+            "id": comment.commented_by.id,
+            "full_name": comment.commented_by.full_name,
+            "profile_picture": None,
+        },
         "title": comment.title,
         "description": comment.description,
+        "created_at": serializer.data["created_at"],
+        "updated_at": serializer.data["updated_at"],
     }
 
 
@@ -127,8 +143,7 @@ def test_comment_serializer_update():
     product = ProductFactory()
     comment = ProductCommentFactory(product=product)
     new_data = {
-        "product": comment.product.id,
-        "commented_by": comment.commented_by.id,
+        "id": comment.id,
         "title": "New title",
         "description": "New description",
     }
@@ -137,9 +152,10 @@ def test_comment_serializer_update():
     assert serializer.is_valid(), f"Serializer errors: {serializer.errors}"
 
     obj = serializer.save()
-    assert new_data == {
-        "product": obj.product.id,
-        "commented_by": obj.commented_by.id,
+    expected_data = {
+        "id": obj.id,
+        "product": product.id,
         "title": obj.title,
         "description": obj.description,
     }
+    assert new_data == expected_data
