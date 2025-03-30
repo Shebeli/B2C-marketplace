@@ -1,5 +1,4 @@
 import pytest
-from django import db
 from django.urls import reverse
 from ecom_user_profile.tests.profile_factory import CustomerFactory, SellerFactory
 from order.tests.order_factory import OrderFactory, OrderItemFactory

@@ -123,7 +123,7 @@ class SellerProfile(models.Model):
             return settings.DEFAULT_REQUIRED_SELLER_FIELDS
         return [field.decode() for field in required_fields]
 
-    def _validate_seller_required_fields(self, required_fields: List[str]) -> None:
+    def _validate_seller_required_fields(self, required_fields: list[str]) -> None:
         all_field_names = self._get_all_field_names()
         valid_field_names = [
             field for field in required_fields if field not in all_field_names
@@ -141,10 +141,10 @@ class SellerProfile(models.Model):
         if errors:
             raise exceptions.ValidationError(errors)
 
-    def _get_all_field_names(self) -> List[str]:
+    def _get_all_field_names(self) -> list[str]:
         return [field.name for field in self._meta.get_fields()]
 
-    def _get_empty_fields(self, field_names: List[str]) -> List[str]:
+    def _get_empty_fields(self, field_names: list[str]) -> list[str]:
         empty_fields = [field for field in field_names if not getattr(self, field)]
         return empty_fields
 
