@@ -1,6 +1,5 @@
 import datetime
 import logging
-from typing import List
 
 from django.conf import settings
 from django.core import exceptions
@@ -11,7 +10,6 @@ from ecom_core.validators import (
     validate_bank_card_number,
     validate_iban,
     validate_postal_code,
-    validate_rating,
 )
 
 # Instead of storing any extra information or preferences for the customer in
@@ -76,12 +74,6 @@ class SellerProfile(models.Model):
     store_image = models.ImageField(blank=True, null=True)
     is_verified = models.BooleanField(default=False)
     products_sold = models.PositiveIntegerField(default=0)
-    rating = models.DecimalField(
-        default=0.0,
-        max_digits=1,
-        decimal_places=1,
-        validators=[validate_rating],
-    )
     website = models.URLField(blank=True)
     established_date = models.DateField(
         null=True, blank=True
@@ -124,7 +116,7 @@ class SellerProfile(models.Model):
         self._validate_seller_required_fields(required_fields)
 
     # Required fields are retrieved from cache, which is subject to change by admins at any given time.
-    def _get_required_seller_fields(self) -> List[str]:
+    def _get_required_seller_fields(self) -> list[str]:
         redis_client = cache.client.get_client()
         required_fields = redis_client.smembers("seller_required_fields")
         if not required_fields:

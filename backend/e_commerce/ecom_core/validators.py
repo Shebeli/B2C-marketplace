@@ -135,3 +135,9 @@ def validate_iban(iban: str) -> None:  # IR062960000000100324200001
 def validate_rating(rating: float) -> None:
     if not 1 <= rating <= 5:
         raise ValidationError("Provided rating should be between 1 and 5")
+
+
+def validate_hex_color(code: str) -> None:
+    "Only 6 digits hex colors are valid"
+    if not re.match(r"^#[A-Fa-f0-9]{6}$", code):
+        raise ValidationError("Given hex code color isn't a valid 6 digit color code.")

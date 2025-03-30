@@ -12,6 +12,8 @@ def generate_unique_phone():
 
 
 class CustomerFactory(DjangoModelFactory):
+    "A customer profile is created when an ecomuser instance is created."
+
     class Meta:
         model = EcomUser
 
@@ -21,6 +23,8 @@ class CustomerFactory(DjangoModelFactory):
 
 
 class SellerFactory(DjangoModelFactory):
+    "A seller profile is created when an ecomuser instance is created."
+
     class Meta:
         model = EcomUser
 

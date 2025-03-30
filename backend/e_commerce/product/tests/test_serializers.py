@@ -1,6 +1,19 @@
 import pytest
 
-from product.serializers import ProductSerializerForAny, ProductSerializerForOwner
+from backend.e_commerce.ecom_user_profile.tests.profile_factory import SellerFactory
+from product.models import TechnicalDetail
+from product.serializers import (
+    ProductSellerSerializer,
+    ProductSerializerForAny,
+    ProductSerializerForOwner,
+    ProductVariantSerializerForAny,
+    TechnicalDetailSerializer,
+)
+from product.tests.product_factory import (
+    ProductFactory,
+    ProductVariantFactory,
+    TechnicalDetailFactory,
+)
 
 # ---------------
 #   Test cases
@@ -8,52 +21,65 @@ from product.serializers import ProductSerializerForAny, ProductSerializerForOwn
 
 
 @pytest.mark.django_db
-def test_product_serializer_for_any_representation(sample_product_instance_factory):
-    # initialize the instance and the serializer
-    sample_product_instance = sample_product_instance_factory()
-    serializer = ProductSerializerForAny(instance=sample_product_instance)
+def test_product_technical_detail_serializer_repr():
+    technical_detail = TechnicalDetailFactory()
 
-    # construct technical details representation of the product
-    technical_details_repr = []
-    for technical_detail in sample_product_instance.technical_details.all():
-        technical_details_repr.append(
-            {
-                "id": technical_detail.id,
-                "attribute": technical_detail.attribute,
-                "value": technical_detail.value,
-            }
-        )
-
-    # construct product variant representation of the product
-    variants_repr = []
-    for variant in sample_product_instance.variants.all():
-        variants_repr.append(
-            {
-                "id": variant.id,
-                "name": variant.name,
-                "images": (
-                    []
-                    if not variant.images
-                    else [variant_image.image for variant_image in variant.images.all()]
-                ),
-                "price": variant.price,
-            }
-        )
-    assert serializer.data == {
-        "id": sample_product_instance.id,
-        "owner": (
-            sample_product_instance.owner.id if sample_product_instance.owner else None
-        ),
-        "technical_details": technical_details_repr,
-        "variants": variants_repr,
-        "tags": sample_product_instance.tag_names,
-        "name": sample_product_instance.name,
-        "rating": str(sample_product_instance.rating),
-        "is_valid": sample_product_instance.is_valid,
-        "description": sample_product_instance.description,
-        "subcategory": sample_product_instance.subcategory.name,
-        "is_enabled": sample_product_instance.is_enabled
+    serializer = TechnicalDetailSerializer(technical_detail)
+    expected_data = {
+        "id": technical_detail.id,
+        "attribute": technical_detail.attribute,
+        "value": technical_detail.value,
     }
+    assert serializer.data == expected_data
+
+
+@pytest.mark.django_db
+def test_product_variant_serializer_any_repr():
+    variant = ProductVariantFactory()
+
+    serializer = ProductVariantSerializerForAny(variant)
+    expected_data = {
+        "id": variant.id,
+        "name": variant.name,
+        "price": variant.price,
+        "images": [variant.image.url for variant in variant.images.all()]
+        if variant.images
+        else None,
+        "color": variant.color,
+    }
+
+    assert serializer.data == expected_data
+
+@pytest.mark.django_db
+def test_product_seller_serializer_repr():
+    seller_user = SellerFactory()
+    
+    serializer = ProductSellerSerializer()
+
+@pytest.mark.django_db
+def test_product_serializer_for_any_representation():
+    product = ProductFactory()
+    technical_details = TechnicalDetailFactory.create_batch(5, product=product)
+    variants = ProductVariantFactory.create_batch(5, product=product)
+
+    technical_serializer = TechnicalDetailSerializer(technical_details, many=True)
+    variant_serializer = ProductVariantSerializerForAny(variants, many=True)
+    product_owner_serializer = ProductSellerSerializer(product.owner.seller_profile)
+
+    product_serializer = ProductSerializerForAny(product)
+    expected_data = {
+        "id": product.id,
+        "owner": product_owner_serializer.data,
+        "technical_details": technical_serializer.data,
+        "variants": variant_serializer.data,
+        "tags": [tag.name for tag in product.tags.all()],
+        "name": product.name,
+        "is_valid": product.is_valid,
+        "description": product.description,
+        "subcategory": product.subcategory.name,
+        "is_enabled": product.is_enabled,
+    }
+    assert product_serializer.data == expected_data
 
 
 @pytest.mark.django_db

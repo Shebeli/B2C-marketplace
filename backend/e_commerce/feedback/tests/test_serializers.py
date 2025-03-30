@@ -1,12 +1,19 @@
-from datetime import datetime, timedelta, timezone
-
 import pytest
-from ecom_user_profile.tests.profile_factory import CustomerFactory
+from ecom_user_profile.tests.profile_factory import CustomerFactory, SellerFactory
 from order.tests.order_factory import OrderFactory, OrderItemFactory
+from product.serializers import ProductSellerSerializer
 from product.tests.product_factory import ProductFactory, ProductVariantFactory
 
-from feedback.serializers import ProductCommentSerializer, ProductReviewSerializer
-from feedback.tests.feedback_factory import ProductCommentFactory, ProductReviewFactory
+from feedback.serializers import (
+    ProductCommentSerializer,
+    ProductReviewSerializer,
+    SellerReviewSerializer,
+)
+from feedback.tests.feedback_factory import (
+    ProductCommentFactory,
+    ProductReviewFactory,
+    SellerReviewFactory,
+)
 
 # ------ Review Serializer -------
 # Note that date time fields are not a matter of importance to get asserted
@@ -25,7 +32,7 @@ def test_review_serializer_representation():
             "full_name": review.reviewed_by.full_name,
             "profile_picture": None,
         },
-        "rating": 3,
+        "rating": review.rating,
         "title": review.title,
         "description": review.description,
         "created_at": serializer.data["created_at"],
@@ -129,7 +136,7 @@ def test_comment_serializer_creation():
     serializer = ProductCommentSerializer(data=data)
     assert serializer.is_valid(), f"Serializer errors: {serializer.errors}"
 
-    obj = serializer.save()
+    obj = serializer.save(commented_by=customer)
     assert data == {
         "product": obj.product.id,
         "commented_by": obj.commented_by.id,
@@ -155,6 +162,87 @@ def test_comment_serializer_update():
     expected_data = {
         "id": obj.id,
         "product": product.id,
+        "title": obj.title,
+        "description": obj.description,
+    }
+    assert new_data == expected_data
+
+
+# ------ Seller Review Serializer -------
+
+
+@pytest.mark.django_db
+def test_seller_review_serializer_representation():
+    seller_review = SellerReviewFactory()
+    serializer = SellerReviewSerializer(seller_review)
+
+    expected_data = {
+        "id": seller_review.id,
+        "reviewed_by": {
+            "id": seller_review.reviewed_by.id,
+            "full_name": seller_review.reviewed_by.full_name,
+            "profile_picture": None,
+        },
+        "seller": seller_review.seller.id,
+        "rating": seller_review.rating,
+        "title": seller_review.title,
+        "description": seller_review.description,
+        "created_at": serializer.data["created_at"],
+        "updated_at": serializer.data["updated_at"],
+    }
+    assert serializer.data == expected_data
+
+
+@pytest.mark.django_db
+def test_seller_review_serializer_creation():
+    customer = CustomerFactory()
+    seller = SellerFactory()
+    order = OrderFactory(customer=customer, seller=seller)
+
+    data = {
+        "order": order.id,
+        "seller": seller.id,
+        "rating": 5,
+        "title": "Sample title",
+        "description": "Sample description",
+    }
+
+    serializer = SellerReviewSerializer(data=data)
+    assert serializer.is_valid(), f"Serializer errors: {serializer.errors}"
+
+    obj = serializer.save(reviewed_by=customer)
+    expected_data = {
+        "seller": seller.id,
+        "order": obj.order.id,
+        "rating": obj.rating,
+        "title": obj.title,
+        "description": obj.description,
+    }
+    assert data == expected_data
+
+
+@pytest.mark.django_db
+def test_seller_review_serializer_update():
+    seller = SellerFactory()
+    order = OrderFactory(seller=seller)
+    seller_review = SellerReviewFactory(order=order, seller=seller)
+
+    new_data = {
+        "id": seller_review.id,
+        "rating": 1,
+        "title": "New title",
+        "description": "New description",
+    }
+
+    serializer = SellerReviewSerializer(seller_review, data=new_data)
+    assert serializer.is_valid(), f"Serializer errors: {serializer.errors}"
+
+    obj = serializer.save()
+    expected_data = {
+        "id": obj.id,
+        "rating": obj.rating,
+        "seller": obj.seller.id,
+        "order": obj.order.id,
         "title": obj.title,
         "description": obj.description,
     }

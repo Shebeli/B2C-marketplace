@@ -1,7 +1,7 @@
 from django.core import exceptions
 from django.db import models
 from django.db.models import Case, F, Sum, Value, When
-from ecom_core.validators import validate_rating
+from ecom_core.validators import validate_hex_color, validate_rating
 from ecom_user.models import EcomUser
 
 from .managers import ProductManager
@@ -55,6 +55,7 @@ class SubCategoryBreadCrumb(models.Model):
     def __str__(self):
         return self.name
 
+
 class Tag(models.Model):
     name = models.CharField(max_length=30, unique=True, db_index=True)
 
@@ -72,7 +73,13 @@ class ProductVariant(models.Model):
     product = models.ForeignKey(
         "Product", on_delete=models.CASCADE, related_name="variants", db_index=True
     )
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=200)
+    color = models.CharField(
+        max_length=6,
+        blank=True,
+        help_text="Color's Hex code",
+        validators=[validate_hex_color],
+    )
     price = models.PositiveIntegerField()
     image = models.ImageField(null=True, blank=True)
     on_hand_stock = models.PositiveIntegerField()
@@ -103,6 +110,14 @@ class ProductVariant(models.Model):
 
     class Meta:
         order_with_respect_to = "product"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["product", "color"], name="unique_product_color"
+            ),
+            models.UniqueConstraint(
+                fields=["product", "name"], name="unique_variant_name"
+            ),
+        ]
 
 
 class Product(models.Model):
@@ -132,12 +147,12 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     description = models.TextField()
     subcategory = models.ForeignKey(
-        SubCategoryBreadCrumb, on_delete=models.SET_NULL, null=True, related_name="products"
+        SubCategoryBreadCrumb,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="products",
     )
     tags = models.ManyToManyField(Tag, related_name="products")
-    rating = models.DecimalField(
-        default=0.0, max_digits=1, decimal_places=1, validators=[validate_rating]
-    )
     view_count = models.PositiveIntegerField(default=0, db_index=True)
     is_valid = models.GeneratedField(
         expression=Case(
@@ -150,7 +165,6 @@ class Product(models.Model):
         db_index=True,
     )
     is_enabled = models.BooleanField(default=True)
-
 
     objects = ProductManager()
 

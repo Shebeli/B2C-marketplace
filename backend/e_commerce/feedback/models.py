@@ -11,7 +11,7 @@ class ProductReview(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="reviews"
     )
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, blank=False, null=True)
     reviewed_by = models.ForeignKey(
         EcomUser,
         verbose_name=_("Reviewed by"),
@@ -59,3 +59,24 @@ class ProductComment(models.Model):
 
     def __str__(self):
         return f"Review by {self.commented_by.full_name} on {self.product}"
+
+
+class SellerReview(models.Model):
+    seller = models.ForeignKey(
+        EcomUser, on_delete=models.CASCADE, related_name="seller_reviews"
+    )
+    order = models.ForeignKey(Order, on_delete=models.SET_NULL, blank=False, null=True)
+    reviewed_by = models.ForeignKey(
+        EcomUser, on_delete=models.CASCADE, related_name="reviewed_sellers"
+    )
+    rating = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Rating should be an integer from 1 to 5",
+    )
+    title = models.CharField(max_length=100)
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("seller", "reviewed_by")  # only one reviewer per seller

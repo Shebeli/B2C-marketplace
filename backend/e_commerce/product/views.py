@@ -1,11 +1,8 @@
 import logging
-from typing import Type
 
 from django.core.cache import cache
 from django_filters import rest_framework as filters
-from ipware import get_client_ip
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.generics import (
     ListAPIView,
@@ -110,7 +107,6 @@ class ProductDetail(RetrieveUpdateDestroyAPIView):
         product_obj = self.get_object()
         serializer = self.get_serializer(product_obj)
         if not user_ip:
-            print(serializer.data)
             return Response(serializer.data)
         self._cache_client_ip(product_obj, user_ip)
         return Response(serializer.data)

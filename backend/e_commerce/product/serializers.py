@@ -1,4 +1,7 @@
+from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Avg, Count
+from ecom_user_profile.models import SellerProfile
 from ecom_user_profile.serializers import SellerBriefProfileSerializer
 from rest_framework import serializers
 
@@ -34,14 +37,25 @@ class ProductVariantSerializerForAny(serializers.ModelSerializer):
 
     class Meta:
         model = ProductVariant
-        fields = ["id", "name", "price", "images"]
+        fields = ["id", "name", "price", "images", "color"]
+
+
+class ProductSellerSerializer(serializers.ModelSerializer):
+    """Only used for nested representation in other serializers."""
+
+    class Meta:
+        model = SellerProfile
+        fields = ["id", "store_name", "store_image"]
 
 
 class ProductSerializerForAny(serializers.ModelSerializer):
-    "Intended only for read operations"
+    "Only used for representation"
 
     technical_details = ProductTechnicalDetailSerializer(many=True, read_only=True)
     variants = ProductVariantSerializerForAny(many=True, read_only=True)
+    owner = ProductSellerSerializer(read_only=True)
+    rating_avg = serializers.SerializerMethodField()
+    rating_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -52,6 +66,20 @@ class ProductSerializerForAny(serializers.ModelSerializer):
         ret["subcategory"] = product_instance.subcategory.name
         ret["tags"] = [tag.name for tag in product_instance.tags.all()]
         return ret
+
+    def get_rating_avg(self, product_obj):
+        return cache.get_or_set(
+            f"product:{product_obj.id}:rating_avg",
+            lambda: product_obj.reviews.aggregate(avg=Avg["rating"])["avg"] or 0,
+            10 * 60,
+        )
+
+    def get_rating_count(self, product_obj):
+        return cache.get_or_set(
+            f"product:{product_obj.id}:rating_count",
+            lambda: product_obj.reviews.aggregate(count=Count["id"])["count"] or 0,
+            10 * 60,
+        )
 
 
 # Product serializers for owners.
@@ -85,6 +113,8 @@ class ProductSerializerForOwner(serializers.ModelSerializer):
     number_sold = serializers.IntegerField(source="get_number_sold", read_only=True)
     main_price = serializers.IntegerField(source="main_variant.price", read_only=True)
     main_image = serializers.ImageField(source="main_variant.image", read_only=True)
+    rating_avg = serializers.SerializerMethodField()
+    rating_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -133,6 +163,20 @@ class ProductSerializerForOwner(serializers.ModelSerializer):
                 "At least 3 tags should be provided and at most, 10 tags can be provided."
             )
         return tags
+
+    def get_rating_avg(self, product_obj):
+        return cache.get_or_set(
+            f"product:{product_obj.id}:rating_avg",
+            lambda: product_obj.reviews.aggregate(avg=Avg["rating"])["avg"] or 0,
+            10 * 60,
+        )
+
+    def get_rating_count(self, product_obj):
+        return cache.get_or_set(
+            f"product:{product_obj.id}:rating_count",
+            lambda: product_obj.reviews.aggregate(count=Count["id"])["count"] or 0,
+            10 * 60,
+        )
 
 
 class TagSerializer(serializers.ModelSerializer):

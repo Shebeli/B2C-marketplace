@@ -6,7 +6,7 @@ from rest_framework.generics import (
 )
 from rest_framework.permissions import IsAuthenticated
 
-from feedback.models import ProductComment, ProductReview
+from feedback.models import ProductComment, ProductReview, SellerReview
 from feedback.permissions import (
     IsCommentOwner,
     IsEcomAdmin,
@@ -15,6 +15,7 @@ from feedback.permissions import (
 from feedback.serializers import (
     ProductCommentSerializer,
     ProductReviewSerializer,
+    SellerReviewSerializer,
 )
 
 # Product Reviews Views
@@ -158,3 +159,76 @@ class ProductCommentDetail(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsCommentOwner | IsEcomAdmin]
     queryset = ProductComment.objects.all()
     serializer_class = ProductCommentSerializer
+
+
+class SellerReviewList(ListAPIView):
+    """
+    GET:
+    Lists all the reviews for the provided seller id (paginated).
+    """
+
+    queryset = SellerReview.objects.all()
+    serializer_class = SellerReviewSerializer
+
+    def get_queryset(self):
+        if not self.kwargs["pk"]:
+            raise ValidationError("Seller's id should be provided.")
+        return (
+            super()
+            .get_queryset()
+            .filter(seller=self.kwargs["pk"])
+            .order_by("created_at")
+        )
+
+
+class SellerReviewCreate(CreateAPIView):
+    """
+    POST:
+    For creating a review for a seller, user should be authenticated.
+
+    If the following criteria are not met, an appropriate error will be returned:
+
+    1) The passed in order should be either in COMPLETED or DELIVERED status.
+    2) The user cannot leave out more than one review for each seller.
+    3) The given order's seller should be the same as the passed in seller id.
+    """
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = SellerReviewSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(reviewed_by=self.request.user)
+
+
+class SellerReviewDetail(RetrieveUpdateDestroyAPIView):
+    """
+    DELETE:
+    Deletes the given review object.
+
+    PUT/PATCH:
+    Update the given review (fields 'seller' and 'order' are not updatable, thus
+    any inputted values are ignored for this fields).
+    """
+
+    permission_classes = [IsReviewOwner | IsEcomAdmin]
+    queryset = SellerReview.objects.all()
+    serializer_class = SellerReviewSerializer
+
+
+class SellerOwnReviews(ListAPIView):
+    """
+    GET:
+    Lists all the seller reviews for the current authenticated user (paginated).
+    """
+
+    permission_classes = [IsAuthenticated]
+    queryset = SellerReview.objects.all()
+    serializer_class = SellerReviewSerializer
+
+    def get_queryset(self):
+        return (
+            super()
+            .get_queryset()
+            .filter(reviewed_by=self.request.user)
+            .order_by("created_at")
+        )

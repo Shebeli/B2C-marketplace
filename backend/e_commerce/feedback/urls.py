@@ -14,7 +14,11 @@ urlpatterns = [
         views.ProductReviewCreate.as_view(),
         name="product-review-create",
     ),
-    path("review/<int:pk>/", views.ProductReviewDetail.as_view(), name="review-detail"),
+    path(
+        "product-review/<int:pk>/",
+        views.ProductReviewDetail.as_view(),
+        name="product-review-detail",
+    ),
     path("user-reviews/", views.CustomerProductReviews.as_view(), name="user-reviews"),
     # product comments
     path(
@@ -32,5 +36,26 @@ urlpatterns = [
     ),
     path(
         "user-comments/", views.CustomerProductComments.as_view(), name="user-comments"
+    ),
+    # seller reviews
+    path(
+        "seller-reviews/<int:pk>/",
+        views.SellerReviewList.as_view(),
+        name="seller-review-list",
+    ),
+    path(
+        "seller-reviews/",
+        views.SellerReviewCreate.as_view(),
+        name="seller-review-create",
+    ),
+    path(
+        "seller-review/<int:pk>/",
+        views.SellerReviewDetail.as_view(),
+        name="seller-review-detail",
+    ),
+    path(
+        "seller-own-reviews/",
+        views.SellerOwnReviews.as_view(),
+        name="seller-own-reviews",
     ),
 ]

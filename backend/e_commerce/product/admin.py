@@ -45,13 +45,12 @@ class ProductAdmin(admin.ModelAdmin):
         "name",
         "owner",
         "subcategory",
-        "rating",
         "view_count",
         "is_valid",
         "is_enabled",
         "created_at",
     )
-    list_filter = ("is_valid", "is_enabled", "subcategory", "rating")
+    list_filter = ("is_valid", "is_enabled", "subcategory")
     search_fields = ("name", "description", "owner__username", "tags__name")
     readonly_fields = ("is_valid", "view_count", "created_at")
     filter_horizontal = ("tags",)
@@ -68,7 +67,7 @@ class ProductAdmin(admin.ModelAdmin):
     )
     (
         ("Statisticss"),
-        {"fields": ("rating", "view_count", "is_valid", "is_enabled", "created_at")},
+        {"fields": ("view_count", "is_valid", "is_enabled", "created_at")},
     )
 
 
