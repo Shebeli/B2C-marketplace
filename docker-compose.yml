@@ -24,6 +24,7 @@ services:
       - "8000:8000"
     volumes:
       - ./backend/e_commerce:/app/e_commerce
+      - ./backend/pyproject.toml:/app/pyproject.toml
     develop:
       watch:
         - action: rebuild

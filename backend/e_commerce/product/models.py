@@ -1,8 +1,9 @@
 from django.core import exceptions
 from django.db import models
-from django.db.models import Case, F, Sum, Value, When
-from ecom_core.validators import validate_hex_color, validate_rating
+from django.db.models import Avg, Case, Count, F, Sum, Value, When
+from ecom_core.validators import validate_hex_color
 from ecom_user.models import EcomUser
+from order.models import Order, OrderItem
 
 from .managers import ProductManager
 
@@ -43,7 +44,7 @@ class Category(models.Model):
         return self.name
 
 
-class SubCategoryBreadCrumb(models.Model):
+class SubCategory(models.Model):
     name = models.CharField(max_length=30)
     category = models.ForeignKey(
         Category, on_delete=models.CASCADE, related_name="subcategories"
@@ -75,7 +76,7 @@ class ProductVariant(models.Model):
     )
     name = models.CharField(max_length=200)
     color = models.CharField(
-        max_length=6,
+        max_length=7,
         blank=True,
         help_text="Color's Hex code",
         validators=[validate_hex_color],
@@ -112,11 +113,8 @@ class ProductVariant(models.Model):
         order_with_respect_to = "product"
         constraints = [
             models.UniqueConstraint(
-                fields=["product", "color"], name="unique_product_color"
-            ),
-            models.UniqueConstraint(
                 fields=["product", "name"], name="unique_variant_name"
-            ),
+            )
         ]
 
 
@@ -147,7 +145,7 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     description = models.TextField()
     subcategory = models.ForeignKey(
-        SubCategoryBreadCrumb,
+        SubCategory,
         on_delete=models.SET_NULL,
         null=True,
         related_name="products",
@@ -173,23 +171,45 @@ class Product(models.Model):
         self.save(update_fields=["view_count"])
         self.refresh_from_db(fields=["view_count"])
 
-    def _get_stock_field(self, field: str, use_db: bool = True):
-        if use_db:
-            results = self.variants.aggregate(stock=Sum(F(field)))
-            return results["stock"]
-        return sum(getattr(variant, field) for variant in self.variants.all())
+    def _get_stock_field(self, field: str) -> int:
+        return self.variants.aggregate(stock=Sum(F(field))).get(field) or 0
 
-    def get_on_hand_stock(self, use_db: bool = True):
-        return self._get_stock_field("on_hand_stock", use_db)
+    def get_on_hand_stock(self):
+        return self._get_stock_field("on_hand_stock")
 
-    def get_reserved_stock(self, use_db: bool = True):
-        return self._get_stock_field("reserved_stock", use_db)
+    def get_reserved_stock(self):
+        return self._get_stock_field("reserved_stock")
 
-    def get_available_stock(self, use_db: bool = True):
-        return self._get_stock_field("available_stock", use_db)
+    def get_available_stock(self):
+        return self._get_stock_field("available_stock")
 
-    def get_number_sold(self, use_db: bool = True):
-        return self._get_stock_field("number_sold", use_db)
+    def get_number_sold(self):
+        return self._get_stock_field("number_sold")
+
+    def get_rating_avg(self):
+        return self.reviews.aggregate(avg=Avg("rating"))["avg"] or 0
+
+    def get_rating_count(self):
+        return self.reviews.aggregate(count=Count("id"))["count"] or 0
+
+    def get_total_revenue(self):
+        return OrderItem.objects.filter(
+            product_variant__in=self.variants.all(),
+            order__seller=self.owner,
+            order__status__in=[Order.COMPLETED, Order.DELIVERED],
+        ).aggregate(sum=Sum(F("quantity") * F("submitted_price")))["sum"]
+
+    def get_total_orders(self):
+        return (
+            OrderItem.objects.filter(
+                product_variant__in=self.variants.all(),
+            ).aggregate(count=Count("order", distinct=True)),
+        )
+
+    def get_total_units_sold(self):
+        return OrderItem.objects.filter(
+            product_variant__in=self.variants.all(),
+        ).aggregate(sum=Sum("quantity", distinct=True))
 
     @property
     def tag_names(self):

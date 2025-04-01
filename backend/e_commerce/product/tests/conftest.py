@@ -5,7 +5,7 @@ from product.models import (
     MainCategory,
     Product,
     ProductVariant,
-    SubCategoryBreadCrumb,
+    SubCategory,
     Tag,
     TechnicalDetail,
 )
@@ -59,7 +59,7 @@ def sample_category_instance_factory(db):
         category_obj = Category.objects.create(
             name="Couches and Home Decoration", main_category=maincategory_obj
         )
-        subcategory_obj = SubCategoryBreadCrumb.objects.create(
+        subcategory_obj = SubCategory.objects.create(
             name="Chair", category=category_obj
         )
         return {

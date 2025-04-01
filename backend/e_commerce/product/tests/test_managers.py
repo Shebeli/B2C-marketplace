@@ -1,6 +1,6 @@
 import pytest
 
-from product.models import Product, ProductVariant, SubCategoryBreadCrumb
+from product.models import Product, ProductVariant, SubCategory
 
 
 @pytest.mark.django_db
@@ -48,7 +48,7 @@ def test_product_manager_available(sample_product_instance_factory):
 @pytest.mark.django_db
 def test_product_manager_unavailable(sample_product_instance_factory):
     sample_product_instance_factory()
-    subcategory = SubCategoryBreadCrumb.objects.first()
+    subcategory = SubCategory.objects.first()
     unavailable_product = Product.objects.create(
         name="Unavailable product", subcategory=subcategory
     )

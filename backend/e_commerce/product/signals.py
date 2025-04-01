@@ -10,7 +10,7 @@ from .cache_keys import (
     SUBCATEGORIES_CACHE_KEY,
     breadcrumb_cache_key,
 )
-from .models import Category, MainCategory, ProductVariant, SubCategoryBreadCrumb
+from .models import Category, MainCategory, ProductVariant, SubCategory
 
 logger = logging.getLogger("django")
 
@@ -41,14 +41,14 @@ def assign_main_variant_on_deletion(sender, instance, **kwargs):
             product.save(update_fields=["main_variant"])
 
 
-@receiver([post_save, post_delete], sender=SubCategoryBreadCrumb)
+@receiver([post_save, post_delete], sender=SubCategory)
 def invalidate_subcategory_cache(sender, instance, **kwargs):
     logger.info("Cache invalidated for subcategories.")
     cache.delete(SUBCATEGORIES_CACHE_KEY)
     cache.delete(breadcrumb_cache_key(instance.id))
 
 
-@receiver([post_save, post_delete], sender=SubCategoryBreadCrumb)
+@receiver([post_save, post_delete], sender=SubCategory)
 @receiver([post_save, post_delete], sender=Category)
 @receiver([post_save, post_delete], sender=MainCategory)
 def invalidate_full_category_cache(sender, instance, **kwargs):

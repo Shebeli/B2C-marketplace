@@ -9,7 +9,7 @@ from product.models import (
     MainCategory,
     Product,
     ProductVariant,
-    SubCategoryBreadCrumb,
+    SubCategory,
     Tag,
     TechnicalDetail,
 )
@@ -32,7 +32,7 @@ class CategoryFactory(DjangoModelFactory):
 
 class SubCategoryBreadCrumbFactory(DjangoModelFactory):
     class Meta:
-        model = SubCategoryBreadCrumb
+        model = SubCategory
 
     name = factory.Sequence(lambda n: f"SubCategory {n}")
     category = factory.SubFactory(CategoryFactory)
@@ -54,6 +54,7 @@ class ProductVariantFactory(DjangoModelFactory):
 
     product = SubFactory(ProductFactory)
     name = factory.Sequence(lambda n: f"product variant {n}")
+    color = factory.Sequence(lambda n: f"#{str(n).zfill(6)}")
     price = FuzzyInteger(100, 5000)
     on_hand_stock = FuzzyInteger(5, 100)
 
@@ -71,4 +72,4 @@ class TagFactory(DjangoModelFactory):
     class Meta:
         model = Tag
 
-    name = factory.Faker("word")
+    name = factory.Sequence(lambda n: f"Tag {n}")

@@ -49,14 +49,14 @@ class SellerProfileSerializer(serializers.ModelSerializer):
 class SellerBriefProfileSerializer(serializers.ModelSerializer):
     """
     Used in other serializers or when a brief introduction of seller is required.
-    for representing/serialization only
+    for representing only.
     """
 
     store_url = serializers.SerializerMethodField()
 
     class Meta:
         model = SellerProfile
-        fields = ["id", "store_name", "store_image", "store_url"]
+        fields = ["store_name", "store_image", "store_url"]
 
     def get_store_url(self, obj):
         return reverse("seller-public-profile", kwargs={"pk": obj.id})

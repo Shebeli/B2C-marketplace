@@ -24,7 +24,7 @@ from product.models import (
     MainCategory,
     Product,
     ProductVariant,
-    SubCategoryBreadCrumb,
+    SubCategory,
     TechnicalDetail,
 )
 from product.permissions import IsOwner, IsSellerVerified
@@ -34,9 +34,9 @@ from product.serializers import (
     ProductListSerializer,
     ProductSerializerForAny,
     ProductSerializerForOwner,
-    ProductTechnicalDetailSerializer,
     ProductVariantSerializerForOwner,
     SubCategorySerializer,
+    TechnicalDetailSerializer,
 )
 
 logger = logging.getLogger("order")
@@ -148,14 +148,14 @@ class ProductVariantList(ListCreateAPIView):
 class ProductTechnicalInfoDetail(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsSellerVerified]
     queryset = TechnicalDetail.objects.all()
-    serializer_class = ProductTechnicalDetailSerializer
+    serializer_class = TechnicalDetailSerializer
     lookup_url_kwarg = "technical_pk"
 
 
 class ProductTechnicalInfoList(ListCreateAPIView):
     permission_classes = [IsSellerVerified]
     queryset = TechnicalDetail.objects.all()
-    serializer_class = ProductTechnicalDetailSerializer
+    serializer_class = TechnicalDetailSerializer
 
     def get_product(self):
         product_pk = self.kwargs.get("product_pk")
@@ -201,7 +201,7 @@ class SubcategoryList(ListAPIView):
     """
 
     permission_classes = [AllowAny]
-    queryset = SubCategoryBreadCrumb.objects.all()
+    queryset = SubCategory.objects.all()
     pagination_class = None
     serializer_class = SubCategorySerializer
 
@@ -238,7 +238,7 @@ class SubCategoryBreadCrumb(RetrieveAPIView):
 
     # can use the subcategories list cache to retrieve the subcategory
     permission_classes = [AllowAny]
-    queryset = SubCategoryBreadCrumb.objects.all()
+    queryset = SubCategory.objects.all()
     serializer_class = BreadcrumbSerializer
 
     def retrieve(self, request, *args, **kwargs):

@@ -1,7 +1,6 @@
 import pytest
 from ecom_user_profile.tests.profile_factory import CustomerFactory, SellerFactory
 from order.tests.order_factory import OrderFactory, OrderItemFactory
-from product.serializers import ProductSellerSerializer
 from product.tests.product_factory import ProductFactory, ProductVariantFactory
 
 from feedback.serializers import (

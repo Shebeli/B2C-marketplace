@@ -4,13 +4,16 @@ from django.db import models
 from django.db.models import F, Sum
 from ecom_user.models import EcomUser
 from ecom_user_profile.models import CustomerAddress
-from product.models import ProductVariant
 
 
 class OrderItem(models.Model):
     order = models.ForeignKey("Order", on_delete=models.CASCADE, related_name="items")
     product_variant = models.ForeignKey(
-        ProductVariant, on_delete=models.SET_NULL, null=True, blank=False
+        "product.ProductVariant",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=False,
+        related_name="order_items",
     )
     submitted_price = models.BigIntegerField()
     quantity = models.PositiveSmallIntegerField()
@@ -199,7 +202,7 @@ class Cart(models.Model):
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
     product_variant = models.ForeignKey(
-        ProductVariant, on_delete=models.SET_NULL, null=True, blank=False
+        "product.ProductVariant", on_delete=models.SET_NULL, null=True, blank=False
     )
     quantity = models.PositiveIntegerField()
     added_at = models.DateTimeField(auto_now_add=True)
