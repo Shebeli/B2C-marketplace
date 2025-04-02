@@ -140,7 +140,6 @@ class ProductCommentList(ListAPIView):
     Lists all the comments for a specific product (paginated).
     """
 
-    permission_classes = [IsAuthenticated]
     queryset = ProductComment.objects.all()
     serializer_class = ProductCommentSerializer
 
