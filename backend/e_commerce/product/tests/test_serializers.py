@@ -1,5 +1,4 @@
 import pytest
-from backend.e_commerce.product.serializers.base import ProductListSerializer
 from django.core.cache import cache
 from django.db.models import Avg, Count
 from django.urls import reverse
@@ -15,6 +14,7 @@ from product.serializers import (
     ProductVariantSerializerForOwner,
     TechnicalDetailSerializer,
 )
+from product.serializers.base import ProductListSerializer
 from product.tests.product_factory import (
     ProductFactory,
     ProductVariantFactory,

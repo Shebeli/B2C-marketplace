@@ -4,11 +4,16 @@ import factory
 from ecom_user.models import EcomUser
 from factory.django import DjangoModelFactory
 
-phone_counter = itertools.count(9000000000)
+ecom_user = EcomUser.objects.order_by("-id").first()
+print("retrieveid phone number:", ecom_user.phone)
+if ecom_user:
+    phone_counter = itertools.count(int(ecom_user.phone[1:])+1)
+else:
+    phone_counter = itertools.count(9000000000)
 
 
 def generate_unique_phone():
-    return f"09{next(phone_counter)}"
+    return f"0{next(phone_counter)}"
 
 
 class CustomerFactory(DjangoModelFactory):

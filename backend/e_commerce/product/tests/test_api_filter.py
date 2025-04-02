@@ -29,18 +29,18 @@ def category_instances_factory():
         sub_categories = []
         for i in range(3):
             # main categories
-            main_category = MainCategory.objects.create(name=f"MainCategory {i+1}")
+            main_category = MainCategory.objects.create(name=f"MainCategory {i + 1}")
             main_categories.append(main_category)
 
             # categories
             category = Category.objects.create(
-                name=f"Category {i+1}", main_category=main_category
+                name=f"Category {i + 1}", main_category=main_category
             )
             categories.append(category)
 
             # sub categories
             sub_category = SubCategory.objects.create(
-                name=f"SubCategory {i+1}", category=category
+                name=f"SubCategory {i + 1}", category=category
             )
             sub_categories.append(sub_category)
         return {
@@ -55,7 +55,7 @@ def category_instances_factory():
 @pytest.fixture
 def tag_instances_factory():
     def create_tags(number_of_tags: int = 3):
-        return [Tag.objects.create(name=f"Tag {i+1}") for i in range(number_of_tags)]
+        return [Tag.objects.create(name=f"Tag {i + 1}") for i in range(number_of_tags)]
 
     return create_tags
 

@@ -32,12 +32,21 @@ class Command(BaseCommand):
             default=2,
             help="Number of product variants per product to create",
         )
+        parser.add_argument(
+            "--reviews_per_product",
+            type=int,
+            default=1,
+            help="Number of ProductReview objects to be created for each product",
+        )
 
     def handle(self, *args, **kwargs):
         start_time = time.time()
+
         num_products = kwargs["num_products"]
         variants_per_product = kwargs["variants_per_product"]
-        fake_seller= EcomUser.objects.get_or_create(phone="09377964142")[0]
+        reviews_per_product = kwargs["reviews_per_product"]
+
+        fake_seller = EcomUser.objects.get_or_create(phone="09377964142")[0]
         fake_customer = EcomUser.objects.get_or_create(phone="09300000000")[0]
 
         with transaction.atomic():
@@ -46,14 +55,17 @@ class Command(BaseCommand):
                 name="Sample Main Category"
             )[0]
             category_obj = Category.objects.get_or_create(
-                name="Sample Category", main_category=maincategory_obj.id
+                name="Sample Category", main_category=maincategory_obj
             )[0]
             subcategory_obj = SubCategory.objects.get_or_create(
-                name="Sample SubCategory", category=category_obj.id
+                name="Sample SubCategory", category=category_obj
             )[0]
 
             # create products
-            for i in tqdm(range(num_products), desc="Creating random products"):
+            for i in tqdm(
+                range(num_products),
+                desc=f"Creating random products, with {variants_per_product} variant per product and a total of {reviews_per_product * num_products} of reviews.",
+            ):
                 product = Product.objects.create(
                     name=f"Product {i}",
                     owner=fake_seller,
@@ -75,14 +87,15 @@ class Command(BaseCommand):
                 OrderItemFactory.create(
                     product_variant=product.main_variant, order=order
                 )
-                product_reviews = ProductReviewFactory(
+                ProductReviewFactory.create_batch(
+                    reviews_per_product,
                     product=product,
                     order=order,
-                    reviewed_by=fake_customer,
                 )
-                product_reviews.save()
         self.stdout.write(
             self.style.SUCCESS(
-                f"A total of {num_products * variants_per_product} datarows has been created in the database in {(time.time() - start_time)} seconds."
+                f"A total of {num_products * variants_per_product} product variants "
+                f"with a total of {reviews_per_product * num_products} reviews "
+                f"has been created in the database in {(time.time() - start_time)} seconds."
             )
         )
