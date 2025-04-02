@@ -47,7 +47,7 @@ class EcomUser(AbstractBaseUser):
     email = models.EmailField(_("Email Address"), blank=True, unique=True, null=True)
     phone = models.CharField(
         _("Phone Number"),
-        max_length=13,
+        max_length=11,
         validators=[validate_phone],
         unique=True,
         blank=True,
