@@ -232,9 +232,6 @@ class TechnicalDetail(models.Model):
         max_length=80, verbose_name="technical attribute description"
     )
 
-    class Meta:
-        unique_together = ("product", "attribute")
-
     @property
     def owner(self):
         return self.product.owner

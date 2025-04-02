@@ -4,15 +4,16 @@ import factory
 from ecom_user.models import EcomUser
 from factory.django import DjangoModelFactory
 
-ecom_user = EcomUser.objects.order_by("-id").first()
-print("retrieveid phone number:", ecom_user.phone)
-if ecom_user:
-    phone_counter = itertools.count(int(ecom_user.phone[1:])+1)
-else:
-    phone_counter = itertools.count(9000000000)
+phone_counter = None
 
 
-def generate_unique_phone():
+def generate_phone():
+    global phone_counter
+    if phone_counter is None:
+        ecom_user = EcomUser.objects.order_by("-id").first()
+        start_number = int(ecom_user.phone[1:]) + 1 if ecom_user else 9000000002
+        phone_counter = itertools.count(start_number)
+
     return f"0{next(phone_counter)}"
 
 
@@ -24,7 +25,7 @@ class CustomerFactory(DjangoModelFactory):
 
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
-    phone = factory.LazyFunction(generate_unique_phone)
+    phone = factory.LazyFunction(generate_phone)
 
 
 class SellerFactory(DjangoModelFactory):
@@ -35,4 +36,4 @@ class SellerFactory(DjangoModelFactory):
 
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
-    phone = factory.LazyFunction(generate_unique_phone)
+    phone = factory.LazyFunction(generate_phone)

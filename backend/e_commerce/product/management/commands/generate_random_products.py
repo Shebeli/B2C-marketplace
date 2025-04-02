@@ -4,19 +4,20 @@ import time
 from django.core.management.base import BaseCommand, CommandParser
 from django.db import transaction
 from ecom_user.models import EcomUser
-from feedback.models import ProductReview
-from feedback.tests.feedback_factory import ProductReviewFactory
+from feedback.tests.feedback_factory import ProductCommentFactory, ProductReviewFactory
 from order.tests.order_factory import OrderFactory, OrderItemFactory
 from tqdm import tqdm
 
 from product.models import (
     Category,
     MainCategory,
-    Product,
     ProductVariant,
     SubCategory,
 )
-from product.tests.product_factory import ProductFactory
+from product.tests.product_factory import (
+    ProductFactory,
+    TechnicalDetailFactory,
+)
 
 
 class Command(BaseCommand):
@@ -35,8 +36,20 @@ class Command(BaseCommand):
         parser.add_argument(
             "--reviews_per_product",
             type=int,
-            default=1,
+            default=5,
             help="Number of ProductReview objects to be created for each product",
+        )
+        parser.add_argument(
+            "--comments_per_product",
+            type=int,
+            default=5,
+            help="Number of ProductReview objects to be created for each product",
+        )
+        parser.add_argument(
+            "--technical_per_product",
+            type=int,
+            default=10,
+            help="Number of technical detail objects to be created for each product ",
         )
 
     def handle(self, *args, **kwargs):
@@ -45,9 +58,11 @@ class Command(BaseCommand):
         num_products = kwargs["num_products"]
         variants_per_product = kwargs["variants_per_product"]
         reviews_per_product = kwargs["reviews_per_product"]
+        comments_per_product = kwargs["comments_per_product"]
+        technical_detail_per_product = kwargs["technical_per_product"]
 
-        fake_seller = EcomUser.objects.get_or_create(phone="09377964142")[0]
-        fake_customer = EcomUser.objects.get_or_create(phone="09300000000")[0]
+        fake_seller = EcomUser.objects.get_or_create(phone="09000000000")[0]
+        fake_customer = EcomUser.objects.get_or_create(phone="09000000001")[0]
 
         with transaction.atomic():
             # create categories
@@ -64,13 +79,16 @@ class Command(BaseCommand):
             # create products
             for i in tqdm(
                 range(num_products),
-                desc=f"Creating random products, with {variants_per_product} variant per product and a total of {reviews_per_product * num_products} of reviews.",
+                desc=(
+                    f"Creating products {num_products}, with {variants_per_product} variant per product "
+                ),
             ):
-                product = Product.objects.create(
-                    name=f"Product {i}",
-                    owner=fake_seller,
+                product = ProductFactory.create(
                     subcategory=subcategory_obj,
-                    description="Lorem pentum of the pottaisum catasium calcium, abatatium shalsium. ",
+                    owner=fake_seller,
+                )
+                TechnicalDetailFactory.create_batch(
+                    technical_detail_per_product, product=product
                 )
                 for j in range(variants_per_product):
                     ProductVariant.objects.create(
@@ -92,10 +110,14 @@ class Command(BaseCommand):
                     product=product,
                     order=order,
                 )
+                ProductCommentFactory.create_batch(
+                    comments_per_product, product=product
+                )
         self.stdout.write(
             self.style.SUCCESS(
-                f"A total of {num_products * variants_per_product} product variants "
+                f"A total of {num_products} products with {num_products * variants_per_product} product variants "
                 f"with a total of {reviews_per_product * num_products} reviews "
+                f"and with a total of {comments_per_product * num_products} comments "
                 f"has been created in the database in {(time.time() - start_time)} seconds."
             )
         )

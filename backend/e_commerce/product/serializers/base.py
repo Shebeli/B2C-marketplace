@@ -15,7 +15,7 @@ from product.models import (
 class TechnicalDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = TechnicalDetail
-        exclude = ["product"]
+        exclude = ["id", "product"]
 
     def create(self, validated_data):
         if not validated_data.get("product"):
@@ -48,9 +48,11 @@ class ProductListSerializer(serializers.ModelSerializer):
     with each product's owner .
     """
 
-    main_price = serializers.IntegerField(read_only=True, source='main_variant.price')
-    main_image = serializers.ImageField(read_only=True, source='main_variant.image')
-    seller_profile = SellerBriefProfileSerializer(read_only=True, source="owner.seller_profile")
+    main_price = serializers.IntegerField(read_only=True, source="main_variant.price")
+    main_image = serializers.ImageField(read_only=True, source="main_variant.image")
+    seller_profile = SellerBriefProfileSerializer(
+        read_only=True, source="owner.seller_profile"
+    )
 
     class Meta:
         model = Product

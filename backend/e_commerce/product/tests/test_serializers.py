@@ -42,7 +42,6 @@ def test_product_technical_detail_serializer_repr():
 
     serializer = TechnicalDetailSerializer(technical_detail)
     expected_data = {
-        "id": technical_detail.id,
         "attribute": technical_detail.attribute,
         "value": technical_detail.value,
     }
@@ -97,7 +96,6 @@ def test_product_serializer_for_any_representation():
 
     # serializer preperation
     product_serializer_data = ProductSerializerForAny(product).data
-    product_serializer_data["technical_details"].sort(key=lambda x: x["id"])
 
     # aggregation fields
     rating_avg = product.reviews.aggregate(avg=Avg("rating"))["avg"]
@@ -136,7 +134,6 @@ def test_product_serializer_for_owner_represenation():
 
     # serializer prep
     product_serializer_data = ProductSerializerForOwner(product).data
-    product_serializer_data["technical_details"].sort(key=lambda x: x["id"])
     product_serializer_data["variants"].sort(key=lambda x: x["id"])
 
     # aggregation fields prep

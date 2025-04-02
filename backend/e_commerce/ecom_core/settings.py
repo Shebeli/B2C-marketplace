@@ -67,6 +67,7 @@ LOGGING = {
             "level": "DEBUG",
             "propagate": False,
         },
+        "development": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
     },
 }
 
