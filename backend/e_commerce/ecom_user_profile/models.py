@@ -68,7 +68,7 @@ class SellerProfile(models.Model):
         on_delete=models.CASCADE,
         related_name="seller_profile",
     )
-    store_name = models.CharField(max_length=50, unique=True, null=True)
+    store_name = models.CharField(max_length=100, unique=True, blank=True, null=True)
     store_address = models.CharField(max_length=250)
     store_description = models.CharField(max_length=500, blank=True)
     store_image = models.ImageField(blank=True, null=True)

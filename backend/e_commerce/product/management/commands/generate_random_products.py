@@ -4,6 +4,7 @@ import time
 from django.core.management.base import BaseCommand, CommandParser
 from django.db import transaction
 from ecom_user.models import EcomUser
+from ecom_user_profile.tests.profile_factory import SellerFactory
 from feedback.tests.feedback_factory import ProductCommentFactory, ProductReviewFactory
 from order.tests.order_factory import OrderFactory, OrderItemFactory
 from tqdm import tqdm
@@ -60,8 +61,12 @@ class Command(BaseCommand):
         reviews_per_product = kwargs["reviews_per_product"]
         comments_per_product = kwargs["comments_per_product"]
         technical_detail_per_product = kwargs["technical_per_product"]
-
-        fake_seller = EcomUser.objects.get_or_create(phone="09000000000")[0]
+        try:
+            fake_seller = EcomUser.objects.get(phone="09000000000")
+        except EcomUser.DoesNotExist:
+            fake_seller = SellerFactory(phone="09000000000", first_name="SELLER TEST FIRST NAME", last_name="SELLER TEST LAST NAME")
+            fake_seller.seller_profile.store_name = "فروشگاه تستی چیتی پیتی"
+            fake_seller.seller_profile.save()
         fake_customer = EcomUser.objects.get_or_create(phone="09000000001")[0]
 
         with transaction.atomic():
