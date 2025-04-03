@@ -1,18 +1,17 @@
 import { PaginatedResponse } from "./generalResponses";
 
 /**
- * 
+ *
  */
 export interface ProductListItemResponse {
   id: number;
   name: string;
   mainPrice: number;
   mainImage: string | null;
-  seller: SellerResponse;
+  sellerProfile: sellerInfo;
 }
 
-export interface SellerResponse {
-  id: number;
+export interface sellerInfo {
   storeName: string;
   storeImage: string | null;
   storeUrl: string;
@@ -28,8 +27,9 @@ export interface SubCategoryResponse {
 
 export interface BreadCrumbResponse {
   subCategory: string;
-  category: string
-  mainCategory: string
+  category: string;
+  mainCategory: string;
 }
 
-export type ProductListResponse = PaginatedResponse<ProductListItemResponse>;
+export type ProductListPaginatedResponse =
+  PaginatedResponse<ProductListItemResponse>;

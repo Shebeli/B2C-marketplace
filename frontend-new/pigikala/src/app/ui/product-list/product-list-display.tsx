@@ -54,9 +54,9 @@ export default async function ProductListDisplay({
       name={product.name}
       image={product.mainImage}
       price={product.mainPrice}
-      sellerName={product.seller.storeName}
-      sellerPic={product.seller.storeImage}
-      sellerStoreUrl={product.seller.storeUrl}
+      sellerName={product.sellerProfile.storeName}
+      sellerPic={product.sellerProfile.storeImage}
+      sellerStoreUrl={product.sellerProfile.storeUrl}
     />
   ));
 

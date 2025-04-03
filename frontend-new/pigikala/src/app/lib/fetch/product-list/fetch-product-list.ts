@@ -6,7 +6,7 @@ import { ProductGenericFilters } from "../../types/ui/productListTypes";
 import { api } from "../fetchWrapper";
 import {
   BreadCrumbResponse,
-  ProductListResponse,
+  ProductListPaginatedResponse,
 } from "../../types/api/responses/productListResponses";
 import { transformKeysToSnakeCase } from "../../utils/product-list-helpers/productListHelpers";
 
@@ -42,7 +42,7 @@ export async function fetchProducts({
 
   
   
-  return await api.get<ProductListResponse>(PRODUCT_ROUTES.PRODUCTS_LIST, {
+  return await api.get<ProductListPaginatedResponse>(PRODUCT_ROUTES.PRODUCTS_LIST, {
     params: transformKeysToSnakeCase(queryParams),
     revalidate: 60,
   });

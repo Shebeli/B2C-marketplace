@@ -11,10 +11,13 @@ import { Suspense } from "react";
 import "react-range-slider-input/dist/style.css";
 import { ZodError } from "zod";
 import { Metadata } from "next";
+import { fetchBreadCrumb } from "@/app/lib/fetch/product-list/fetch-product-list";
+import { isError } from "@/app/lib/fetch/fetchWrapper";
+import { details } from "@/app/ui/product-page/placeholder-data";
 
 export const metadata: Metadata = {
-  title: "Products List"
-}
+  title: "Products List",
+};
 
 export default async function ProductListPage({
   searchParams,
@@ -37,6 +40,20 @@ export default async function ProductListPage({
         status: 400,
         message: "مشکلی در دریافت لیست کالا ها پیش آمده است",
         details: error instanceof ZodError ? error.format() : "Unknown error",
+      })
+    );
+  }
+
+  // validate if the given subcategory ID
+  const subCategoryBreadCrumbResult = await fetchBreadCrumb(
+    validatedParams.subCategoryId
+  );
+  if (isError(subCategoryBreadCrumbResult)) {
+    throw new Error(
+      JSON.stringify({
+        status: 404,
+        message: "دسته بندی مورد نظر یافت نشد. 😵",
+        details: subCategoryBreadCrumbResult.details,
       })
     );
   }

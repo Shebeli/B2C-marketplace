@@ -19,9 +19,15 @@ export default async function CategoryBreadcrumb({
   ) : (
     <div className="breadcrumbs text-sm pt-2 pb-1">
       <ul>
-        <li>{categoryBreadCrumbResult.mainCategory}</li>
-        <li>{categoryBreadCrumbResult.category}</li>
-        <li>{categoryBreadCrumbResult.subCategory}</li>
+        <li>
+          <a>{categoryBreadCrumbResult.mainCategory}</a>
+        </li>
+        <li>
+          <a>{categoryBreadCrumbResult.category}</a>
+        </li>
+        <li>
+          <a>{categoryBreadCrumbResult.subCategory}</a>
+        </li>
       </ul>
     </div>
   );
