@@ -2,7 +2,6 @@
 export const productSortOptions = [
   { name: "گران ترین", value: "-main_price" },
   { name: "ارزان ترین", value: "main_price" },
-  { name: "بالاترین امتیاز", value: "rating" },
   { name: "جدیدترین", value: "created_at" },
   { name: "بیشترین بازدید", value: "view_count" },
   { name: "موجود در انبار", value: "in_stock" },
@@ -12,7 +11,6 @@ export const productSortOptions = [
 export const sortOptions = [
   "main_price",
   "-main_price",
-  "rating",
   "created_at",
   "view_count",
   "in_stock",

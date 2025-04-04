@@ -29,7 +29,7 @@ export async function processVerifyCode(
     verifyCode = constructCode(formData);
   } catch (error) {
     const err = error as Error;
-    return { formError: err.message };
+    return { formError: err.details };
   }
 
   try {

@@ -1,5 +1,5 @@
 import { fetchBreadCrumb } from "../lib/fetch/product-list/fetch-product-list";
-import { isError } from "../lib/fetch/fetchWrapper";
+import { isFailedResponse } from "../lib/fetch/fetchWrapper";
 
 export default async function CategoryBreadcrumb({
   subCategoryId,
@@ -9,7 +9,7 @@ export default async function CategoryBreadcrumb({
   // fetch breadcrumb data
   const categoryBreadCrumbResult = await fetchBreadCrumb(subCategoryId);
 
-  return isError(categoryBreadCrumbResult) ? (
+  return isFailedResponse(categoryBreadCrumbResult) ? (
     <div className="text-sm pt-2 pb-1">
       <p className="text-error font-semibold italic">
         {" "}

@@ -8,10 +8,10 @@ export interface ProductListItemResponse {
   name: string;
   mainPrice: number;
   mainImage: string | null;
-  sellerProfile: sellerInfo;
+  sellerProfile: SellerInfo;
 }
 
-export interface sellerInfo {
+export interface SellerInfo {
   storeName: string;
   storeImage: string | null;
   storeUrl: string;

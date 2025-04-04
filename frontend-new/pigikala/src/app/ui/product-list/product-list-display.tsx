@@ -1,8 +1,9 @@
-import ProductCard from "./product-card";
-import { isError } from "@/app/lib/fetch/fetchWrapper";
+import { ProductSort } from "@/app/lib/constants/ui/productListConstants";
+import { isFailedResponse } from "@/app/lib/fetch/fetchWrapper";
 import { fetchProducts } from "@/app/lib/fetch/product-list/fetch-product-list";
 import { ProductGenericFilters } from "@/app/lib/types/ui/productListTypes";
-import { ProductSort } from "@/app/lib/constants/ui/productListConstants";
+import { ApiError } from "@/app/main/customError";
+import ProductCard from "./product-card";
 import ProductListPagination from "./product-list-pagination";
 
 export default async function ProductListDisplay({
@@ -16,38 +17,24 @@ export default async function ProductListDisplay({
   page: number;
   genericFilters: ProductGenericFilters;
 }) {
+  // artificial delay for displaying skeleton for test purposes
   const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
-
   await delay(1500);
 
-  let productsListResponse;
-  try {
-    productsListResponse = await fetchProducts({
-      subCategoryId: subCategoryId,
-      sort: sort,
-      page: page,
-      genericFilters: genericFilters,
-    });
+  const productsFetchResult = await fetchProducts({
+    subCategoryId: subCategoryId,
+    sort: sort,
+    page: page,
+    genericFilters: genericFilters,
+  });
 
-    if (isError(productsListResponse)) {
-      console.error("Error when fetching product list from the server");
-      throw new Error(JSON.stringify(productsListResponse));
-    }
-  } catch (error) {
-    console.error(
-      "An unexpected error has occured when fetching product list:",
-      error
-    );
-    throw new Error(
-      JSON.stringify({
-        status: 500,
-        message: "یک خطای غیر منتظره پیش آمده است.",
-        details: "Unexpected error",
-      })
-    );
+  if (isFailedResponse(productsFetchResult)) {
+    throw new ApiError({
+      ...productsFetchResult,
+    });
   }
 
-  const productCards = productsListResponse.results.map((product) => (
+  const productCards = productsFetchResult.results.map((product) => (
     <ProductCard
       key={product.id}
       id={product.id}
@@ -74,7 +61,7 @@ export default async function ProductListDisplay({
           </div>
         </div>
       )}
-      <ProductListPagination itemTotalCount={productsListResponse.count} />
+      <ProductListPagination itemTotalCount={productsFetchResult.count} />
     </div>
   );
 }

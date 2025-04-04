@@ -18,7 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en" dir="rtl" suppressHydrationWarning>
       <body
-        className={`font-vazir ${vazirMatn.variable}  font-inter ${inter.variable}`}
+        className={`font-vazir ${vazirMatn.variable} min-h-screen  font-inter ${inter.variable}`}
       >
         <Toaster />
         <NuqsAdapter>

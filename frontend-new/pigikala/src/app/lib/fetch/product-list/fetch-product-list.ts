@@ -13,7 +13,7 @@ import { transformKeysToSnakeCase } from "../../utils/product-list-helpers/produ
 const { PRODUCT: PRODUCT_ROUTES } = API_ROUTES;
 
 /**
- * For fetching the subcategory name based on ID
+ * For fetching the breadcrumb name via the passed in subcategory's id.
  */
 export async function fetchBreadCrumb(id: number) {
   return await api.get<BreadCrumbResponse>(
@@ -40,11 +40,11 @@ export async function fetchProducts({
     ...genericFilters,
   };
 
-  
-  
-  return await api.get<ProductListPaginatedResponse>(PRODUCT_ROUTES.PRODUCTS_LIST, {
-    params: transformKeysToSnakeCase(queryParams),
-    revalidate: 60,
-  });
+  return await api.get<ProductListPaginatedResponse>(
+    PRODUCT_ROUTES.PRODUCTS_LIST,
+    {
+      params: transformKeysToSnakeCase(queryParams),
+      revalidate: 60,
+    }
+  );
 }
-  

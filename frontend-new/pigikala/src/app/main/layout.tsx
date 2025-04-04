@@ -7,9 +7,11 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="items-center justify-center flex flex-col">
+    <div className="flex flex-col min-h-screen justify-between">
       <Navbar />
-      <main className="w-full place-items-center">{children}</main>
+      <main className="w-full flex justify-center">
+        {children}
+      </main>
       <Footer />
     </div>
   );

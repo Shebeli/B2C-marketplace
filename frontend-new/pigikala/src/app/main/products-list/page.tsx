@@ -1,4 +1,6 @@
 import { productSortOptions } from "@/app/lib/constants/ui/productListConstants";
+import { isFailedResponse } from "@/app/lib/fetch/fetchWrapper";
+import { fetchBreadCrumb } from "@/app/lib/fetch/product-list/fetch-product-list";
 import { ProductQueryParamsSchema } from "@/app/lib/schemas/productListSchemas";
 import { ProductGenericFilters } from "@/app/lib/types/ui/productListTypes";
 import CategoryBreadcrumb from "@/app/ui/breadcrumbs";
@@ -7,13 +9,11 @@ import sampleColorChoices from "@/app/ui/product-list/placeholder";
 import ProductListDisplay from "@/app/ui/product-list/product-list-display";
 import ProductListSortDropdown from "@/app/ui/product-list/sort-dropdown";
 import { BreadCrumbSkeleton, ProductsListSkeleton } from "@/app/ui/skeletons";
+import { Metadata } from "next";
 import { Suspense } from "react";
 import "react-range-slider-input/dist/style.css";
 import { ZodError } from "zod";
-import { Metadata } from "next";
-import { fetchBreadCrumb } from "@/app/lib/fetch/product-list/fetch-product-list";
-import { isError } from "@/app/lib/fetch/fetchWrapper";
-import { details } from "@/app/ui/product-page/placeholder-data";
+import { ApiError, QueryParamError } from "../customError";
 
 export const metadata: Metadata = {
   title: "Products List",
@@ -31,31 +31,23 @@ export default async function ProductListPage({
     const paramResults = await searchParams;
     validatedParams = ProductQueryParamsSchema.parse(paramResults);
   } catch (error) {
-    console.error(
-      "Error when parsing query params with zod in product list component",
-      error instanceof ZodError ? error.format() : "Unknown error"
-    );
-    throw new Error(
-      JSON.stringify({
-        status: 400,
-        message: "مشکلی در دریافت لیست کالا ها پیش آمده است",
-        details: error instanceof ZodError ? error.format() : "Unknown error",
-      })
-    );
+    throw new QueryParamError({
+      details: error instanceof ZodError ? error.message : "Unknown error",
+    });
   }
 
-  // validate if the given subcategory ID
-  const subCategoryBreadCrumbResult = await fetchBreadCrumb(
+  // given subcategory should be valid for product list fetching
+  const breadCrumbFetchResult = await fetchBreadCrumb(
     validatedParams.subCategoryId
   );
-  if (isError(subCategoryBreadCrumbResult)) {
-    throw new Error(
-      JSON.stringify({
-        status: 404,
-        message: "دسته بندی مورد نظر یافت نشد. 😵",
-        details: subCategoryBreadCrumbResult.details,
-      })
-    );
+  if (isFailedResponse(breadCrumbFetchResult)) {
+    throw new ApiError({
+      ...breadCrumbFetchResult,
+      userMessage:
+        breadCrumbFetchResult.status == 404
+          ? "دسته بندی مد نظر یافت نشد."
+          : breadCrumbFetchResult.userMessage,
+    });
   }
 
   // transform generic filters for fetching

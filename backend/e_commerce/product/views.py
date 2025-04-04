@@ -68,7 +68,6 @@ class ProductList(ListCreateAPIView):
     filterset_class = ProductFilter
     ordering_fields = [
         "main_price",
-        "rating",
         "created_at",
         "view_count",
         "in_stock",

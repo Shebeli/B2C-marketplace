@@ -1,23 +1,29 @@
+import errorMessages from "./errorMessages";
 import queryString from "query-string";
 
-export type ErrorInfo = {
+export type FailedResponse = {
   status: number;
-  message: string;
-  details?: string;
+  userMessage: string;
+  details: string;
 };
 
 /**
- * Helper function to check if the response follows the structure of type ErrorResponse
+ * Helper function to check if the response follows the structure of type FailedResponse
  */
-export const isError = (errorDetails: object) => {
-  return errorDetails && "status" in errorDetails && "message" in errorDetails;
+export const isFailedResponse = (errorDetails: object) => {
+  return (
+    errorDetails &&
+    "status" in errorDetails &&
+    "userMessage" in errorDetails &&
+    "details" in errorDetails
+  );
 };
 
 /**
- * A generic type for API responses recieved from DRF routes.
+ * A generic type for API responses recieved from backend routes.
  * T represents the expected data structure in the response body.
  */
-export type ApiResponse<T> = T | ErrorInfo;
+export type ApiResponse<T> = T;
 
 /**
  * Options to be passed to fetch, when using one of API methods, this format
@@ -38,7 +44,7 @@ export const createFetchClient = (
   async function fetchApi<T>(
     endpoint: string,
     options: FetchOptions = {}
-  ): Promise<ApiResponse<T>> {
+  ): Promise<ApiResponse<T> | FailedResponse> {
     const timeoutMs = options.timeout || defaultTimeout;
     const params = options.params || {};
     const revalidate = options.revalidate ?? defaultOptions.revalidate;
@@ -78,7 +84,10 @@ export const createFetchClient = (
       if (!response.ok) {
         return {
           status: response.status,
-          message: "مشکلی در دریافت اطلاعات از سرور پیش آمده",
+          userMessage:
+            response.status in errorMessages
+              ? errorMessages[response.status]
+              : "یک خطایی غیر منتظره از سمت سرور رخ داده است, لطفا بعدا تلاش کنید.",
           details: response.statusText,
         };
       }
@@ -94,14 +103,14 @@ export const createFetchClient = (
       if (error instanceof DOMException && error.name === "AbortError") {
         return {
           status: 408, // timeout
-          message: "زمان درخواست اطلاعات به پایان رسیده, لطفا بعدا تلاش کنید",
+          userMessage: errorMessages[408],
           details: error.message,
         };
       }
 
       return {
         status: 500,
-        message: "یک خطای غیر منتظره پیش آمده است.",
+        userMessage: errorMessages[500],
         details:
           error instanceof Error ? error.message : "Unknown type of error",
       };
@@ -112,14 +121,14 @@ export const createFetchClient = (
     get: <T>(
       endpoint: string,
       options?: FetchOptions
-    ): Promise<ApiResponse<T>> =>
+    ): Promise<ApiResponse<T> | FailedResponse> =>
       fetchApi<T>(endpoint, { method: "GET", ...options }),
 
     post: <T>(
       endpoint: string,
       data?: object,
       options?: FetchOptions
-    ): Promise<ApiResponse<T>> =>
+    ): Promise<ApiResponse<T> | FailedResponse> =>
       fetchApi<T>(endpoint, {
         method: "POST",
         body: JSON.stringify(data),
@@ -130,7 +139,7 @@ export const createFetchClient = (
       endpoint: string,
       data?: object,
       options?: FetchOptions
-    ): Promise<ApiResponse<T>> =>
+    ): Promise<ApiResponse<T> | FailedResponse> =>
       fetchApi<T>(endpoint, {
         method: "PUT",
         body: JSON.stringify(data),
@@ -140,7 +149,7 @@ export const createFetchClient = (
     delete: <T>(
       endpoint: string,
       options?: FetchOptions
-    ): Promise<ApiResponse<T>> =>
+    ): Promise<ApiResponse<T> | FailedResponse> =>
       fetchApi<T>(endpoint, {
         method: "DELETE",
         ...options,
