@@ -39,3 +39,27 @@ export function ProductsListSkeleton() {
 export function BreadCrumbSkeleton() {
   return <div className="skeleton w-12 h-4 rounded-3xl"></div>;
 }
+
+export function ReviewCardSkeleton() {
+  return (
+    <li className="skeleton list-row">
+      <div className="skeleton size-8"></div>
+      <div>
+        <div className="skeleton text-xs uppercase font-semibold opacity-60"></div>
+      </div>
+      <p className="skeleton list-col-wrap text-xs"></p>
+    </li>
+  );
+}
+
+export function ReviewSkeleton() {
+  return (
+    <ul className="skeleton list bg-base-100 rounded-box shadow-md">
+      {Array(20)
+        .fill(null)
+        .map((_, index) => (
+          <ReviewCardSkeleton key={index} />
+        ))}
+    </ul>
+  );
+}

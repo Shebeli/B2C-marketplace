@@ -20,6 +20,7 @@ class ProductReviewSerializer(serializers.ModelSerializer):
         exclude = ["reviewed_by"]
         extra_kwargs = {
             "order": {"write_only": True},
+            "product": {"write_only": True},
         }
 
     def to_internal_value(self, data):
@@ -67,6 +68,7 @@ class ProductCommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductComment
         exclude = ["commented_by"]
+        extra_kwargs = {"product": {"write_only": True}}
 
     def to_internal_value(self, data):
         if self.instance:

@@ -1,6 +1,8 @@
-import { NavbarProfileInfo } from "../../types/ui/generalTypes";
+"use server"
+
+import { NavbarProfileInfo } from "../../../../types/ui/generalTypes";
 import { getAccessFromCookies } from "../fetchAuth";
-import { API_ROUTES } from "../../apiRoutes";
+import { API_ROUTES } from "../../../../apiRoutes";
 import { fetchWithAuth } from "../fetchAuth";
 
 const { USER: USER_ENDPOINTS } = API_ROUTES;

@@ -1,4 +1,4 @@
-import { PaginatedResponse } from "./generalResponses";
+import { Paginated } from "./generalResponses";
 
 /**
  *
@@ -32,4 +32,4 @@ export interface BreadCrumbResponse {
 }
 
 export type ProductListPaginatedResponse =
-  PaginatedResponse<ProductListItemResponse>;
+  Paginated<ProductListItemResponse>;

@@ -1,22 +1,24 @@
-interface Detail {
-  name: string;
+interface TechnicalDetail {
+  attribute: string;
   value: string;
 }
 
-interface Props {
-  details: Array<Detail>;
+interface ProductTechnicalDetailProps {
+  technicalDetails: TechnicalDetail[];
 }
 
-const ProductDetail: React.FC<Props> = ({ details }) => {
+const ProductTechnicalDetails: React.FC<ProductTechnicalDetailProps> = ({
+  technicalDetails,
+}) => {
   return (
     <section>
       <ul className="grid md:grid-cols-2">
-        {details.map((detail, index) => (
+        {technicalDetails.map((detail, index) => (
           <li
             key={index}
             className="flex gap-8 border-b-2 border-base-300 py-3"
           >
-            <p className="font-semibold">{detail.name}</p>
+            <p className="font-semibold">{detail.attribute}</p>
             <p className="">{detail.value}</p>
           </li>
         ))}
@@ -25,4 +27,4 @@ const ProductDetail: React.FC<Props> = ({ details }) => {
   );
 };
 
-export default ProductDetail;
+export default ProductTechnicalDetails;

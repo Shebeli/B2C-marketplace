@@ -1,27 +1,24 @@
 import Image from "next/image";
-
-interface ProductImageDetail {
-  source: string;
-  alt?: string;
-}
+import { ProductImageDetail } from "@/app/lib/types/ui/generalTypes";
 
 interface ProductImageProps {
   onClickEventHandler: () => void;
-  image: ProductImageDetail;
+  imageSource: string;
+  imageAlt: string;
 }
 
 const ProductImage: React.FC<ProductImageProps> = ({
   onClickEventHandler,
-  image,
+  imageSource,
+  imageAlt,
 }) => {
   return (
     <Image
-      key={image.source}
       className="mask w-16 border-2 p-0.5 border-gray-300 rounded-lg hover:cursor-pointer"
-      src={image.source}
+      src={imageSource}
       width={200}
       height={200}
-      alt={image.alt ? image.alt : ""}
+      alt={imageAlt}
       onClick={onClickEventHandler}
     />
   );

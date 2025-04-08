@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 
 const CODE_REQUEST_COOLDOWN = Number(process.env.CODE_REQUEST_COOLDOWN);
 
@@ -17,3 +19,9 @@ export const calculateCodeRemainingTimer = (requestTimestamp: number) => {
   }
   return 0;
 };
+
+export function toRelativePersianTime(date: string): string {
+  dayjs.extend(relativeTime);
+  dayjs.locale("fa");
+  return dayjs().to(date);
+}

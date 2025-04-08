@@ -1,11 +1,9 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import DeadFaceIcon from "../ui/deadFaceIcon";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useSearchParams } from "next/navigation";
-import { usePathname } from "next/navigation";
 
 export default function Error({
   error,
@@ -19,8 +17,16 @@ export default function Error({
   const searchParams = useSearchParams();
   const { replace } = useRouter();
   const pathname = usePathname();
-  const errorData = JSON.parse(error.message);
-  console.log(typeof error);
+  let errorData;
+  try {
+    errorData = JSON.parse(error.message);
+  } catch {
+    errorData = {
+      status: 500,
+      userMessage: "یک خطای داخلی پیش آمده است.",
+      details: "Error in parsing error.message data in error.tsx boundary.",
+    };
+  }
 
   const handleQueryParamReset = () => {
     const params = new URLSearchParams();

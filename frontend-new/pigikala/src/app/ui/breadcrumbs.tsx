@@ -1,5 +1,5 @@
-import { fetchBreadCrumb } from "../lib/fetch/product-list/fetch-product-list";
-import { isFailedResponse } from "../lib/fetch/fetchWrapper";
+import { fetchBreadCrumb } from "../lib/services/api/fetch/product-list/fetchProductList";
+import { isFailedResponse } from "../lib/services/api/fetch/fetchWrapper";
 
 export default async function CategoryBreadcrumb({
   subCategoryId,

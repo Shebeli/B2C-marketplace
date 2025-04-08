@@ -1,7 +1,7 @@
 import { productSortOptions } from "@/app/lib/constants/ui/productListConstants";
-import { isFailedResponse } from "@/app/lib/fetch/fetchWrapper";
-import { fetchBreadCrumb } from "@/app/lib/fetch/product-list/fetch-product-list";
 import { ProductQueryParamsSchema } from "@/app/lib/schemas/productListSchemas";
+import { isFailedResponse } from "@/app/lib/services/api/fetch/fetchWrapper";
+import { fetchBreadCrumb } from "@/app/lib/services/api/fetch/product-list/fetchProductList";
 import { ProductGenericFilters } from "@/app/lib/types/ui/productListTypes";
 import CategoryBreadcrumb from "@/app/ui/breadcrumbs";
 import ProductFilter from "@/app/ui/product-list/filter/product-filter";
@@ -26,9 +26,17 @@ export default async function ProductListPage({
 }) {
   let validatedParams;
 
+  const paramResults = await searchParams;
+  if (!paramResults["subCategoryId"]) {
+    throw new ApiError({
+      userMessage: "دسته بندی مد نظر یافت نشد.",
+      details: "No subcategoryId was provided in the URL",
+      status: 404,
+    });
+  }
+
   // Parse the query params and prepare the data for fetching
   try {
-    const paramResults = await searchParams;
     validatedParams = ProductQueryParamsSchema.parse(paramResults);
   } catch (error) {
     throw new QueryParamError({

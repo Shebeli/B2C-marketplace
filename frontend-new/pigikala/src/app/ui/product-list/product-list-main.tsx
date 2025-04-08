@@ -30,7 +30,7 @@ export default function ProductListMain({
           aria-label="Toggle filters"
           onClick={() => setToggleFilters(!toggleFilters)}
         >
-        <FaFilter className="size-7 text-primary" />
+          <FaFilter className="size-7 text-primary" />
         </button>
       </div>
       <div className="flex gap-2">
@@ -57,9 +57,9 @@ export default function ProductListMain({
                   name={product.name}
                   image={product.mainImage}
                   price={product.mainPrice}
-                  sellerName={product.seller.storeName}
-                  sellerPic={product.seller.storeImage}
-                  sellerStoreUrl={product.seller.storeUrl}
+                  sellerName={product.sellerProfile.storeName}
+                  sellerPic={product.sellerProfile.storeImage}
+                  sellerStoreUrl={product.sellerProfile.storeUrl}
                 />
               ))}
             </div>

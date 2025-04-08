@@ -1,14 +1,14 @@
 "use server";
 
-import { ProductSort } from "../../constants/ui/productListConstants";
-import { API_ROUTES } from "../../apiRoutes";
-import { ProductGenericFilters } from "../../types/ui/productListTypes";
+import { ProductSort } from "../../../../constants/ui/productListConstants";
+import { API_ROUTES } from "../../../../apiRoutes";
+import { ProductGenericFilters } from "../../../../types/ui/productListTypes";
 import { api } from "../fetchWrapper";
 import {
   BreadCrumbResponse,
   ProductListPaginatedResponse,
-} from "../../types/api/responses/productListResponses";
-import { transformKeysToSnakeCase } from "../../utils/product-list-helpers/productListHelpers";
+} from "../../../../types/api/responses/productListResponses";
+import { transformKeysToSnakeCase } from "../../../../utils/product-list-helpers/productListHelpers";
 
 const { PRODUCT: PRODUCT_ROUTES } = API_ROUTES;
 
@@ -41,7 +41,7 @@ export async function fetchProducts({
   };
 
   return await api.get<ProductListPaginatedResponse>(
-    PRODUCT_ROUTES.PRODUCTS_LIST,
+    PRODUCT_ROUTES.PRODUCTS,
     {
       params: transformKeysToSnakeCase(queryParams),
       revalidate: 60,

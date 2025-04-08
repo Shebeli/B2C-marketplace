@@ -5,9 +5,9 @@ import {
   details,
   images,
 } from "@/app/ui/product-page/placeholder-data";
-import ProductColor from "@/app/ui/product-page/product-color";
-import ProductDetail from "@/app/ui/product-page/product-detail";
-import ProductFeature from "@/app/ui/product-page/product-feature";
+import ProductColorVariant from "@/app/ui/product-page/product-color";
+import ProductTechnicalDetails from "@/app/ui/product-page/product-detail";
+import ProductFeatures from "@/app/ui/product-page/product-feature";
 import ProductImage from "@/app/ui/product-page/product-image";
 import Image from "next/image";
 import { useState } from "react";
@@ -78,10 +78,10 @@ function Product({ productFeatures }: { productFeatures: ProductFeature[] }) {
               <div className="grid grid-rows-[auto_1fr] lg:grid-cols-[8fr_5fr] grid-cols-[1fr_2fr] my-3 wrap gap-4">
                 <div className="lg mx-4">
                   <ProductRating rating={2.4} buyersCount={200} />
-                  <ProductColor
+                  <ProductColorVariant
                     colors={colors}
-                    selectedColor={selectedColor}
-                    setSelectedColor={setSelectedColor}
+                    selectedVariant={selectedColor}
+                    setSelectedVariant={setSelectedColor}
                   />
                 </div>
                 <div className="card h-fit lg:w-full w-8/12 min-w-64 max-w-96 shadow-xl bg-base-200 mr-auto font-medium text-sm col-span-1 row-span-2 ">
@@ -114,9 +114,9 @@ function Product({ productFeatures }: { productFeatures: ProductFeature[] }) {
                   <h2 className="font-semibold text-lg mt-2 mb-1">ویژگی ها</h2>
                   <div className="lg:grid grid-cols-3 flex gap-4 w-full lg:overflow-hidden overflow-scroll scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-slate-700 scrollbar-track-slate-300 py-1">
                     {productFeatures.map((productFeature, index) => (
-                      <ProductFeature
+                      <ProductFeatures
                         key={index}
-                        name={productFeature.name}
+                        attribute={productFeature.name}
                         value={productFeature.value}
                       />
                     ))}
@@ -142,7 +142,7 @@ function Product({ productFeatures }: { productFeatures: ProductFeature[] }) {
             role="tabpanel"
             className="tab-content bg-base-100 border-secondary rounded-box p-6 border-r-8 "
           >
-            <ProductDetail details={details} />
+            <ProductTechnicalDetails technicalDetails={details} />
           </div>
 
           <input

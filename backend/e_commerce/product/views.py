@@ -27,7 +27,7 @@ from product.models import (
     SubCategory,
     TechnicalDetail,
 )
-from product.permissions import IsOwner, IsSellerVerified
+from product.permissions import IsOwnerOrReadOnly, IsSellerVerified
 from product.serializers import (
     BreadcrumbSerializer,
     FullCategorySerializer,
@@ -80,7 +80,7 @@ class ProductList(ListCreateAPIView):
 
 
 class ProductDetail(RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsOwner & IsSellerVerified]
+    permission_classes = [IsOwnerOrReadOnly & IsSellerVerified]
     queryset = Product.objects.all()
     _cached_object = None
 
@@ -120,7 +120,7 @@ class ProductDetail(RetrieveUpdateDestroyAPIView):
 
 
 class ProductVariantDetail(RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsOwner & IsSellerVerified]
+    permission_classes = [IsOwnerOrReadOnly & IsSellerVerified]
     queryset = ProductVariant.objects.all()
     serializer_class = ProductVariantSerializerForOwner
     lookup_url_kwarg = "variant_pk"

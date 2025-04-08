@@ -1,6 +1,6 @@
 import { ProductSort } from "@/app/lib/constants/ui/productListConstants";
-import { isFailedResponse } from "@/app/lib/fetch/fetchWrapper";
-import { fetchProducts } from "@/app/lib/fetch/product-list/fetch-product-list";
+import { isFailedResponse } from "@/app/lib/services/api/fetch/fetchWrapper";
+import { fetchProducts } from "@/app/lib/services/api/fetch/product-list/fetchProductList";
 import { ProductGenericFilters } from "@/app/lib/types/ui/productListTypes";
 import { ApiError } from "@/app/main/customError";
 import ProductCard from "./product-card";

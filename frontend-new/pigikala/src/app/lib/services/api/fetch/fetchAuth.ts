@@ -4,7 +4,7 @@ import { RequestInit } from "next/dist/server/web/spec-extension/request";
 import { cookies } from "next/headers";
 import { ResponseCookies } from "next/dist/compiled/@edge-runtime/cookies";
 import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
-import { API_ROUTES } from "../apiRoutes";
+import { API_ROUTES } from "../../../apiRoutes";
 
 
 // retrieve refresh token from cookies (only for server actions)

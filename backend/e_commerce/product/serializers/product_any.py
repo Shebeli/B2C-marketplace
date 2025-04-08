@@ -31,17 +31,24 @@ class ProductSerializerForAny(serializers.ModelSerializer):
 
     technical_details = TechnicalDetailSerializer(many=True, read_only=True)
     variants = ProductVariantSerializerForAny(many=True, read_only=True)
-    owner = ProductSellerSerializer(read_only=True)
+    owner = ProductSellerSerializer(read_only=True, source="owner.seller_profile")
     rating_avg = serializers.SerializerMethodField()
     rating_count = serializers.SerializerMethodField()
+    bread_crumb = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
-        exclude = ["view_count", "created_at", "main_variant"]
+        exclude = [
+            "view_count",
+            "created_at",
+            "main_variant",
+            "is_valid",
+            "is_enabled",
+            "subcategory",
+        ]
 
     def to_representation(self, product_instance):
         ret = super().to_representation(product_instance)
-        ret["subcategory"] = product_instance.subcategory.name
         ret["tags"] = [tag.name for tag in product_instance.tags.all()]
         return ret
 
@@ -58,3 +65,10 @@ class ProductSerializerForAny(serializers.ModelSerializer):
             lambda: product_obj.reviews.aggregate(count=Count("id"))["count"] or 0,
             10 * 60,
         )
+
+    def get_bread_crumb(self, product_obj):
+        return {
+            "sub_category": product_obj.subcategory.name,
+            "category": product_obj.subcategory.category.name,
+            "main_category": product_obj.subcategory.category.main_category.name,
+        }

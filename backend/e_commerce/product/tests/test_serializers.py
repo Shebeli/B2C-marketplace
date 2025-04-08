@@ -108,10 +108,12 @@ def test_product_serializer_for_any_representation():
         "variants": variant_serializer.data,
         "tags": [tag.name for tag in product.tags.all()],
         "name": product.name,
-        "is_valid": product.is_valid,
         "description": product.description,
-        "subcategory": product.subcategory.name,
-        "is_enabled": product.is_enabled,
+        "bread_crumb": {
+            "subcategory": product.subcategory.name,
+            "category": product.subcategory.category.name,
+            "main_category": product.subcategory.category.main_category.name,
+        },
         "rating_avg": rating_avg,
         "rating_count": rating_count,
     }

@@ -13,14 +13,15 @@ class IsAdminOrReadOnly(BasePermission):
         )
 
 
-class IsOwner(BasePermission):
+class IsOwnerOrReadOnly(BasePermission):
     message = "User is not the owner of this object"
 
     def has_object_permission(self, request, view, obj):
         "Object should have a 'owner' attribute referencing to user instance"
-        if request.method in SAFE_METHODS:
+        if request.method in SAFE_METHODS and obj.is_valid and obj.is_enabled:
             return True
         return obj.owner == request.user
+
 
 
 class IsSellerVerified(BasePermission):
