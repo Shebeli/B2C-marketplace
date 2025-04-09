@@ -159,7 +159,11 @@ export function translateColorToPersian(colorHex: string): string | null {
   try {
     colorName = namer(colorHex, { pick: ["html"] }).html[0].name;
   } catch (error) {
-    console.error("Unknown color caught by color-namer:", error);
+    console.error(
+      "Unknown color caught by color-namer when trying to translate color in colorTranslations:",
+      `Passed in color: ${colorHex}`,
+      error
+    );
     return null;
   }
 

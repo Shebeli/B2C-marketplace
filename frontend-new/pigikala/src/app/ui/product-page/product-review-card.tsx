@@ -1,6 +1,7 @@
 import { ProductReviewUI } from "@/app/lib/types/ui/product-detail/productReviewUI";
 import Image from "next/image";
 import { DEFAULT_PROFILE_IMAGE_URL } from "@/app/lib/constants/assets";
+import { FaRegThumbsDown, FaRegThumbsUp } from "react-icons/fa6";
 
 interface ReviewCardProps {
   review: ProductReviewUI;
@@ -8,54 +9,44 @@ interface ReviewCardProps {
 
 export default function ReviewCard({ review }: ReviewCardProps) {
   return (
-    <li className="list-row">
+    <li className="list-row border-y-[1px] border-x-[1px] border-base-300 my-0.5">
+      <div></div>
       <div>
-        <Image
-          alt={`${review.reviewedBy.fullName} Profile Picture`}
-          className="size-8 rounded-box"
-          src={review.reviewedBy.profilePicture ?? DEFAULT_PROFILE_IMAGE_URL}
-        />
-      </div>
-      <div>
-        <div>{review.reviewedBy.fullName}</div>
-        <div className="text-xs uppercase font-semibold opacity-60">
-          {review.title}
+        <div className="flex items-end gap-2">
+          <Image
+            width={32}
+            height={32}
+            alt={`${review.reviewedBy.fullName} Profile Picture`}
+            className="size-8 rounded-box"
+            src={review.reviewedBy.profilePicture ?? DEFAULT_PROFILE_IMAGE_URL}
+          />
+          <div className="text-xs mb-2">{review.reviewedBy.fullName}</div>
+        </div>
+        <div className="font-semibold mt-2">
+          <span className="flex items-center gap-x-2">
+            <div className="rating">
+              {/* DaisyUI rating component */}
+              {Array(5)
+                .fill(null)
+                .map((_, index) => (
+                  <div
+                    key={index}
+                    className="mask mask-star-2 size-3.5 bg-orange-400"
+                    aria-label={`${index + 1} star`}
+                    aria-current={review.rating === index + 1}
+                  ></div>
+                ))}
+            </div>{" "}
+            <h1>{review.title}</h1>
+          </span>
         </div>
       </div>
       <p className="list-col-wrap text-xs">{review.description}</p>
-      <button className="btn btn-square btn-ghost">
-        <svg
-          className="size-[1.2em]"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-        >
-          <g
-            strokeLinejoin="round"
-            strokeLinecap="round"
-            strokeWidth="2"
-            fill="none"
-            stroke="currentColor"
-          >
-            <path d="M6 3L20 12 6 21 6 3z"></path>
-          </g>
-        </svg>
+      <button className="btn btn-sm btn-square btn-ghost">
+        <FaRegThumbsUp className="size-4" />
       </button>
-      <button className="btn btn-square btn-ghost">
-        <svg
-          className="size-[1.2em]"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-        >
-          <g
-            strokeLinejoin="round"
-            strokeLinecap="round"
-            strokeWidth="2"
-            fill="none"
-            stroke="currentColor"
-          >
-            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
-          </g>
-        </svg>
+      <button className="btn btn-sm btn-square btn-ghost">
+        <FaRegThumbsDown className="size-4" />
       </button>
     </li>
   );

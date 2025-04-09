@@ -5,7 +5,7 @@ import {
   details,
   images,
 } from "@/app/ui/product-page/placeholder-data";
-import ProductColorVariant from "@/app/ui/product-page/product-color";
+import ProductColorVariant from "@/app/ui/product-page/product-color-variant";
 import ProductTechnicalDetails from "@/app/ui/product-page/product-detail";
 import ProductFeatures from "@/app/ui/product-page/product-feature";
 import ProductImage from "@/app/ui/product-page/product-image";

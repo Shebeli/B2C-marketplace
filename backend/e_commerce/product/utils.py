@@ -1,4 +1,6 @@
+import random
 from typing import Union
+
 
 # to be implemented later
 def increase_view_count(
@@ -20,3 +22,7 @@ def increase_view_count(
         return wrapper
 
     return decorator
+
+
+def generate_hex_color():
+    return f"#{random.randint(0, 0xFFFFFF):06x}"

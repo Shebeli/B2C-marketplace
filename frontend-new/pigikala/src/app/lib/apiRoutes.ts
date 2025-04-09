@@ -11,7 +11,7 @@ export const API_ROUTES = {
   PRODUCT: {
     SUB_CATEGORIES: "api/products/sub-categories/",
     FULL_CATEGORIES: "api/products/full-categories/",
-    PRODUCTS: "api/products",
+    PRODUCTS: "api/products/",
   },
   FEEDBACK: {
     PRODUCT_COMMENTS: "api/feedback/product-comments/",

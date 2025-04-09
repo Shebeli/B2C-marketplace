@@ -9,7 +9,9 @@ interface ProductReviewProps {
 export async function ProductReview({ productId }: ProductReviewProps) {
   const reviews = await getProductReviewsById(productId);
 
+  console.log("Retrieved reviews objects:", reviews)
   if (isFailedResponse(reviews)) {
+    console.error("Failed to retrieve product reviews by id:", reviews);
     return <h1>مشکلی در دریافت نظرات پیش آمده است, لطفا بعدا تلاش کنید.</h1>;
   }
 

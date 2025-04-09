@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { FaShieldHalved, FaStar, FaStore } from "react-icons/fa6";
-import ProductColorVariant from "./product-color";
+import ProductColorVariant from "./product-color-variant";
 import ProductFeatures from "./product-feature";
 import ProductImage from "./product-image";
 import ProductImageModal from "./product-image-modal";

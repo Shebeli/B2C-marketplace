@@ -18,12 +18,12 @@ const ProductColorVariant: React.FC<ProductColorProps> = ({
         {variants.map((variant) => (
           <button
             key={variant.id}
-            className={`w-9 h-9 rounded-full ${
+            className={`w-9 h-9 rounded-full hover:cursor-pointer ${
               selectedVariant === variant
                 ? "ring-4 border-[3.5px] ring-cyan-500"
                 : ""
             }`}
-            style={{ backgroundColor: `#${selectedVariant.colorValue}` }}
+            style={{ backgroundColor: `${variant.colorValue}` }}
             onClick={() => setSelectedVariant(variant)}
           ></button>
         ))}
