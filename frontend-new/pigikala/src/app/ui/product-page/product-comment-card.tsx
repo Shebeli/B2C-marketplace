@@ -30,7 +30,7 @@ export default function ProductCommentCard({ comment }: CommentCard) {
         </div>
       </div>
       <p className="list-col-wrap text-xs">{comment.description}</p>
-      <button className="btn btn-sm btn-secondary">Reply</button>
+      <button className="btn btn-sm btn-secondary place-self-end">Reply</button>
     </li>
   );
 }

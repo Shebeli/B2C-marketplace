@@ -4,6 +4,9 @@ import {
 } from "@/app/lib/constants/assets";
 import Image from "next/image";
 import Link from "next/link";
+import { API_ROUTES } from "@/app/lib/apiRoutes";
+
+const { PRODUCTS } = API_ROUTES.PRODUCT;
 
 interface ProductCardProps {
   id: number;
@@ -55,7 +58,9 @@ export default function ProductCard({
 
         <p className="text-left text-sm">{price.toLocaleString()} تومان</p>
         <div className="card-actions justify-end">
-          <button className="btn btn-primary btn-sm ">مشاهده محصول</button>
+          <Link href={`product/${id}`}>
+            <button className="btn btn-primary btn-sm ">مشاهده محصول</button>
+          </Link>
         </div>
       </div>
     </div>

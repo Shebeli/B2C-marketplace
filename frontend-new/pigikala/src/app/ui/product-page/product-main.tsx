@@ -41,14 +41,32 @@ export default function ProductMain({ product }: ProductMainProps) {
             />
             <div className="flex self-start pb-1 gap-3 scrollbar overflow-x-auto scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-slate-700 scrollbar-track-slate-300">
               {product.variants.flatMap((variant) =>
-                variant.images.map((image, index) => (
-                  <ProductImage
-                    key={variant.id}
-                    imageSource={image}
-                    imageAlt={`${product.name} ${variant.name} ${index}`}
-                    onClickEventHandler={() => setOpenedImageSrc(image)}
-                  />
-                ))
+                variant.images.length !== 0
+                  ? variant.images.map((image, index) => (
+                      <ProductImage
+                        key={`${variant.id}-${index}`}
+                        imageSource={image}
+                        imageAlt={`${product.name} ${variant.name} ${index}`}
+                        onClickEventHandler={() => setOpenedImageSrc(image)}
+                      />
+                    ))
+                  : Array(5)
+                      .fill(null)
+                      .map((_, index) => (
+                        <Image
+                          className=" hover:cursor-pointer border-2 border-base-300 rounded-md p-1"
+                          alt={`Sample image ${index + 1}`}
+                          key={`sample-${variant.id}-${index}`}
+                          width={100}
+                          height={100}
+                          src={`/sample_images/side-image-${index + 1}.webp`}
+                          onClick={() =>
+                            setOpenedImageSrc(
+                              `/sample_images/side-image-${index + 1}.webp`
+                            )
+                          }
+                        />
+                      ))
               )}
             </div>
           </div>

@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { ProductImageDetail } from "@/app/lib/types/ui/generalTypes";
 
 interface ProductImageProps {
   onClickEventHandler: () => void;
@@ -16,8 +15,8 @@ const ProductImage: React.FC<ProductImageProps> = ({
     <Image
       className="mask w-16 border-2 p-0.5 border-gray-300 rounded-lg hover:cursor-pointer"
       src={imageSource}
-      width={200}
-      height={200}
+      width={100}
+      height={100}
       alt={imageAlt}
       onClick={onClickEventHandler}
     />

@@ -9,7 +9,6 @@ export default async function ProductPage(props: {
   const params = await props.params;
   const id = params.id;
 
-  console.log("ID OF PRODUCT IN URL:", id);
   const product = await getProductById(id);
 
   return (
