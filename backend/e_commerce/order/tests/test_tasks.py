@@ -1,8 +1,20 @@
-import pytest
+from asyncio import Server
+from unittest.mock import patch
 
+import pytest
+from backend.e_commerce.order.models import Order
+from backend.e_commerce.order.tests.order_factory import OrderFactory, OrderItemFactory
+from backend.e_commerce.product.tests.product_factory import ProductVariantFactory
 from financeops.models import Payment
-from order.tasks import handle_payment
-from zibal.models.schemas import TransactionInquiryResponse
+from financeops.tests.finance_factory import PaymentFactory
+from zibal.client import ZibalIPGClient
+from zibal.models.schemas import (
+    TransactionInquiryResponse,
+    TransactionRequireResponse,
+    TransactionVerifyResponse,
+)
+
+from order.tasks import cancel_unpaid_order, handle_payment
 
 # ---------------
 #    Fixtures
@@ -10,54 +22,62 @@ from zibal.models.schemas import TransactionInquiryResponse
 
 
 @pytest.fixture
-def payment_factory():
-    def create_payment_obj():
-        return Payment.objects.create(status=Payment.PAYING)
+def mock_zibal_client():
+    with patch("order.tasks.ZibalIPGClient") as mock_client:
+        sample_response_data = {
+            "message": "success",
+            "result": 100,
+            "refNumber": None,
+            "paidAt": "2025-04-11T18:56:25.743000",
+            "verifiedAt": "2025-04-11T18:56:41.377000",
+            "status": 1,
+            "amount": 10000,
+            "orderId": "",
+            "description": "",
+            "cardNumber": None,
+            "multiplexing_infos": [],
+            "wage": 0,
+            "shaparakFee": 1200,
+            "createdAt": "2025-04-11T18:54:32.893000",
+        }
+        mock_client.inquiry_transaction.return_value = (
+            TransactionInquiryResponse.from_camel_case(sample_response_data)
+        )
+        mock_client.request_transaction.return_value = TransactionRequireResponse(
+            track_id=123, result=100, message="success"
+        )
+        yield mock_client.return_value
 
-    return create_payment_obj
 
-
-@pytest.fixture
-def mocked_succesful_payment_handling(mocker):
-    return mocker.patch("order.tasks.handle_payment", return_value=None)
-
-
-@pytest.fixture
-def mock_zibal_client(mocker):
-    with mocker.patch("order.services.payment.ZibalIPGClient") as MockClient:
-        yield MockClient.return_value
-
-
-# handle_payment tests
+# Test tasks core logic and assert expected execution flow
 
 PAID_AND_VERIFIED = 1
 
+
 @pytest.mark.django_db
-def test_paid_and_verified_payment_handling(
-    mock_zibal_client, mocked_succesful_payment_handling, payment_factory
-):
-    payment = payment_factory()
-    sample_response_data = {
-        "message": "success",
-        "result": 100,
-        "ref_number": None,
-        "paid_at": None,
-        "verified_at": None,
-        "status": -1,
-        "amount": 50000,
-        "order_id": "",
-        "description": "",
-        "card_number": None,
-        "multiplexing_infos": [],
-        "wage": 0,
-        "shaparak_fee": 1200,
-        "created_at": "2024-12-02T20:09:10.637000",
-    }
-    mock_zibal_client.inquiry_transaction.return_value = TransactionInquiryResponse(
-        **sample_response_data
-    )
-    handle_payment.delay(payment_id=payment.id, track_id=100)
-    mocked_succesful_payment_handling.assert_called_once_with(
-        payment_id=payment.id, track_id=100
-    )
-    payment.refresh_from_db()
+def test_handle_payment_task_succesful(mock_zibal_client):
+    payment = PaymentFactory(status=Payment.UNPAID, amount=10000)
+
+    response = mock_zibal_client.request_transaction(10000, "https://localhost.com")
+    handle_payment(response.track_id, payment.id)
+    payment.refresh_from_db(fields=["amount", "status"])
+
+    assert payment.amount == 10000
+    assert payment.status == Payment.PAID
+
+
+@pytest.mark.django_db
+def test_cancel_unpaid_order_succesful(mock_zibal_client):
+    product_variants = ProductVariantFactory.create_batch(10)
+    order = OrderFactory(status=Order.UNPAID)
+    order_items = [
+        OrderItemFactory(product_variant=variant) for variant in product_variants
+    ]
+
+    cancel_unpaid_order(order.id)
+
+    assert order.status == Order.CANCELLED
+    assert order.cancelled_by == Order.SERVER
+    
+    for variant in product_variants:
+        assert variant.reserved_stock == 0 

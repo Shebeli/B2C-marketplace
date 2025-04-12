@@ -1,13 +1,11 @@
 from datetime import timedelta
 
-from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
-
-
-from ecom_user_profile.models import BankCard
+from django.utils.translation import gettext_lazy as _
 from ecom_user.models import EcomUser
+from ecom_user_profile.models import BankCard
 from order.models import Order
 
 
@@ -20,7 +18,7 @@ class Wallet(models.Model):
     balance = models.PositiveBigIntegerField(default=0)
 
 
-class Transaction(models.Model):
+class FinancialRecord(models.Model):
     """
     This model is intended to be used only by server for recording
     all types of financial records.
@@ -89,17 +87,29 @@ class Payment(models.Model):
     Used for direct IPG payments, depending on the payment type,
     only one of the fields `order` or `wallet` should be provided.
 
-    # Only one instance of payment should exist for each `Order` instance
-    # or a `Wallet` balance increase operation, which means if an instance
-    # of `Payment` already exists when a new payment attempt is made, the
-    # already existing instance will be updated instead.
+    Only one instance of payment should exist for each `Order` instance
+    or a `Wallet` balance increase operation, which means if an instance
+    of `Payment` already exists when a new payment attempt is made, the
+    already existing instance will be updated instead.
 
     Whenever an instance of this model is PAYING, a task should check in x minutes
     to conduct whether the payment was paid or not and update the status to
     CANCELLED if it was not paid.
+
+    Used whenever a payment is involved for either paying an order, or increasing
+    the balance of the wallet. The criteria for order and payment is the following:
+
+    - Order: Only one instance of payment exists per order (assuming the order payment
+    method is via direct payment).
+    - Wallet:
+
+
+    If an instance of the `Payment` model payment status is PAYING, a celery task
+    should check in X minutes and update the payment status by inqurying the payment
+    from the provided IPG server.
     """
 
-    user = models.ForeignKey(
+    paid_by = models.ForeignKey(
         EcomUser,
         on_delete=models.SET_NULL,
         null=True,
@@ -109,7 +119,12 @@ class Payment(models.Model):
     amount = models.PositiveBigIntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    ipg_service = models.IntegerField(blank=True)
+
+    ZIBAL = "ZB"
+    ASAN_PARDAKHT = "AP"
+    IPG_CHOICES = {ZIBAL: "Zibal", ASAN_PARDAKHT: "Asan Pardakht"}
+    ipg_service = models.CharField(choices=IPG_CHOICES, max_length=2)
+
     is_used = models.BooleanField(
         default=False,
         help_text=(
@@ -118,11 +133,12 @@ class Payment(models.Model):
             "the balance of a wallet."
         ),
     )
-    track_id = models.CharField(max_length=50, unique=True)
-    # track_id_submitted_at = models.DateTimeField(
-    #     help_text="When `track_id` field is provided/updated, this field should updated with the current time",
-        
-    # )
+    track_id = models.CharField(
+        max_length=50,
+        unique=True,
+        help_text="Payment's track id which is provided by the IPG service",
+    )
+
     order = models.OneToOneField(
         Order,
         on_delete=models.SET_NULL,
@@ -193,7 +209,7 @@ class WithdrawalRequest(models.Model):
 
 
 class MoneyTransferRequest(models.Model):
-    """For refunds and other related money transfer requests."""
+    """For refunds and other related money transfer requests from the server to users."""
 
     requested_by = models.ForeignKey(
         EcomUser,
@@ -219,8 +235,8 @@ class MoneyTransferRequest(models.Model):
     tracking_code = models.IntegerField(blank=True)
 
 
-class IPG(models.Model):
-    service_name = models.CharField(max_length=50)
-    api_key = models.CharField(max_length=100)
-    api_endpoint = models.URLField()
-    status_check_url = models.URLField()
+# class IPG(models.Model):
+#     service_name = models.CharField(max_length=50)
+#     api_key = models.CharField(max_length=100)
+#     api_endpoint = models.URLField()
+#     status_check_url = models.URLField()

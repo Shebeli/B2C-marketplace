@@ -1,5 +1,5 @@
 from django.db import transaction
-from financeops.models import MoneyTransferRequest, Transaction, Wallet
+from financeops.models import FinancialRecord, MoneyTransferRequest, Wallet
 from product.models import ProductVariant
 from rest_framework import serializers
 
@@ -12,7 +12,7 @@ def process_order_creation(validated_data: dict) -> Order:
     the following steps will be executed in order when calling this function:
 
     1) Create an unsaved instance of `Order`.
-    2) Using passed in user's current `Cart`, validate each `CartItem` instance having
+    2) By using the `Cart` object from passed in `validated_data`, validate each `CartItem` instance having
     a valid quantity.
     3) For each `CartItem`, create an unsaved `OrderItem` instance using the `Order`
     instance created in step 1.
@@ -20,11 +20,12 @@ def process_order_creation(validated_data: dict) -> Order:
     on hand stocks fields.
     5) Delete user's current cart items.
 
-    The key `order` in passed in arg `validated should be an instance of order
+    The key `order` in passed in arg `validated_data` should be an instance of order
     which hasn't been saved to the database, yet.
     Note that the DB operations will all be executed in a single block using
     a transaction operation.
     """
+    assert
     user = validated_data.get("user")
     order = Order(
         status=Order.UNPAID,
@@ -70,7 +71,7 @@ def process_order_creation(validated_data: dict) -> Order:
     return order
 
 
-def pay_order_using_wallet(wallet: Wallet, order: Order) -> Transaction:
+def pay_order_using_wallet(wallet: Wallet, order: Order) -> FinancialRecord:
     """
     Pay an order using wallet's currency, update the order's related field
     and create a `Transaction` instance.
@@ -83,9 +84,9 @@ def pay_order_using_wallet(wallet: Wallet, order: Order) -> Transaction:
     with transaction.atomic():
         order.status = Order.PAID
         wallet.balance -= order_total_price
-        transaction_obj = Transaction.objects.create(
+        transaction_obj = FinancialRecord.objects.create(
             wallet=wallet,
-            type=Transaction.WALLET_PAYMENT,
+            type=FinancialRecord.WALLET_PAYMENT,
             amount=order.get_total_price(),
             order=order,
         )
@@ -139,7 +140,7 @@ def update_order_to_shipped(order: Order, validated_data: dict) -> Order:
     return order
 
 
-def update_order_to_cancelled(order: Order, validated_data: dict) -> Transaction:
+def update_order_to_cancelled(order: Order, validated_data: dict) -> FinancialRecord:
     """
     Only usable for order instances where the status is PAID or
     PROCESSING.
@@ -156,7 +157,7 @@ def update_order_to_cancelled(order: Order, validated_data: dict) -> Transaction
     instance will also be created, which customer support should handle the
     refund using this instance.
     - If the payment method was wallet payment, then the wallet balance will
-    be reverted back to pre-purchase amount.
+    be reverted back to its pre-purchase value.
     """
     new_cancel_reason = validated_data.get("cancel_reason")
     if not new_cancel_reason:
@@ -179,8 +180,9 @@ def update_order_to_cancelled(order: Order, validated_data: dict) -> Transaction
     order.status = Order.CANCELLED
     order.cancel_reason = new_cancel_reason
     order.cancelled_by = Order.SELLER
-    trans_obj = Transaction.objects.filter(
-        order=order, type__in=[Transaction.DIRECT_PAYMENT, Transaction.WALLET_PAYMENT]
+    trans_obj = FinancialRecord.objects.filter(
+        order=order,
+        type__in=[FinancialRecord.DIRECT_PAYMENT, FinancialRecord.WALLET_PAYMENT],
     ).first()
     if not trans_obj:
         raise serializers.ValidationError(
@@ -189,12 +191,12 @@ def update_order_to_cancelled(order: Order, validated_data: dict) -> Transaction
         )
 
     with transaction.atomic():
-        if trans_obj.type == Transaction.WALLET_PAYMENT:
+        if trans_obj.type == FinancialRecord.WALLET_PAYMENT:
             customer_wallet = order.customer.wallet
             order_total_price = order.get_total_price()
             customer_wallet.balance += order_total_price
-            refund_tran_obj = Transaction.objects.create(
-                type=Transaction.WALLET_REFUND,
+            refund_tran_obj = FinancialRecord.objects.create(
+                type=FinancialRecord.WALLET_REFUND,
                 amount=order_total_price,
                 wallet=trans_obj.wallet,
                 order=trans_obj.order,
@@ -204,8 +206,8 @@ def update_order_to_cancelled(order: Order, validated_data: dict) -> Transaction
                 requested_by=order.customer,
                 amount=order.amount,
             )
-            refund_tran_obj = Transaction.objects.create(
-                type=Transaction.DIRECT_REFUND,
+            refund_tran_obj = FinancialRecord.objects.create(
+                type=FinancialRecord.DIRECT_REFUND,
                 amount=order_total_price,
                 order=trans_obj.order,
             )

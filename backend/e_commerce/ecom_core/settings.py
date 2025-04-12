@@ -341,6 +341,7 @@ else:
 IPG_SERVICES_BASE_URL = {
     ipgs.ZIBAL: "https://gateway.zibal.ir/start/",
 }
+
 ZIBAL_IPG_IP = ["185.143.233.79"]
 IPG_IPS = [ZIBAL_IPG_IP]
 IPG_CHOICES = {

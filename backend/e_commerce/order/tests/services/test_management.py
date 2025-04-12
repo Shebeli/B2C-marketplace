@@ -1,12 +1,13 @@
 import pytest
-from order.services.management import (
-    process_order_creation,
-    pay_order_using_wallet,
-    update_order_to_shipped,
-    update_order_to_cancelled,
-)
+from financeops.models import FinancialRecord
+
 from order.models import Cart, CartItem, Order
-from financeops.models import Transaction
+from order.services.management import (
+    pay_order_using_wallet,
+    process_order_creation,
+    update_order_to_cancelled,
+    update_order_to_shipped,
+)
 
 # Note that the input data for the functions in the
 # `process_order_creation` module are expected to
@@ -72,7 +73,7 @@ def test_pay_order_using_wallet(customer_and_seller, sample_product_instance_fac
         customer.wallet.balance + order.get_total_price() == pre_payment_wallet_balance
     )
 
-    assert transaction_obj.type == Transaction.WALLET_PAYMENT
+    assert transaction_obj.type == FinancialRecord.WALLET_PAYMENT
     assert transaction_obj.amount == order.get_total_price()
     assert transaction_obj.order == order
 
@@ -170,5 +171,5 @@ def test_cancelling_unpaid_order(customer_and_seller, sample_product_instance_fa
 
     customer.wallet.refresh_from_db()
     assert customer.wallet.balance == initial_wallet_balance
-    assert refund_transaction.type == Transaction.WALLET_REFUND
+    assert refund_transaction.type == FinancialRecord.WALLET_REFUND
     assert refund_transaction.amount == order.get_total_price()

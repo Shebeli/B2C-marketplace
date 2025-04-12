@@ -9,13 +9,13 @@ from ecom_user_profile.models import (
     BankCard,
 )
 from ecom_user.models import EcomUser
-from financeops.models import Wallet, Transaction, WithdrawalRequest
+from financeops.models import Wallet, FinancialRecord, WithdrawalRequest
 
 
 def add_order_revenue_to_wallet(
     wallet: Wallet,
     order: Order,
-) -> Transaction:
+) -> FinancialRecord:
     """
     Assuming the order's status was just changed to `COMPLETED`, which will
     increase the balance of the given `Wallet` instance via the given `Order`
@@ -25,10 +25,10 @@ def add_order_revenue_to_wallet(
     commission_rate = settings.COMMISSION_RATE
     order_total_price = order.get_total_price()
     with transaction.atomic():
-        wallet_transaction = Transaction.objects.create(
+        wallet_transaction = FinancialRecord.objects.create(
             wallet=wallet,
             amount=order_total_price,
-            type=Transaction.ORDER_REVENUE,
+            type=FinancialRecord.ORDER_REVENUE,
             order=order,
             commission_rate=commission_rate,
         )
@@ -85,6 +85,6 @@ def update_withdrawal_request(user: EcomUser, amount: int) -> WithdrawalRequest:
     return withdrawal
 
 
-def pay_withdrawal(withdrawal: WithdrawalRequest) -> Transaction:
+def pay_withdrawal(withdrawal: WithdrawalRequest) -> FinancialRecord:
     """Pay the given withdrawal using card to card money transfer service"""
     pass

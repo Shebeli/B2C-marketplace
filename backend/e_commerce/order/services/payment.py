@@ -1,17 +1,17 @@
 import logging
 
 from django.conf import settings
-from ecom_core import ipgs
 from django.db import transaction
 from django.urls import reverse
+from ecom_core import ipgs
+from financeops.models import Payment, FinancialRecord, Wallet
+from rest_framework import serializers
 from zibal.client import ZibalIPGClient
 from zibal.exceptions import RequestError, ResultError
-from zibal.models.schemas import TransactionRequireResponse
-from rest_framework import serializers
-from order.tasks import handle_payment
+from zibal.models.schemas import TransactionRequireResponse, TransactionVerifyResponse
 
-from financeops.models import Payment, Transaction, Wallet
 from order.models import Order
+from order.tasks import handle_payment
 
 logger = logging.getLogger("order")
 
@@ -56,7 +56,7 @@ def _inititate_zibal_payment(amount: int, base_url: str) -> dict:
 
 def initiate_wallet_payment(
     wallet: Wallet, amount: int, ipg_service: int, base_url: str
-) -> Transaction:
+) -> FinancialRecord:
     """
     Initialize an IPG payment, update the order's status to PAYING
     and create a `Payment` model instance.
@@ -103,7 +103,7 @@ def initiate_order_payment(order: Order, ipg_service: int, base_url: str) -> Pay
     return payment
 
 
-def finalize_order_payment(payment: Payment) -> Transaction:
+def finalize_order_payment(payment: Payment) -> FinancialRecord:
     """
     The passed in `Payment` instance should already be in PAID
     status. if so, then the order's status will be updated to PAID status
@@ -119,15 +119,15 @@ def finalize_order_payment(payment: Payment) -> Transaction:
     with transaction.atomic():
         order.status = order.PAID
         order.save()
-        tran = Transaction.objects.create(
+        tran = FinancialRecord.objects.create(
             amount=order.total_price,
-            type=Transaction.DIRECT_PAYMENT,
+            type=FinancialRecord.DIRECT_PAYMENT,
             order=order,
         )
     return tran
 
 
-def finalize_wallet_payment(payment: Payment) -> Transaction:
+def finalize_wallet_payment(payment: Payment) -> FinancialRecord:
     """
     The passed in `Payment` instance should already be in PAID status.
     if so, then the wallet's balance will increased.
@@ -143,7 +143,7 @@ def finalize_wallet_payment(payment: Payment) -> Transaction:
     with transaction.atomic():
         wallet.balance += payment.amount
         wallet.save()
-        tran = Transaction.objects.create(
-            amount=payment.amount, type=Transaction.DEPOSIT, wallet=wallet
+        tran = FinancialRecord.objects.create(
+            amount=payment.amount, type=FinancialRecord.DEPOSIT, wallet=wallet
         )
     return tran

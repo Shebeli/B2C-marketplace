@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.cache import cache
 from ecom_user.models import EcomUser
 from ecom_user_profile.models import CustomerAddress
-from financeops.models import IPG, Payment, Transaction
+from financeops.models import IPG, Payment, FinancialRecord
 from product.models import ProductVariant
 from rest_framework import serializers
 from zibal.client import ZibalIPGClient
@@ -123,14 +123,14 @@ class CartItemSerializer(serializers.ModelSerializer):
     ) -> None:
         if selected_variant.owner != current_user:
             raise serializers.ValidationError(
-                "Cannot add items from the user's own shop to the cart!"
+                "Cannot add items from the user's own shop to the cart"
             )
 
 
 class CartSerializerForCustomer(serializers.ModelSerializer):
     """
-    This serializer is intended only for representation, and to be read only
-    by the customer.
+    This serializer is intended only for read-only purposes by the
+    customers.
     """
 
     items = CartItemSerializer(many=True, read_only=True)
@@ -291,7 +291,7 @@ class OrderSerializerForCustomer(serializers.ModelSerializer):
         Validates no ongoing order should exist with the same seller when
         requesting a new order.
         """
-        on_going_order_statuses = (Order.PENDING, Order.PROCESSING, Order.SHIPPED)
+        on_going_order_statuses = (Order.PAYING, Order.PAID, Order.PROCESSING, Order.SHIPPED)
         seller = user.cart.items.first().seller
         if user.orders.filter(
             seller=seller, status__in=on_going_order_statuses
@@ -349,20 +349,20 @@ class OrderPaymentSerializer(serializers.Serializer):
                 raise serializers.ValidationError(
                     "The selected IPG service is either not recognized or its disabled"
                 )
-            base_url = self.context.get('request').build_absolute_uri()
+            base_url = self.context.get("request").build_absolute_uri()
             payment = initiate_order_payment(order, validated_data["ipg_id"], base_url)
             return payment
         raise serializers.ValidationError(
             "One of the fields `pay_with_wallet` or `ipg_choice` should be provided."
         )
 
-    def to_representation(self, instance: Union[Payment, Transaction]):
+    def to_representation(self, instance: Union[Payment, FinancialRecord]):
         ret = {}
         if isinstance(instance, Payment):
             ret["payment_link"] = instance.get_payment_link()
             ret["amount"] = instance.amount
             ret["ipg_service"] = instance.ipg_service
-        elif isinstance(instance, Transaction):
+        elif isinstance(instance, FinancialRecord):
             ret["description"] = "Order was paid succesfully using wallet."
             ret["amount"] = instance.amount
             ret["paid_at"] = instance.created_at
@@ -424,11 +424,13 @@ class OrderSerializerForSeller(serializers.ModelSerializer):
             order.save()
         return order
 
+
 class ZibalCallbackSerializer(serializers.Serializer):
     """
-    Only a placeholder for data, maybe a datastructure like dataclass 
+    Only a placeholder for data, maybe a datastructure like dataclass
     """
-    success = serializers.ChoiceField(choices=[0,1])
+
+    success = serializers.ChoiceField(choices=[0, 1])
     track_id = serializers.CharField()
     order_id = serializers.CharField(required=False)
-    status = serializers.ChoiceField(choices=STATUS_CODES.keys()) 
+    status = serializers.ChoiceField(choices=STATUS_CODES.keys())

@@ -9,11 +9,11 @@ from zibal.exceptions import RequestError, ResultError
 from zibal.models.schemas import TransactionRequireResponse
 
 from order.services.payment import (
+    finalize_order_payment,
+    finalize_wallet_payment,
     initiate_ipg_payment,
     initiate_order_payment,
     initiate_wallet_payment,
-    finalize_order_payment,
-    finalize_wallet_payment,
 )
 
 # initate_ipg_payment tests:

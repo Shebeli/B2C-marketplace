@@ -3,7 +3,7 @@ import logging
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
-from financeops.models import IPG, Payment
+from financeops.models import Payment
 from product.permissions import IsSellerVerified
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
@@ -34,24 +34,23 @@ from order.serializers import (
 logger = logging.getLogger("order")
 
 
-class IPGStatus(APIView):
-    """
-    For displaying the list of available IPGs.
-    """
+# class IPGStatus(APIView):
+#     """
+#     For displaying the list of available IPGs.
+#     """
 
-    permission_classes = [AllowAny]
+#     permission_classes = [AllowAny]
 
-    def get(self, request, *args, **kwargs):
-        available_ipg_ids = cache.get("available_ipgs")
-        ipgs = IPG.objects.filter(pk__in=available_ipg_ids)
-        serializer = IPGStatusSerializer(ipgs, many=True)
-        return Response(serializer.data)
+#     def get(self, request, *args, **kwargs):
+#         available_ipg_ids = cache.get("available_ipgs")
+#         ipgs = IPG.objects.filter(pk__in=available_ipg_ids)
+#         serializer = IPGStatusSerializer(ipgs, many=True)
+#         return Response(serializer.data)
 
 
 class CartItemDetail(GenericAPIView, UpdateModelMixin, DestroyModelMixin):
     """
     Allows a customer to delete or modify one of their cart items
-    (The only modification in this case would be the `quantity` field).
     """
 
     permission_classes = [IsCartItemOwner, IsAuthenticated]
@@ -67,10 +66,8 @@ class CartDetail(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        obj = self.request.user.cart
-        if not obj:
-            obj = Cart.objects.create(user=self.request.user)
-        serializer = CartSerializerForCustomer(obj)
+        cart_obj, _ = Cart.objects.get_or_create(user=self.request.user)
+        serializer = CartSerializerForCustomer(cart_obj)
         return Response(serializer.data)
 
 
@@ -162,9 +159,16 @@ class SellerOrderDetail(RetrieveUpdateAPIView):
 
 
 class ZibalCallbackView(APIView):
+    """The callbackURL specified for requesting a new payment for zibal
+    should ensure that Zibal's payment service does a call to this endpoint."""
+
     def get(self, request, *args, **kwargs):
         ip_address = request.META.get("REMOTE_ADDR")
         if ip_address not in settings.IPG_IPGS:
+            logger.error(
+                "An unallowed request was made to Zibal's callback endpoint"
+                f"with IP of {request.META.get('REMOTE_ADDR')}"
+            )
             raise PermissionDenied("Unauthorized request.")
         payment_data = to_snake_case_dict(self.request.query_params)
         serializer = ZibalCallbackSerializer(payment_data)
@@ -208,7 +212,7 @@ class ZibalCallbackView(APIView):
             payment_obj.status = Payment.PAID
             logger.info(
                 f"The payment instance with id of {payment_obj.id} was updated"
-                "to PAID due to successful callback request from IPG."
+                "to PAID due to successful callback request from Zibal's IPG."
             )
 
         payment_obj.save()
