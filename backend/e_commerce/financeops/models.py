@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import Literal
 
 from django.conf import settings
 from django.db import models
@@ -84,7 +85,7 @@ class FinancialRecord(models.Model):
 
 class Payment(models.Model):
     """
-    Used for direct IPG payments, depending on the payment type,
+    Used for direct IPG payments or charging wallet, depending on the payment type,
     only one of the fields `order` or `wallet` should be provided.
 
     Only one instance of payment should exist for each `Order` instance
@@ -93,18 +94,10 @@ class Payment(models.Model):
     already existing instance will be updated instead.
 
     Whenever an instance of this model is PAYING, a task should check in x minutes
-    to conduct whether the payment was paid or not and update the status to
+    to check whether the payment was paid or not and update the status to
     CANCELLED if it was not paid.
 
-    Used whenever a payment is involved for either paying an order, or increasing
-    the balance of the wallet. The criteria for order and payment is the following:
-
-    - Order: Only one instance of payment exists per order (assuming the order payment
-    method is via direct payment).
-    - Wallet:
-
-
-    If an instance of the `Payment` model payment status is PAYING, a celery task
+    If an instance of the `Payment` model payment status is PAYING, the task scheduler
     should check in X minutes and update the payment status by inqurying the payment
     from the provided IPG server.
     """
@@ -122,7 +115,12 @@ class Payment(models.Model):
 
     ZIBAL = "ZB"
     ASAN_PARDAKHT = "AP"
-    IPG_CHOICES = {ZIBAL: "Zibal", ASAN_PARDAKHT: "Asan Pardakht"}
+    ZARIN_PAL = "ZP"
+    IPG_CHOICES = {
+        ZIBAL: "Zibal",
+        ASAN_PARDAKHT: "Asan Pardakht",
+        ZARIN_PAL: "Zarin Pal",
+    }
     ipg_service = models.CharField(choices=IPG_CHOICES, max_length=2)
 
     is_used = models.BooleanField(
@@ -138,6 +136,7 @@ class Payment(models.Model):
         unique=True,
         help_text="Payment's track id which is provided by the IPG service",
     )
+    track_id_submitted_at = models.DateTimeField()
 
     order = models.OneToOneField(
         Order,
@@ -163,20 +162,23 @@ class Payment(models.Model):
         PAYING: "Paying",
         PAID: "Paid",
     }
-    status = models.CharField(max_length=2, choices=PAYMENT_STATUSES)
+    status = models.CharField(max_length=2, choices=PAYMENT_STATUSES, default=PAYING)
 
     @property
     def is_payment_link_expired(self) -> bool:
         expire_time = settings.PAYMENT_LINK_EXPIRY_TIME
-        if self.track_id_submitted_at > timezone.now() - timedelta(minutes=expire_time):
+        if timezone.now() - self.track_id_submitted_at > timedelta(minutes=expire_time):
             return True
         return False
 
     def get_payment_link(self) -> str | None:
-        if not self.is_payment_link_expired:
+        if self.is_payment_link_expired:
             return None
         base_url = settings.IPG_SERVICE_BASE_URL[self.service_name]
         return base_url + self.track_id
+
+
+IPGChoice = Literal["ZB", "AP", "ZP"]
 
 
 class WithdrawalRequest(models.Model):
@@ -209,7 +211,7 @@ class WithdrawalRequest(models.Model):
 
 
 class MoneyTransferRequest(models.Model):
-    """For refunds and other related money transfer requests from the server to users."""
+    """For refunds and other related money transfer requests from the app to users."""
 
     requested_by = models.ForeignKey(
         EcomUser,

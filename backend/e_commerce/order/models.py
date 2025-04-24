@@ -172,8 +172,12 @@ class Order(models.Model):
     tracking_code = models.CharField(blank=True, max_length=50)  # set by seller
 
     def get_total_price(self) -> int:
-        results = self.items.aggregate(total=Sum(F("submitted_price") * F("quantity")))
-        return results["total"]
+        return (
+            self.items.aggregate(total=Sum(F("submitted_price") * F("quantity")))[
+                "total"
+            ]
+            or 0
+        )
 
 
 class Cart(models.Model):

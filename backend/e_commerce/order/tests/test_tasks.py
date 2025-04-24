@@ -2,11 +2,9 @@ from asyncio import Server
 from unittest.mock import patch
 
 import pytest
-from backend.e_commerce.order.models import Order
-from backend.e_commerce.order.tests.order_factory import OrderFactory, OrderItemFactory
-from backend.e_commerce.product.tests.product_factory import ProductVariantFactory
 from financeops.models import Payment
 from financeops.tests.finance_factory import PaymentFactory
+from product.tests.product_factory import ProductVariantFactory
 from zibal.client import ZibalIPGClient
 from zibal.models.schemas import (
     TransactionInquiryResponse,
@@ -14,7 +12,9 @@ from zibal.models.schemas import (
     TransactionVerifyResponse,
 )
 
+from order.models import Order
 from order.tasks import cancel_unpaid_order, handle_payment
+from order.tests.order_factory import OrderFactory, OrderItemFactory
 
 # ---------------
 #    Fixtures
