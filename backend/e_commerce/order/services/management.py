@@ -13,8 +13,6 @@ from financeops.models import (
     Payment,
     Wallet,
 )
-from order.payment.exceptions import PaymentRequestError
-from order.payment.factory import PaymentGatewayFactory
 from product.models import ProductVariant
 from zibal.client import ZibalIPGClient
 from zibal.exceptions import RequestError
@@ -25,6 +23,8 @@ from order.exceptions.errors import (
     ResponseBaseError,
 )
 from order.models import Cart, CartItem, Order, OrderItem
+from order.payment.exceptions import PaymentRequestError
+from order.payment.factory import PaymentGatewayFactory
 from order.services.schemas import OrderCreationSchema
 from order.services.validators import (
     run_cart_item_creation_validations,
@@ -305,9 +305,10 @@ class PaymentService:
         order_total_price = order.get_total_price()
 
         client = PaymentGatewayFactory.get_client(selected_ipg)
-        response = client.request_transaction(
+        try:
+            response = client.request_transaction(
             order_total_price, client.get_callback_url()
-        )
+            )
 
         payment = order.payment or Payment(order=order)
         payment.amount = order_total_price
@@ -317,4 +318,22 @@ class PaymentService:
         payment.ipg_service = selected_ipg
         payment.save()
 
-        return payment.get_payment_link()
+        return client.get_payment_link()
+
+    @staticmethod
+    def create_payment_for_wallet_charge(
+        wallet: Wallet, selected_ipg: IPGChoice, amount: int
+    ) -> str:
+        client = PaymentGatewayFactory.get_client(selected_ipg)
+        response = client.request_transaction(amount, client.get_callback_url())
+
+        Payment.objects.create(
+            wallet=wallet,
+            amount=amount,
+            track_id=response.track_id,
+            track_id_submitted_at=timezone.now(),
+            status=Payment.PAYING,
+            ipg_service=selected_ipg,
+        )
+
+        return client.get_payment_link()

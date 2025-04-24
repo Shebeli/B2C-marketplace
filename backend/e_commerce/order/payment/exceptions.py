@@ -1,7 +1,8 @@
+from email import message
+
 from django.utils.translation import gettext_lazy as _
 
 from order.exceptions.errors import ResponseBaseError
-
 ResponseBaseError
 
 class PaymentNotImplementedError(ResponseBaseError):
@@ -19,8 +20,12 @@ class PaymentGatewayNotFoundError(ResponseBaseError):
 class PaymentRequestError(ResponseBaseError):
     http_status = 502
     code = 19
-    message = _("An error or a bad response was recieved from the payment service.")
+    message = _("The request to the payment service is malformed or unexpected.")
 
+class PaymentResponseError(ResponseBaseError):
+    http_status = 502
+    code =22 
+    message = _("")
 
 class PaymentTimeoutError(ResponseBaseError):
     http_status = 504

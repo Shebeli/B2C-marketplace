@@ -1,6 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 
+from zibal.exceptions import ResultError, RequestError
 from django.conf import settings
 from django.urls import reverse
 from financeops.models import Payment
@@ -16,8 +17,8 @@ from order.payment.schemas import PaymentRequestResponse, PaymentStatusResponse
 
 # An interface for implementing payment clients
 class PaymentGatewayClient(ABC):
-    def __init__(self, service_name: str,logger=None, *args, **kwargs):
-        self.service_name = service_name 
+    def __init__(self, service_name: str, logger=None, *args, **kwargs):
+        self.service_name = service_name
         self.logger = logger or logging.getLogger(f"payment.{service_name}")
 
     @abstractmethod
@@ -69,8 +70,11 @@ class ZibalIPGClient(PaymentGatewayClient):
         try:
             response = self.zibal_client.verify_transaction(track_id)
         except Exception as e:
-            self.logger.error(f"Error in Zibal transaction's verify: {str(e)}")
-            raise PaymentRequestError()
+            self.logger.error(
+                f"Error in {self.__class__.__name__} transaction's verify: {str(e)}"
+            )
+        except ResultError
+        
         return PaymentStatusResponse(
             status=response.status,
             paid_at=response.paid_at,
@@ -84,8 +88,8 @@ class ZibalIPGClient(PaymentGatewayClient):
     def inquiry_transaction(self, track_id):
         try:
             response = self.zibal_client.inquiry_transaction(track_id)
-        except Exception as e:
-            self.logger.error(f"Error in Zibal transaction's inquiry: {str(e)}")
+        except RequestError as e:
+            self.logger.error(f"Error in Zibal transaction's inquiry request: {str(e)}")
             raise PaymentRequestError()
         return PaymentStatusResponse(
             status=response.status,
@@ -110,5 +114,3 @@ class ZarinPalIPGClient(PaymentGatewayClient):
 
 class AsanPardakhtIPGClient(PaymentGatewayClient):
     pass
-
-
