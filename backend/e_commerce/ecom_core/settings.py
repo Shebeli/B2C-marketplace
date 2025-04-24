@@ -67,11 +67,6 @@ LOGGING = {
             "level": "DEBUG",
             "propagate": False,
         },
-        "payment": {
-            "handlers": ["file", "console", "error_file"],
-            "level": "DEBUG",
-            "propagate": False,
-        },
         "development": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
     },
 }
@@ -256,7 +251,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    "EXCEPTION_HANDLER": "order.exceptions.handlers.order_exception_handler",
+    "EXCEPTION_HANDLER": "ecom_core.exceptions.handlers.order_exception_handler"
 }
 
 CORS_ALLOWED_ORIGINS = [

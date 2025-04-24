@@ -5,7 +5,7 @@ from celery import shared_task
 from django.conf import settings
 from django.core.cache import cache
 from django.db import transaction
-from financeops.models import FinancialRecord, Payment
+from financeops.models import IPG, FinancialRecord, Payment
 from product.models import ProductVariant
 from requests.exceptions import RequestException
 from zibal.client import ZibalIPGClient
