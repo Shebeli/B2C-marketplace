@@ -24,6 +24,7 @@ from order.permissions import IsCartItemOwner, IsSellerOfOrder
 from order.serializers import (
     CartItemSerializer,
     CartSerializerForCustomer,
+    IPGStatusSerializer,
     OrderPaymentSerializer,
     OrderSerializerForCustomer,
     OrderSerializerForSeller,
@@ -164,6 +165,10 @@ class ZibalCallbackView(APIView):
     def get(self, request, *args, **kwargs):
         ip_address = request.META.get("REMOTE_ADDR")
         if ip_address not in settings.IPG_IPGS:
+            logger.error(
+                "An unallowed request was made to Zibal's callback endpoint"
+                f"with IP of {request.META.get('REMOTE_ADDR')}"
+            )
             raise PermissionDenied("Unauthorized request.")
         payment_data = to_snake_case_dict(self.request.query_params)
         serializer = ZibalCallbackSerializer(payment_data)
