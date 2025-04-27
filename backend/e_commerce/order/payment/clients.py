@@ -40,7 +40,7 @@ class PaymentGatewayClient(ABC):
         pass
 
     @abstractmethod
-    def get_callback_url(self) -> str:
+    def check_health(self) -> bool:
         pass
 
 
@@ -112,8 +112,9 @@ class ZibalIPGClient(PaymentGatewayClient):
     def get_payment_link(self, track_id) -> str:
         return self.zibal_client.create_payment_link(track_id)
 
-    def get_callback_url(self) -> str:
-        return reverse("zibal-callback")
+
+    def check_health(self) -> bool:
+        return self.zibal_client.check_service_status()
 
 
 class ZarinPalIPGClient(PaymentGatewayClient):

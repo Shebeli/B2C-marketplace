@@ -1,5 +1,4 @@
 from datetime import timedelta
-from typing import Literal
 
 from django.conf import settings
 from django.db import models
@@ -25,7 +24,7 @@ class FinancialRecord(models.Model):
     all types of financial records.
 
     Depending on the transaction type, only some fields are required
-    to be provided (and so other unrequired fields should be null).
+    to be provided (and so other non-mandatory fields should be null).
     """
 
     amount = models.BigIntegerField()
@@ -121,15 +120,7 @@ class Payment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    ZIBAL = "ZB"
-    ASAN_PARDAKHT = "AP"
-    ZARIN_PAL = "ZP"
-    IPG_CHOICES = {
-        ZIBAL: "Zibal",
-        ASAN_PARDAKHT: "Asan Pardakht",
-        ZARIN_PAL: "Zarin Pal",
-    }
-    ipg_service = models.CharField(choices=IPG_CHOICES, max_length=2)
+    ipg_service = models.IntegerField(choices=settings.IPG_CHOICES)
 
     is_used = models.BooleanField(
         default=False,
@@ -191,9 +182,6 @@ class Payment(models.Model):
             return None
         base_url = settings.IPG_SERVICE_BASE_URL[self.service_name]
         return base_url + self.track_id
-
-
-IPGChoice = Literal["ZP", "AP", "ZB"]
 
 
 class WithdrawalRequest(models.Model):

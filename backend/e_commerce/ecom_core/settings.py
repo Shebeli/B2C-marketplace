@@ -251,7 +251,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    "EXCEPTION_HANDLER": "ecom_core.exceptions.handlers.order_exception_handler"
+    "EXCEPTION_HANDLER": "ecom_core.exceptions.handlers.order_exception_handler",
 }
 
 CORS_ALLOWED_ORIGINS = [
@@ -365,5 +365,15 @@ except ValueError:
     )
 
 
-ORDER_TIMEOUT = 90 # in minutes
-ORDER_REQUIRED_DAYS_FOR_DELIVERED = 5 # in days
+ORDER_TIMEOUT = 90  # in minutes
+ORDER_REQUIRED_DAYS_FOR_DELIVERED = 5  # in days
+
+# IPGs
+ZIBAL = 1
+ASAN_PARDAKHT = 2
+ZARIN_PAL = 3
+IPG_CHOICES = {
+    ZIBAL: "Zibal",
+    ASAN_PARDAKHT: "Asan Pardakht",
+    ZARIN_PAL: "Zarin Pal",
+}

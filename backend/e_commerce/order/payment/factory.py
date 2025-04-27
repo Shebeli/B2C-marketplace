@@ -8,13 +8,23 @@ from order.payment.exceptions import (
 
 
 class PaymentGatewayFactory:
+    "For creating a IPG payment client"
+
     @staticmethod
-    def get_client(selected_ipg: str):
-        if selected_ipg == Payment.ZIBAL:
+    def get_client(selected_ipg: int):
+        """
+        Creates and returns an instance of the given IPG.
+
+        Raises:
+            PaymentNotImplementedError: Given IPG is recognized but the client is not implemented yet.
+            PaymentGatewayNotFoundError: Given IPG is not recognized.
+        """
+        ipgs = settings.IPG_CHOICES
+        if selected_ipg == ipgs.ZIBAL:
             return ZibalIPGClient(settings.ZIBAL_MERCHANT_ID)
-        elif selected_ipg == Payment.ASAN_PARDAKHT:
+        elif selected_ipg == ipgs.ASAN_PARDAKHT:
             raise PaymentNotImplementedError()
-        elif selected_ipg == Payment.ZIBAL:
+        elif selected_ipg == ipgs.ZARIN_PAL:
             raise PaymentNotImplementedError()
         else:
             raise PaymentGatewayNotFoundError()

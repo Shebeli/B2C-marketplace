@@ -1,6 +1,5 @@
 from django.utils import timezone
 from financeops.models import (
-    IPGChoice,
     Payment,
     Wallet,
 )
@@ -12,11 +11,11 @@ from order.tasks import cancel_payment
 
 class PaymentService:
     @staticmethod
-    def create_payment_for_order(order: Order, selected_ipg: IPGChoice) -> str:
+    def create_payment_for_order(order: Order, selected_ipg: int) -> str:
         """
         Initiates a transaction with the requested IPG and creates a `Payment`
         for paying the order.
-        
+
         Raises:
             PaymentNotImplementedError: Selected IPG is recognized but the client isn't implemented.
             PaymentGatewayNotFoundError: Selected IPG is not recognized.
@@ -43,7 +42,7 @@ class PaymentService:
 
     @staticmethod
     def create_payment_for_wallet(
-        wallet: Wallet, charge_amount: int, selected_ipg: IPGChoice
+        wallet: Wallet, charge_amount: int, selected_ipg: int
     ) -> str:
         """
         Initiates a transaction with the requested IPG and creates a `Payment`

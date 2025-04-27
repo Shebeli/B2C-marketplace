@@ -12,7 +12,11 @@ from product.models import ProductVariant
 from requests.exceptions import RequestException
 
 from order.models import Order
-from order.payment.exceptions import PaymentRequestError, PaymentResponseError
+from order.payment.exceptions import (
+    PaymentNotImplementedError,
+    PaymentRequestError,
+    PaymentResponseError,
+)
 from order.payment.factory import PaymentGatewayFactory
 from order.payment.schemas import PAYMENT_STATUS_CODES
 
@@ -247,31 +251,27 @@ def update_order_to_delivered(self, order_id: int):
 @shared_task
 def check_and_cache_ipg_status():
     """
-    Cache the available ipgs with a get request to assert whether the IPG
+    Cache the available IPGs with a get request to assert whether the IPG
     service is running or not.
-    """
-    ipgs = IPG.objects.all()
-    if not ipgs:
-        logger.critical(
-            "One IPG instance should at least exist for IPG status scheduler checker."
-        )
-        return
-    available_ipgs = []
-    for ipg in IPG.objects.all():
-        try:
-            response = requests.get(ipg.status_check_url, timeout=5)
-            if response.status_code != 200:
-                logger.warning(
-                    f"Unexpected response status code on service check: {response.status_code} content: {response.content}"
-                    f"\n IPG service {ipg.service_name} is unavailable, disabling gateway."
-                )
-                return
 
-        except RequestException as err:
-            logger.warning(
-                f"A network request error has occured on IPG status check: {err}"
-                f"\n IPG service {ipg.service_name} is unavailable, disabling gateway."
+    Should be executed as a scheduler
+    """
+    ipgs = settings.IPG_OPTIONS
+    available_ipgs = []
+    for ipg_choice in ipgs.keys():
+        try:
+            client = PaymentGatewayFactory.get_client(ipg_choice)
+        except PaymentNotImplementedError():
+            logger.debug(
+                f"IPG {ipgs[ipg_choice]} is not implemented and thus checking its status will not be executed."
             )
             return
-        available_ipgs.append(ipg.id)
+        except Exception as e:
+            logger.error(
+                "An error has occurred when retrieving the payment client for checking the uptime; "
+                f"IPG: {ipgs[ipg_choice]} "
+                f"error: {str(e)}"
+            )
+        if client.check_health():
+            available_ipgs.append(ipg_choice)
     cache.set("available_ipgs", available_ipgs)
