@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from ecom_core import settings
@@ -20,7 +22,8 @@ from order.services.validators import (
     validate_product_is_available,
     validate_wallet_enough_currency,
 )
-from order.tasks import cancel_unpaid_order
+from order.tasks import cancel_unpaid_order, update_order_to_delivered
+from order.utils import add_business_days
 
 
 class OrderService:
@@ -40,7 +43,8 @@ class OrderService:
         `on_hand_stock`.
         5. Delete user's current cart items.
 
-        Will also create a new task after the order is created for canceling the order if its not paid.
+        Will also create a new instance of the task `cancel_unpaid_order` for cancelling the order using
+        value `ORDER_TIMEOUT` in conf.settings.
         """
         run_order_creation_validations(user, customer_address_id)
         order = Order(
@@ -89,7 +93,12 @@ class OrderService:
             OrderItem.objects.bulk_create(order_items)
             user.cart.items.all().delete()
 
-        cancel_unpaid_order.apply_async(order.id, countdown=settings.ORDER_TIMEOUT * 60)
+        cancel_unpaid_order.apply_async(
+            args=[
+                order.id,
+            ],
+            countdown=settings.ORDER_TIMEOUT * 60,
+        )
 
         return order
 
@@ -120,23 +129,31 @@ class OrderService:
     def update_order_to_shipped(order: Order, tracking_code: str) -> Order:
         """
         Updates the order's status to SHIPPED with the following changes:
-        The order's items stocks will be updated accordingly, and the
-        order's tracking code will either be set and the order's status
-        will also be updated to SHIPPED.
+        The order's items stocks will be updated accordingly, and a new
+        tracking code is set on the order for inquiring the order's shipment
+        status and the order's status will also be updated to SHIPPED.
 
         If the order's status is already SHIPPED, only the order's
         tracking code will be updated.
+
+        Will create an instance of the task `update_order_to_delivered` for updating
+        the order to delivered in x business days using the value in conf.settings
+        `ORDER_REQUIRED_DAYS_FOR_DELIVERED`.
         """
         if order.status not in (Order.PAID, Order.SHIPPED, Order.PROCESSING):
             raise ImproperOrderUpdateError(
-                "SHIPPED status update is only usable when the order is in PAID"
-                ", SHIPPED or PROCESSING state."
+                _(
+                    "SHIPPED status update is only usable when the order is in PAID"
+                    ", SHIPPED or PROCESSING state."
+                )
             )
 
         if not tracking_code:
             raise ImproperOrderUpdateError(
-                "A tracking code should be provided when updating the status to"
-                " shipped or updating the tracking code"
+                _(
+                    "A tracking code should be provided when updating the status to"
+                    " shipped or updating the tracking code"
+                )
             )
 
         # if the order is already updated to SHIPPED status, then the assumption is
@@ -162,6 +179,15 @@ class OrderService:
                 ["reserved_stock", "on_hand_stock"],
             )
             order.save()
+
+        update_order_to_delivered.apply_async(
+            args=[
+                order.id,
+            ],
+            eta=add_business_days(
+                datetime.now(), settings.ORDER_REQUIRED_DAYS_FOR_DELIVERED
+            ),
+        )
         return order
 
     @staticmethod
@@ -180,7 +206,7 @@ class OrderService:
         """
         if not cancel_reason:
             raise ImproperOrderUpdateError(
-                "A cancellation reason should be provided when cancelling the order."
+                _("A cancellation reason should be provided when cancelling the order.")
             )
 
         # if the following case is true then its assumed that
@@ -192,7 +218,7 @@ class OrderService:
 
         if order.status not in (Order.PAID, Order.PROCESSING):
             raise ImproperOrderUpdateError(
-                "Order cannot be cancelled if it is not in PAID or PROCESSING state."
+                _("Order cannot be cancelled if it is not in PAID or PROCESSING state.")
             )
 
         order_items = (

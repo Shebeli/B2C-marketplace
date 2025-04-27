@@ -1,4 +1,3 @@
-
 from django.utils import timezone
 from financeops.models import (
     IPGChoice,
@@ -15,8 +14,9 @@ class PaymentService:
     @staticmethod
     def create_payment_for_order(order: Order, selected_ipg: IPGChoice) -> str:
         """
-        Creates a payment record and initiates a transaction with the requested IPG.
-
+        Initiates a transaction with the requested IPG and creates a `Payment`
+        for paying the order.
+        
         Raises:
             PaymentNotImplementedError: Selected IPG is recognized but the client isn't implemented.
             PaymentGatewayNotFoundError: Selected IPG is not recognized.
@@ -36,6 +36,7 @@ class PaymentService:
         payment.status = Payment.PAYING
         payment.ipg_service = selected_ipg
         payment.save()
+
         cancel_payment.apply_async(payment.id, countdown=60 * 15)
 
         return client.get_payment_link()
@@ -44,6 +45,16 @@ class PaymentService:
     def create_payment_for_wallet(
         wallet: Wallet, charge_amount: int, selected_ipg: IPGChoice
     ) -> str:
+        """
+        Initiates a transaction with the requested IPG and creates a `Payment`
+        for charging the given wallet.
+
+        Raises:
+            PaymentNotImplementedError: Selected IPG is recognized but the client isn't implemented.
+            PaymentGatewayNotFoundError: Selected IPG is not recognized.
+            PaymentRequestError: Request to IPG has failed (timeouts, network errors and etc.)
+            PaymentResponseError: A bad/unexpected response was received from IPG.
+        """
         client = PaymentGatewayFactory.get_client()
         callback_url = client.get_callback_url()
         response = client.request_transaction(charge_amount, callback_url)
@@ -56,6 +67,7 @@ class PaymentService:
             status=Payment.PAYING,
             ipg_service=selected_ipg,
         )
+
         cancel_payment.apply_async(payment.id, countdown=60 * 15)
 
         return client.get_payment_link()

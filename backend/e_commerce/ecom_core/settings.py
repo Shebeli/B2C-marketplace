@@ -366,3 +366,4 @@ except ValueError:
 
 
 ORDER_TIMEOUT = 90 # in minutes
+ORDER_REQUIRED_DAYS_FOR_DELIVERED = 5 # in days

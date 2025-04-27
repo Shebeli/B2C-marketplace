@@ -146,7 +146,7 @@ def cancel_payment(payment_id: int):
 @shared_task(bind=True, max_retries=5, default_retry_delay=75)
 def cancel_unpaid_order(self, order_id):
     """
-    For cancelling orders which haven't been paid for about 1-2 hours,
+    For cancelling orders which haven't been paid and are considered timed oiut,
     which will also release the reserved stocks occupied by the order.
     """
     try:
@@ -214,14 +214,7 @@ def cancel_unpaid_order(self, order_id):
 def update_order_to_delivered(self, order_id: int):
     """
     After a period of 5 business days of shipment, if no complaints have been
-    recieved from the customer, the order's status is updated to DELIVERED.
-
-    However, if the order is not delivered and the customer
-    informs the server that the order hasn't been delivered,
-    customer support should intervene and check what has happened
-    with the order, and should follow up with approprite actions
-    inorder to resolve the issue, and update the order and related data models
-    accordingly.
+    received from the customer, the order's status is updated to DELIVERED.
     """
     try:
         order = Order.objects.get(id=order_id)
@@ -232,6 +225,10 @@ def update_order_to_delivered(self, order_id: int):
             f"task ID: {self.task.id} | task name: {self.request.task}"
         )
         return
+
+    # the following actions should be reversible since
+    # there might be a chance that the order gets refunded
+    # or it still hasn't been received by the customer.
     commission_rate = settings.COMMISSION_RATE
     seller_wallet = order.seller.wallet
     with transaction.atomic():

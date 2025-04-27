@@ -246,7 +246,8 @@ class MoneyTransferRequest(models.Model):
     amount = models.BigIntegerField()
     is_verified = models.BooleanField(
         default=False,
-        help_text="Indicating whether the money transfer request is valid or not.",
+        help_text="Indicating whether the money transfer request is valid or not,"
+        "should be manually be set by support/administrator ",
     )
     is_paid = models.BooleanField(default=False)
     tracking_code = models.IntegerField(blank=True)
