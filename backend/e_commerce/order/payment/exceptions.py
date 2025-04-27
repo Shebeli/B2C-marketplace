@@ -1,9 +1,6 @@
-from email import message
-
 from django.utils.translation import gettext_lazy as _
-
 from order.exceptions.errors import ResponseBaseError
-ResponseBaseError
+
 
 class PaymentNotImplementedError(ResponseBaseError):
     http_status = 500
@@ -20,12 +17,14 @@ class PaymentGatewayNotFoundError(ResponseBaseError):
 class PaymentRequestError(ResponseBaseError):
     http_status = 502
     code = 19
-    message = _("The request to the payment service is malformed or unexpected.")
+    message = _("The request to the payment service is malformed.")
+
 
 class PaymentResponseError(ResponseBaseError):
     http_status = 502
-    code =22 
-    message = _("")
+    code = 22
+    message = _("Response received from payment gateway service is invalid.  ")
+
 
 class PaymentTimeoutError(ResponseBaseError):
     http_status = 504
@@ -37,3 +36,11 @@ class PaymentServiceUnavailableError(ResponseBaseError):
     http_status = 503
     code = 21
     message = _("Payment service is unavailable.")
+
+
+class PaymentGoingOnError(ResponseBaseError):
+    http_status = 400
+    code = 22
+    message = _(
+        "A paying payment is already going on, should either cancel the on going payment manually or wait it out until its cancelled by the server."
+    )

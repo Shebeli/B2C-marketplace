@@ -39,3 +39,4 @@ dist-ssr
 *.sw?
 frontend/b2c-app/.env.*
 frontend/b2c-app/.env.
+cspell.json

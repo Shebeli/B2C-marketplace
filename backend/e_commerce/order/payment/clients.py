@@ -1,18 +1,18 @@
 import logging
 from abc import ABC, abstractmethod
 
-from zibal.exceptions import ResultError, RequestError
 from django.conf import settings
 from django.urls import reverse
 from financeops.models import Payment
+from order.payment.schemas import PaymentRequestResponse, PaymentStatusResponse
 from payment.exceptions import (
     PaymentGatewayNotFoundError,
     PaymentNotImplementedError,
     PaymentRequestError,
+    PaymentResponseError,
 )
 from zibal.client import ZibalIPGClient as ZibalClient
-
-from order.payment.schemas import PaymentRequestResponse, PaymentStatusResponse
+from zibal.exceptions import RequestError, ResultError
 
 
 # An interface for implementing payment clients
@@ -51,14 +51,25 @@ class ZibalIPGClient(PaymentGatewayClient):
         )
         super().__init__(logger)
 
+    def _handle_error(self, e: Exception) -> None:
+        if isinstance(e, ResultError):
+            self.logger.error(
+                f"Bad response received from ZibalIPG for transaction request: {str(e)}"
+            )
+            raise PaymentResponseError()
+        else:
+            self.logger.error(
+                f"Error in ZibalIPG transaction request HTTP request: {str(e)}"
+            )
+            raise PaymentRequestError()
+
     def request_transaction(self, amount, callback_url) -> PaymentRequestResponse:
         try:
             response = self.zibal_client.request_transaction(
                 amount, callback_url=callback_url
             )
         except Exception as e:
-            self.logger.error(f"Error in Zibal transaction request: {str(e)}")
-            raise PaymentRequestError()
+            self._handle_error(e)
 
         return PaymentRequestResponse(
             result_code=response.result,
@@ -70,11 +81,8 @@ class ZibalIPGClient(PaymentGatewayClient):
         try:
             response = self.zibal_client.verify_transaction(track_id)
         except Exception as e:
-            self.logger.error(
-                f"Error in {self.__class__.__name__} transaction's verify: {str(e)}"
-            )
-        except ResultError
-        
+            self._handle_error(e)
+
         return PaymentStatusResponse(
             status=response.status,
             paid_at=response.paid_at,
@@ -88,9 +96,9 @@ class ZibalIPGClient(PaymentGatewayClient):
     def inquiry_transaction(self, track_id):
         try:
             response = self.zibal_client.inquiry_transaction(track_id)
-        except RequestError as e:
-            self.logger.error(f"Error in Zibal transaction's inquiry request: {str(e)}")
-            raise PaymentRequestError()
+        except Exception as e:
+            self._handle_error(e)
+
         return PaymentStatusResponse(
             status=response.status,
             paid_at=response.paid_at,

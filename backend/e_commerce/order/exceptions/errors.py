@@ -132,7 +132,7 @@ class OrderIsFinishedError(ResponseBaseError):
 
 class WalletNotEnoughCurrencyError(ResponseBaseError):
     code = 14
-    message = _("Not enough wallet currency to perform the requsted action.")
+    message = _("Not enough wallet currency to perform the requested action.")
 
 
 class ImproperOrderUpdateError(ResponseBaseError):

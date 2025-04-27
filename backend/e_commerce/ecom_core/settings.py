@@ -361,5 +361,8 @@ try:
     SMS_CODE_LIFESPAN = int(os.environ.get("SMS_CODE_LIFESPAN", 15))
 except ValueError:
     raise ValueError(
-        "SMS_COOLDOWN_DURATION and SMS_VERIFY_EXP env variables should be integer mutable"
+        "SMS_COOLDOWN_DURATION and SMS_VERIFY_EXP env variables should be integer"
     )
+
+
+ORDER_TIMEOUT = 90 # in minutes

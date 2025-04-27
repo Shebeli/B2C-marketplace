@@ -2,7 +2,7 @@ import pytest
 from financeops.models import FinancialRecord
 
 from order.models import Cart, CartItem, Order
-from order.services.management import (
+from order.services.order import (
     pay_order_using_wallet,
     process_order_creation,
     update_order_to_cancelled,

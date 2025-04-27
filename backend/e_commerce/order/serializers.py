@@ -12,7 +12,7 @@ from zibal.client import ZibalIPGClient
 from zibal.response_codes import STATUS_CODES
 
 from order.models import Cart, CartItem, Order, OrderItem
-from order.services.management import (
+from order.services.order import (
     pay_order_using_wallet,
     process_order_creation,
     update_order_to_cancelled,

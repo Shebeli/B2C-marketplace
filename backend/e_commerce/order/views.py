@@ -1,12 +1,9 @@
 import logging
 
-from django.conf import settings
-from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from financeops.models import Payment
 from product.permissions import IsSellerVerified
 from rest_framework import status
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import (
     GenericAPIView,
     ListAPIView,
@@ -14,7 +11,7 @@ from rest_framework.generics import (
     RetrieveUpdateAPIView,
 )
 from rest_framework.mixins import DestroyModelMixin, UpdateModelMixin
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from zibal.utils import to_snake_case_dict
@@ -24,7 +21,6 @@ from order.permissions import IsCartItemOwner, IsSellerOfOrder
 from order.serializers import (
     CartItemSerializer,
     CartSerializerForCustomer,
-    IPGStatusSerializer,
     OrderPaymentSerializer,
     OrderSerializerForCustomer,
     OrderSerializerForSeller,
@@ -163,13 +159,13 @@ class ZibalCallbackView(APIView):
     should ensure that Zibal's payment service does a call to this endpoint."""
 
     def get(self, request, *args, **kwargs):
-        ip_address = request.META.get("REMOTE_ADDR")
-        if ip_address not in settings.IPG_IPGS:
-            logger.error(
-                "An unallowed request was made to Zibal's callback endpoint"
-                f"with IP of {request.META.get('REMOTE_ADDR')}"
-            )
-            raise PermissionDenied("Unauthorized request.")
+        # ip_address = request.META.get("REMOTE_ADDR")
+        # if ip_address not in settings.IPG_IPGS:
+        #     logger.error(
+        #         "An unallowed request was made to Zibal's callback endpoint"
+        #         f"with IP of {request.META.get('REMOTE_ADDR')}"
+        #     )
+        #     raise PermissionDenied("Unauthorized request.")
         payment_data = to_snake_case_dict(self.request.query_params)
         serializer = ZibalCallbackSerializer(payment_data)
 

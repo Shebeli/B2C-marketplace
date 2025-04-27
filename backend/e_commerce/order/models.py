@@ -1,7 +1,11 @@
+from datetime import timedelta
 from typing import Union
+from xmlrpc.client import Boolean
 
+from django.conf import settings
 from django.db import models
 from django.db.models import F, Sum
+from django.utils import timezone
 from ecom_user.models import EcomUser
 from ecom_user_profile.models import CustomerAddress
 
@@ -46,8 +50,8 @@ class Order(models.Model):
     The order can also be cancelled depending on the seller's policies if it is in
     other states such as PROCESSING or SHIPPED.
 
-    It is seller's full responsibilty to fully inform the customer of its order
-    policies before the purchase, and its the customer's responsiblity to adhere
+    It is seller's full responsibility to fully inform the customer of its order
+    policies before the purchase, and its the customer's responsibility to adhere
     to the seller's declared order policies before accepting the order.
 
     Key business rules and policies:
@@ -104,18 +108,19 @@ class Order(models.Model):
         related factors, or using an external API service for retrieving the estimation).
     """
 
-    ONHOLD = "OH"  # incase the payment gateways are all down, or the support deems so
+    ON_HOLD = "OH"  # incase the payment gateways are all down, or the support deems so
     UNPAID = "UP"  # the customer hasn't paid the order amount
     PAYING = "PG"  # customer is attempting to pay (in sync for 20 minutes)
     PAID = "PD"  # the order is paid, but the seller hasn't accepted the order yet
     PROCESSING = "PC"  # the seller has accepted the order and is preparing the product for shipment
     SHIPPED = "SH"  # the seller has shipped the product to be delivered to customer
-    DELIVERED = "DL"  # the customer has recieved the product
-    COMPLETED = "CP"  # no complaints have been recieved from the customer for 7 days after delivery
+    DELIVERED = "DL"  # the customer has received the product
+    COMPLETED = "CP"  # no complaints have been received from the customer for 7 days after delivery
     CANCELLED = "CC"  # the order is cancelled by customer, seller or the server
+    TIMED_OUT = "TO"  # Due to payment of the order taking too long (recreating the order requires order creation validations to be re-executed)
     REFUNDED = "RF"  # the customer has refunded the delivered product
     STATUS_CHOICES = {
-        ONHOLD: "Onhold",
+        ON_HOLD: "Onhold",
         UNPAID: "Unpaid",
         PAID: "Paid",
         PROCESSING: "Processing",
@@ -124,6 +129,7 @@ class Order(models.Model):
         COMPLETED: "Completed",
         CANCELLED: "Cancelled",
         REFUNDED: "Refunded",
+        TIMED_OUT: "Timed Out",
     }
     status = models.CharField(max_length=2, choices=STATUS_CHOICES, default=UNPAID)
 
@@ -170,10 +176,16 @@ class Order(models.Model):
     )  # set by customer, seller or system
     refund_reason = models.CharField(max_length=300, blank=True)  # set by customer
     tracking_code = models.CharField(blank=True, max_length=50)  # set by seller
+    expire_timestamp = models.DateTimeField(
+        default=timezone.now() + timedelta(minutes=settings.ORDER_TIMEOUT),
+        help_text="Indicates that if the order is expired (timed out) if its not paid.",
+    )
 
     def get_total_price(self) -> int:
         results = self.items.aggregate(total=Sum(F("submitted_price") * F("quantity")))
         return results["total"]
+
+
 
 
 class Cart(models.Model):

@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import Literal
 
 from django.conf import settings
 from django.db import models
@@ -122,7 +123,12 @@ class Payment(models.Model):
 
     ZIBAL = "ZB"
     ASAN_PARDAKHT = "AP"
-    IPG_CHOICES = {ZIBAL: "Zibal", ASAN_PARDAKHT: "Asan Pardakht"}
+    ZARIN_PAL = "ZP"
+    IPG_CHOICES = {
+        ZIBAL: "Zibal",
+        ASAN_PARDAKHT: "Asan Pardakht",
+        ZARIN_PAL: "Zarin Pal",
+    }
     ipg_service = models.CharField(choices=IPG_CHOICES, max_length=2)
 
     is_used = models.BooleanField(
@@ -138,6 +144,7 @@ class Payment(models.Model):
         unique=True,
         help_text="Payment's track id which is provided by the IPG service",
     )
+    track_id_submitted_at = models.DateTimeField()
 
     order = models.OneToOneField(
         Order,
@@ -153,17 +160,24 @@ class Payment(models.Model):
         blank=True,
         related_name="payments",
     )
-    CANCELLED = "CC"
-    UNPAID = "UP"
-    PAYING = "PY"
+    CANCELLED = "CC"  # cancelled by server, due to reasons such as taking too long.
+    FAILED = "FD"  # Failed payment response received from the IPG
+    PAYING = "PY"  # when an instance of payment is created up to 15 minutes
     PAID = "PD"
     PAYMENT_STATUSES = {
         CANCELLED: "Cancelled",
-        UNPAID: "Unpaid",
+        FAILED: "Failed",
         PAYING: "Paying",
         PAID: "Paid",
     }
     status = models.CharField(max_length=2, choices=PAYMENT_STATUSES)
+    details = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text=_(
+            "More details of the status of the payment via using the status code received from the IPG response."
+        ),
+    )
 
     @property
     def is_payment_link_expired(self) -> bool:
@@ -177,6 +191,9 @@ class Payment(models.Model):
             return None
         base_url = settings.IPG_SERVICE_BASE_URL[self.service_name]
         return base_url + self.track_id
+
+
+IPGChoice = Literal["ZP", "AP", "ZB"]
 
 
 class WithdrawalRequest(models.Model):
