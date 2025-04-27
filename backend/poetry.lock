@@ -689,6 +689,20 @@ pytz = "*"
 tornado = ">=5.0.0,<7.0.0"
 
 [[package]]
+name = "holidays"
+version = "0.71"
+description = "Open World Holidays Framework"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "holidays-0.71-py3-none-any.whl", hash = "sha256:15803b167b71d9ca3e45198db84ed7fce15912b81ab27ba916b088f4a8f704f3"},
+    {file = "holidays-0.71.tar.gz", hash = "sha256:3ebd9c9de0927bee90ea7bfb551c2a030ef139cf6381c7a23add94d061787466"},
+]
+
+[package.dependencies]
+python-dateutil = "*"
+
+[[package]]
 name = "humanize"
 version = "4.11.0"
 description = "Python humanize utilities"
@@ -1847,4 +1861,4 @@ types-requests = ">=2.32.0.20240712,<3.0.0.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "0e3f7a12076288e1a2eaacabaadcdb77f46eb4702c61b16b90d9832e50912252"
+content-hash = "d1d0ee269278bb011aa512a3791a6e3ac3871be4b77aa1ef4c04cf43530a552a"
